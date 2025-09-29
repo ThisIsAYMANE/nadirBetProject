@@ -7,7 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:start": "docker-compose up -d postgres",
+    "db:stop": "docker-compose down",
+    "db:restart": "docker-compose restart postgres",
+    "db:logs": "docker-compose logs postgres",
+    "db:shell": "docker-compose exec postgres psql -U admin -d betting_platform",
+    "db:backup": "docker-compose exec postgres pg_dump -U admin betting_platform > database/backups/backup_$(date +%Y%m%d_%H%M%S).sql",
+    "db:reset": "docker-compose down -v && docker-compose up -d postgres"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",

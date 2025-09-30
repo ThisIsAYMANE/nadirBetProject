@@ -81,15 +81,30 @@ BEGIN
     IF TG_OP = 'DELETE' THEN
         old_json = to_jsonb(OLD);
         new_json = NULL;
-        record_id_val = OLD.user_id;
+        -- Get record ID based on table
+        IF TG_TABLE_NAME = 'brokers' THEN
+            record_id_val = OLD.broker_id;
+        ELSE
+            record_id_val = OLD.user_id;
+        END IF;
     ELSIF TG_OP = 'INSERT' THEN
         old_json = NULL;
         new_json = to_jsonb(NEW);
-        record_id_val = NEW.user_id;
+        -- Get record ID based on table
+        IF TG_TABLE_NAME = 'brokers' THEN
+            record_id_val = NEW.broker_id;
+        ELSE
+            record_id_val = NEW.user_id;
+        END IF;
     ELSIF TG_OP = 'UPDATE' THEN
         old_json = to_jsonb(OLD);
         new_json = to_jsonb(NEW);
-        record_id_val = NEW.user_id;
+        -- Get record ID based on table
+        IF TG_TABLE_NAME = 'brokers' THEN
+            record_id_val = NEW.broker_id;
+        ELSE
+            record_id_val = NEW.user_id;
+        END IF;
     END IF;
     
     -- Determine action type based on table and operation

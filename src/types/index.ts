@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'broker' | 'user';
+  role: 'super_admin' | 'broker' | 'regular_user';
   status: 'active' | 'inactive' | 'suspended';
   createdAt: string;
   lastLogin: string;
@@ -11,9 +11,11 @@ export interface User {
 }
 
 export interface Broker {
-  id: string;
+  id?: string; // Optional for database responses
+  broker_id?: string; // Database field name
   name: string;
   email: string;
+  password?: string; // Optional for creation
   status: 'active' | 'inactive';
   totalUsers: number;
   totalTransactions: number;

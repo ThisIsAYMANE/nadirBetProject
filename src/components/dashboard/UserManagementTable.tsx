@@ -36,7 +36,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
         return 'text-purple-500';
       case 'broker':
         return 'text-blue-500';
-      case 'user':
+      case 'regular_user':
         return 'text-gray-400';
       default:
         return 'text-gray-400';
@@ -80,7 +80,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                     {user.role.replace('_', ' ').toUpperCase()}
                   </td>
                   <td className="py-3 text-sm text-accent-green font-semibold">
-                    {user.totalPoints.toLocaleString()}
+                    {(user.totalPoints || 0).toLocaleString()}
                   </td>
                   <td className="py-3">
                     <Badge variant={getStatusVariant(user.status)} size="sm">
@@ -135,7 +135,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                 <div>
                   <div className="text-xs text-gray-400">Points</div>
                   <div className="text-sm font-semibold text-accent-green">
-                    {user.totalPoints.toLocaleString()}
+                    {(user.totalPoints || 0).toLocaleString()}
                   </div>
                 </div>
               </div>

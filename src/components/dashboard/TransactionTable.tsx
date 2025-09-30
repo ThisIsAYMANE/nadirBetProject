@@ -69,8 +69,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                   <td className={`py-3 text-sm font-medium ${getTypeColor(transaction.type)}`}>
                     {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
                   </td>
-                  <td className="py-3 text-sm text-white">${transaction.amount.toLocaleString()}</td>
-                  <td className="py-3 text-sm text-accent-green">{transaction.points.toLocaleString()}</td>
+                  <td className="py-3 text-sm text-white">${(transaction.amount || 0).toLocaleString()}</td>
+                  <td className="py-3 text-sm text-accent-green">{(transaction.points || 0).toLocaleString()}</td>
                   <td className="py-3">
                     <Badge variant={getStatusVariant(transaction.status)} size="sm">
                       {transaction.status}
@@ -99,10 +99,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 <span className={`font-medium ${getTypeColor(transaction.type)}`}>
                   {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
                 </span>
-                <span className="text-white font-semibold">${transaction.amount.toLocaleString()}</span>
+                <span className="text-white font-semibold">${(transaction.amount || 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-accent-green">{transaction.points.toLocaleString()} pts</span>
+                <span className="text-accent-green">{(transaction.points || 0).toLocaleString()} pts</span>
                 <span className="text-gray-400">
                   {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}
                 </span>

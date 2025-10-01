@@ -15,6 +15,7 @@ import transactionRoutes from './routes/transactions.js';
 import dashboardRoutes from './routes/dashboard.js';
 import kpiRoutes from './routes/kpis.js';
 import chartRoutes from './routes/charts.js';
+import cashoutRoutes from './routes/cashout.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -71,6 +72,7 @@ app.use('/api/transactions', authenticateToken, transactionRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/kpis', authenticateToken, kpiRoutes);
 app.use('/api/charts', authenticateToken, chartRoutes);
+app.use('/api/cashout-requests', authenticateToken, cashoutRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

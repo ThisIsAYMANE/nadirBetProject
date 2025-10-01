@@ -7,7 +7,6 @@ import {
   Settings, 
   UserCheck,
   DollarSign,
-  MessageSquare,
   Activity,
   Shield
 } from 'lucide-react';
@@ -36,7 +35,6 @@ const brokerNavItems = [
   { id: 'users', label: 'User Management', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
   { id: 'cashouts', label: 'Cashout Queue', icon: DollarSign },
-  { id: 'communications', label: 'Communications', icon: MessageSquare },
   { id: 'analytics', label: 'Performance', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];

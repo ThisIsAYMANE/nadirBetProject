@@ -29,14 +29,13 @@ router.get('/', async (req, res) => {
     } else if (type === 'performance') {
       const result = await pool.query(`
         SELECT 
-          TO_CHAR(DATE(created_at), 'DD') as name,
+          TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as name,
           COUNT(*) as value
         FROM transactions 
-        WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+        WHERE created_at >= CURRENT_DATE - INTERVAL '12 months'
         ${brokerId ? 'AND broker_id = $1' : ''}
-        GROUP BY DATE(created_at)
-        ORDER BY DATE(created_at)
-        LIMIT 30
+        GROUP BY DATE_TRUNC('month', created_at)
+        ORDER BY DATE_TRUNC('month', created_at)
       `, brokerId ? [brokerId] : []);
 
       chartData = result.rows;

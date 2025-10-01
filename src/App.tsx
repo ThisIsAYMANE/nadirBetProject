@@ -9,6 +9,7 @@ import { TransactionTable } from './components/dashboard/TransactionTable';
 import { UserManagement } from './components/dashboard/UserManagement';
 import { BrokerManagementTable } from './components/dashboard/BrokerManagementTable';
 import { Settings } from './components/dashboard/Settings';
+import { CashoutQueue } from './components/dashboard/CashoutQueue';
 import { useDashboardData } from './hooks/useDashboardData';
 import { DashboardType } from './types';
 
@@ -226,6 +227,10 @@ const DashboardApp: React.FC = () => {
 
     if (activeItem === 'settings') {
       return <Settings />;
+    }
+
+    if (activeItem === 'cashouts') {
+      return <CashoutQueue />;
     }
 
     return (

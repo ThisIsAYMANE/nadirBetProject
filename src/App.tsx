@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginForm } from './components/auth/LoginForm';
 import { Header } from './components/layout/Header';
@@ -8,6 +8,7 @@ import { RevenueChart } from './components/dashboard/RevenueChart';
 import { TransactionTable } from './components/dashboard/TransactionTable';
 import { UserManagement } from './components/dashboard/UserManagement';
 import { BrokerManagementTable } from './components/dashboard/BrokerManagementTable';
+import { Settings } from './components/dashboard/Settings';
 import { useDashboardData } from './hooks/useDashboardData';
 import { DashboardType } from './types';
 
@@ -16,11 +17,20 @@ const DashboardApp: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('dashboard');
 
+  // Reset sidebar state when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSidebarOpen(false);
+      setActiveItem('dashboard');
+    }
+  }, [isAuthenticated]);
+
   // Get real-time dashboard data only when authenticated
   const { data, loading, error, refresh } = useDashboardData({
     dashboardType,
     brokerId: user?.role === 'broker' ? user.id : undefined,
     autoRefresh: isAuthenticated,
+    refreshInterval: 300000, // 5 minutes
   });
 
   const handleMenuClick = () => {
@@ -214,6 +224,10 @@ const DashboardApp: React.FC = () => {
       );
     }
 
+    if (activeItem === 'settings') {
+      return <Settings />;
+    }
+
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -246,7 +260,11 @@ const DashboardApp: React.FC = () => {
 
       {/* Main content */}
       <div className="lg:ml-64">
-        <Header onMenuClick={handleMenuClick} dashboardType={dashboardType} />
+        <Header 
+          onMenuClick={handleMenuClick} 
+          dashboardType={dashboardType} 
+          onSettingsClick={() => handleSidebarItemClick('settings')}
+        />
         
         <main className="p-4 lg:p-6 min-h-screen">
           {renderDashboardContent()}

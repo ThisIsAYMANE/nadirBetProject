@@ -67,7 +67,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: http://localhost/api
+        VITE_API_URL: /api
     container_name: betting_platform_web
     restart: unless-stopped
     ports:

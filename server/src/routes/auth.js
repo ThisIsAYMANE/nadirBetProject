@@ -11,9 +11,11 @@ router.post('/login', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 })
 ], async (req, res) => {
+  console.log('Login request received:', req.body);
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -37,7 +39,13 @@ router.post('/login', [
     }
 
     // Verify password
+    console.log('Checking password for user:', email);
+    console.log('Stored hash:', user.password_hash);
+    console.log('Provided password:', password);
+    
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('Password valid:', isValidPassword);
+    
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -122,4 +130,6 @@ router.post('/logout', (req, res) => {
 });
 
 export default router;
+
+
 

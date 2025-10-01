@@ -1,21 +1,22 @@
-import bcrypt from 'bcryptjs';
+const bcrypt = require('bcryptjs');
 
-const password = 'admin123';
-const saltRounds = 10;
+async function generateHashes() {
+  const password = 'admin123'; // Default password for all users
+  const saltRounds = 12;
+  
+  try {
+    const hash = await bcrypt.hash(password, saltRounds);
+    console.log('Generated hash for password "admin123":');
+    console.log(hash);
+    
+    // Test the hash
+    const isValid = await bcrypt.compare(password, hash);
+    console.log('Hash verification test:', isValid);
+    
+    return hash;
+  } catch (error) {
+    console.error('Error generating hash:', error);
+  }
+}
 
-console.log('Generating bcrypt hashes for password:', password);
-console.log('');
-
-const hash = bcrypt.hashSync(password, saltRounds);
-console.log('Hash:', hash);
-
-console.log('');
-console.log('SQL UPDATE statements:');
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'admin@bettingplatform.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'broker1@premiumbets.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'broker2@globalgaming.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'broker3@elitesports.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'john.smith@email.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'sarah.j@email.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'mike.w@email.com';`);
-console.log(`UPDATE users SET password_hash = '${hash}' WHERE email = 'emma.davis@email.com';`);
+generateHashes();

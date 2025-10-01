@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { User, Broker, Transaction, KPIData, ChartData } from '../types';
 import { apiService } from '../services/api';
 
@@ -22,7 +22,7 @@ export const useDashboardData = ({
   dashboardType,
   brokerId,
   autoRefresh = true,
-  refreshInterval = 60000, // 60 seconds (increased to reduce API calls)
+  refreshInterval = 300000, // 5 minutes (reduced frequency to prevent constant refreshing)
 }: UseDashboardDataProps) => {
   const [data, setData] = useState<DashboardData>({
     users: [],
@@ -35,8 +35,11 @@ export const useDashboardData = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const isMountedRef = useRef(true);
 
   const fetchData = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     try {
       setLoading(true);
       setError(null);
@@ -47,6 +50,8 @@ export const useDashboardData = ({
         apiService.getChartData('revenue', '12months', brokerId),
         apiService.getChartData('performance', '12months', brokerId),
       ]);
+
+      if (!isMountedRef.current) return;
 
       setData({
         users: dashboardData.users || [],
@@ -59,10 +64,15 @@ export const useDashboardData = ({
 
       setLastUpdated(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-      console.error('Dashboard data fetch error:', err);
+      // Don't set error if we're not authenticated (user might be logging out)
+      if (err instanceof Error && !err.message.includes('401') && !err.message.includes('403')) {
+        setError(err.message);
+        console.error('Dashboard data fetch error:', err);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [dashboardType, brokerId]);
 
@@ -77,9 +87,25 @@ export const useDashboardData = ({
   useEffect(() => {
     if (!autoRefresh) return;
 
-    const interval = setInterval(fetchData, refreshInterval);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      try {
+        fetchData();
+      } catch (error) {
+        console.error('Auto-refresh error:', error);
+      }
+    }, refreshInterval);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, [fetchData, autoRefresh, refreshInterval]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Real-time updates only when authenticated
   useEffect(() => {
@@ -91,7 +117,11 @@ export const useDashboardData = ({
       }
     });
 
-    return unsubscribe;
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, [fetchData, autoRefresh]);
 
   const refresh = useCallback(() => {

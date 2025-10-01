@@ -62,7 +62,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
   };
 
   const handleDeleteUser = async (user: User) => {
-    if (!window.confirm(`Are you sure you want to delete ${user.name}?`)) return;
+    if (!window.confirm(`Are you sure you want to deactivate ${user.name}? This will make them inactive but preserve their data.`)) return;
     
     try {
       setFormLoading(true);
@@ -70,7 +70,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
       await apiService.deleteUser(user.id!);
       refresh();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to delete user');
+      setFormError(err instanceof Error ? err.message : 'Failed to deactivate user');
     } finally {
       setFormLoading(false);
     }
@@ -81,10 +81,24 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
       setFormLoading(true);
       setFormError(null);
 
+      // Map form data to API format
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        status: formData.status
+      };
+
       if (modalType === 'create') {
-        await apiService.createUser(formData);
+        await apiService.createUser(userData);
       } else if (modalType === 'edit' && selectedUser) {
-        await apiService.updateUser(selectedUser.id!, formData);
+        // For updates, don't send password if empty
+        const updateData = { ...userData };
+        if (!updateData.password) {
+          delete updateData.password;
+        }
+        await apiService.updateUser(selectedUser.id!, updateData);
       }
 
       setShowModal(false);
@@ -397,6 +411,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                       value={formData.role}
                       onChange={(e) => handleInputChange('role', e.target.value)}
                       className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                      aria-label="User role selection"
                     >
                       <option value="regular_user">Regular User</option>
                       <option value="broker">Broker</option>
@@ -410,6 +425,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                       value={formData.status}
                       onChange={(e) => handleInputChange('status', e.target.value)}
                       className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                      aria-label="User status selection"
                     >
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>

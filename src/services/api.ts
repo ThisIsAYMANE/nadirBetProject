@@ -69,17 +69,26 @@ class ApiService {
       headers: this.getAuthHeaders(),
       body: JSON.stringify(userData),
     });
-    if (!response.ok) throw new Error('Failed to create user');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Create user error:', response.status, errorData);
+      throw new Error(`Failed to create user: ${errorData.error || response.statusText}`);
+    }
     return response.json();
   }
 
   async updateUser(id: string, userData: Partial<User>) {
+    console.log('Sending update request:', { id, userData, url: `${API_BASE_URL}/users/${id}` });
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'PUT',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(userData),
     });
-    if (!response.ok) throw new Error('Failed to update user');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Update user error:', response.status, errorData);
+      throw new Error(`Failed to update user: ${errorData.error || response.statusText}`);
+    }
     return response.json();
   }
 

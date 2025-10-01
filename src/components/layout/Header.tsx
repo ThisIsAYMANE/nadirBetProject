@@ -1,14 +1,24 @@
-import React from 'react';
-import { Menu, Bell, Search, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { DashboardType } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
   onMenuClick: () => void;
   dashboardType: DashboardType['type'];
+  onSettingsClick: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, dashboardType }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, dashboardType, onSettingsClick }) => {
+  const { user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+  };
+
   return (
     <header className="bg-dark-bg border-b border-gray-700 px-4 py-3 lg:px-6">
       <div className="flex items-center justify-between">
@@ -35,7 +45,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, dashboardType }) =>
           </div>
         </div>
 
-
         {/* Right side */}
         <div className="flex items-center space-x-3">
           <Button variant="ghost" size="sm" className="relative">
@@ -45,9 +54,48 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, dashboardType }) =>
             </span>
           </Button>
           
-          <Button variant="ghost" size="sm">
-            <User className="h-5 w-5" />
-          </Button>
+          {/* User Profile Dropdown */}
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center space-x-2"
+            >
+              <User className="h-5 w-5" />
+              <span className="hidden md:block text-sm">{user?.name || 'User'}</span>
+            </Button>
+            
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-card-bg border border-gray-600 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  <div className="px-4 py-2 border-b border-gray-600">
+                    <p className="text-sm font-medium text-white">{user?.name}</p>
+                    <p className="text-xs text-gray-400">{user?.email}</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onSettingsClick();
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                  >
+                    <Settings className="h-4 w-4 mr-3" />
+                    Settings
+                  </button>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300"
+                  >
+                    <LogOut className="h-4 w-4 mr-3" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

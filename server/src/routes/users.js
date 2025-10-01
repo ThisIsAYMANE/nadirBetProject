@@ -111,17 +111,20 @@ router.post('/', [
 router.put('/:id', [
   body('name').optional().notEmpty().trim(),
   body('email').optional().isEmail().normalizeEmail(),
-  body('role').optional().isIn(['super_admin', 'broker', 'user']),
+  body('role').optional().isIn(['super_admin', 'broker', 'regular_user']),
   body('status').optional().isIn(['active', 'inactive', 'suspended'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { id } = req.params;
     const { name, email, role, status, brokerId } = req.body;
+    
+    console.log('Update user request:', { id, name, email, role, status, brokerId });
 
     // Check if user exists
     const existingUser = await pool.query(

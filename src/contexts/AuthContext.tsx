@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const token = localStorage.getItem('auth_token');
         if (token) {
-          const response = await fetch('http://localhost:3001/api/auth/me', {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/me`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,9 +84,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
-    setUser(null);
-    setDashboardType('super_admin');
+    try {
+      localStorage.removeItem('auth_token');
+      setUser(null);
+      setDashboardType('super_admin');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force clear even if there's an error
+      setUser(null);
+      setDashboardType('super_admin');
+    }
   };
 
   const updateUser = (userData: Partial<User>) => {

@@ -1,6 +1,6 @@
 import { User, Broker, Transaction, KPIData, ChartData } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Debug logging
 console.log('API_BASE_URL:', API_BASE_URL);
@@ -112,7 +112,14 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/brokers?${params}`, {
       headers: this.getAuthHeaders(),
     });
-    return response.json();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Get brokers error:', response.status, errorData);
+      throw new Error(errorData.error || 'Failed to fetch brokers');
+    }
+    const data = await response.json();
+    console.log('Brokers API response:', data);
+    return data;
   }
 
   async getBrokerById(id: string) {
@@ -231,7 +238,11 @@ class ApiService {
       headers: this.getAuthHeaders(),
       body: JSON.stringify(broker),
     });
-    if (!response.ok) throw new Error('Failed to create broker');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Create broker error:', response.status, errorData);
+      throw new Error(errorData.error || errorData.errors?.[0]?.msg || 'Failed to create broker');
+    }
     return response.json();
   }
 

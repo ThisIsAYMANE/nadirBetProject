@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
     const params = [];
 
     if (search) {
-      query += ` AND (name ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1})`;
+      query += ` AND (business_name ILIKE $${params.length + 1} OR username ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1})`;
       params.push(`%${search}%`);
     }
 
@@ -29,8 +29,22 @@ router.get('/', async (req, res) => {
     const result = await pool.query(query, params);
     const countResult = await pool.query('SELECT COUNT(*) FROM broker_dashboard_view');
 
+    // Transform data to match frontend Broker interface
+    const transformedData = result.rows.map(row => ({
+      id: row.broker_id,
+      broker_id: row.broker_id,
+      name: row.business_name || row.username || 'Unknown',
+      email: row.email,
+      status: row.status,
+      totalUsers: row.total_users_count || 0,
+      totalTransactions: parseInt(row.total_transactions_processed || 0),
+      revenue: parseFloat(row.total_revenue || 0),
+      performanceScore: row.performance_score || 0,
+      createdAt: row.created_at
+    }));
+
     res.json({
-      data: result.rows,
+      data: transformedData,
       total: parseInt(countResult.rows[0].count),
       page: parseInt(page),
       limit: parseInt(limit)
@@ -48,7 +62,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     
     const result = await pool.query(
-      'SELECT * FROM broker_dashboard_view WHERE id = $1',
+      'SELECT * FROM broker_dashboard_view WHERE broker_id = $1',
       [id]
     );
 
@@ -56,7 +70,22 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Broker not found' });
     }
 
-    res.json(result.rows[0]);
+    const row = result.rows[0];
+    // Transform data to match frontend Broker interface
+    const transformedBroker = {
+      id: row.broker_id,
+      broker_id: row.broker_id,
+      name: row.business_name || row.username || 'Unknown',
+      email: row.email,
+      status: row.status,
+      totalUsers: row.total_users_count || 0,
+      totalTransactions: parseInt(row.total_transactions_processed || 0),
+      revenue: parseFloat(row.total_revenue || 0),
+      performanceScore: row.performance_score || 0,
+      createdAt: row.created_at
+    };
+
+    res.json(transformedBroker);
 
   } catch (error) {
     console.error('Get broker error:', error);
@@ -66,23 +95,43 @@ router.get('/:id', async (req, res) => {
 
 // Create new broker
 router.post('/', requireRole(['super_admin']), [
-  body('name').notEmpty().trim(),
-  body('email').isEmail().normalizeEmail(),
+  body('name').notEmpty().trim().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('businessName').notEmpty().trim(),
-  body('commissionRate').isFloat({ min: 0, max: 1 })
+  body('businessName').notEmpty().trim().withMessage('Business name is required'),
+  body('commissionRate').custom((value) => {
+    const num = parseFloat(value);
+    if (isNaN(num) || num < 0 || num > 1) {
+      throw new Error('Commission rate must be a number between 0 and 1');
+    }
+    return true;
+  })
 ], async (req, res) => {
   try {
+    console.log('Create broker request:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      console.log('Validation errors:', errors.array());
+      return res.status(400).json({ 
+        error: 'Validation failed',
+        errors: errors.array() 
+      });
     }
 
-    const { name, email, password, businessName, commissionRate, description } = req.body;
+    let { name, email, password, businessName, commissionRate, description } = req.body;
+    
+    // Normalize email (lowercase, trim)
+    email = email.toLowerCase().trim();
+    
+    // Ensure commissionRate is a number
+    commissionRate = parseFloat(commissionRate);
+    if (isNaN(commissionRate) || commissionRate < 0 || commissionRate > 1) {
+      return res.status(400).json({ error: 'Commission rate must be a number between 0 and 1' });
+    }
 
     // Check if email already exists
     const existingUser = await pool.query(
-      'SELECT user_id FROM users WHERE email = $1',
+      'SELECT user_id FROM users WHERE LOWER(TRIM(email)) = $1',
       [email]
     );
 

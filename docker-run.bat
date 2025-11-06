@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   Betting Platform - Docker Deployment
+echo   Freebet Platform - Docker Deployment
 echo ========================================
 
 echo.
@@ -89,9 +89,9 @@ echo 🗄️  Database: localhost:5432
 echo 📊 pgAdmin: http://localhost:8080 (optional)
 echo.
 echo Login credentials:
-echo - Super Admin: admin@bettingplatform.com / admin123
-echo - Broker: broker1@premiumbets.com / broker123
-echo - User: john.smith@email.com / user123
+echo - Super Admin: admin@freebet.com / admin123
+echo - Broker: broker1@freebet.com / broker123
+echo - User: john.smith@freebet.com / user123
 echo.
 echo To stop the services:
 echo docker-compose -f docker-compose.prod.yml down

@@ -164,24 +164,34 @@ export const useUsers = (page = 1, limit = 10, search = '') => {
   return { users, loading, error, total, refresh: fetchUsers };
 };
 
-export const useBrokers = (page = 1, limit = 10, search = '') => {
+export const useBrokers = (page = 1, limit = 10, search = '', enabled = true) => {
   const [brokers, setBrokers] = useState<Broker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
   const fetchBrokers = useCallback(async () => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching brokers with params:', { page, limit, search });
       const response = await apiService.getBrokers(page, limit, search);
-      setBrokers(response.data);
-      setTotal(response.total);
+      console.log('Brokers response received:', response);
+      setBrokers(response.data || []);
+      setTotal(response.total || 0);
     } catch (err) {
+      console.error('Error fetching brokers:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch brokers');
+      setBrokers([]);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search]);
+  }, [page, limit, search, enabled]);
 
   useEffect(() => {
     fetchBrokers();

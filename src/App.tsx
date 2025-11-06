@@ -10,7 +10,7 @@ import { UserManagement } from './components/dashboard/UserManagement';
 import { BrokerManagementTable } from './components/dashboard/BrokerManagementTable';
 import { Settings } from './components/dashboard/Settings';
 import { CashoutQueue } from './components/dashboard/CashoutQueue';
-import { useDashboardData } from './hooks/useDashboardData';
+import { useDashboardData, useBrokers } from './hooks/useDashboardData';
 import { DashboardType } from './types';
 
 const DashboardApp: React.FC = () => {
@@ -34,6 +34,14 @@ const DashboardApp: React.FC = () => {
     refreshInterval: 300000, // 5 minutes
   });
 
+  // Get brokers data (only fetch when on brokers page and authenticated)
+  const { brokers, loading: brokersLoading, refresh: refreshBrokers } = useBrokers(
+    1, 
+    100, 
+    '',
+    isAuthenticated && activeItem === 'brokers'
+  );
+
   const handleMenuClick = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -48,6 +56,9 @@ const DashboardApp: React.FC = () => {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
         <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <img src="/freebet.png" alt="Freebet Logo" className="h-64 w-auto" />
+          </div>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
           <p className="text-white">Loading...</p>
         </div>
@@ -138,13 +149,23 @@ const DashboardApp: React.FC = () => {
     }
 
     if (activeItem === 'brokers' && dashboardType === 'super_admin') {
+      // Use dedicated brokers hook instead of dashboard data
       return (
         <div className="space-y-6">
-          <BrokerManagementTable 
-            brokers={data.brokers.length > 0 ? data.brokers : []} 
-            title="Broker Management"
-            onRefresh={refresh}
-          />
+          {brokersLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-green mx-auto mb-4"></div>
+                <p className="text-white">Loading brokers...</p>
+              </div>
+            </div>
+          ) : (
+            <BrokerManagementTable 
+              brokers={brokers || []} 
+              title="Broker Management"
+              onRefresh={refreshBrokers}
+            />
+          )}
         </div>
       );
     }

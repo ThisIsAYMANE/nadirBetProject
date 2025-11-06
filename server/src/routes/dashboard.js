@@ -22,7 +22,6 @@ router.get('/', async (req, res) => {
         `),
         pool.query(`
           SELECT * FROM broker_dashboard_view 
-          WHERE status = 'active'
           ORDER BY created_at DESC
         `),
         pool.query(`
@@ -32,9 +31,23 @@ router.get('/', async (req, res) => {
         `)
       ]);
 
+      // Transform brokers data to match frontend Broker interface
+      const transformedBrokers = brokersResult.rows.map(row => ({
+        id: row.broker_id,
+        broker_id: row.broker_id,
+        name: row.business_name || row.username || 'Unknown',
+        email: row.email,
+        status: row.status,
+        totalUsers: row.total_users_count || 0,
+        totalTransactions: parseInt(row.total_transactions_processed || 0),
+        revenue: parseFloat(row.total_revenue || 0),
+        performanceScore: row.performance_score || 0,
+        createdAt: row.created_at
+      }));
+
       dashboardData = {
         users: usersResult.rows,
-        brokers: brokersResult.rows,
+        brokers: transformedBrokers,
         transactions: transactionsResult.rows
       };
 

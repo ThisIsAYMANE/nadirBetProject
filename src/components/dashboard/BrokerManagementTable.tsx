@@ -80,6 +80,7 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
         // Validate required fields
         if (!editingBroker.name || !editingBroker.email || !editingBroker.password) {
           alert('Please fill in all required fields (Name, Email, Password)');
+          setLoading(false);
           return;
         }
         
@@ -91,15 +92,22 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
           businessName: editingBroker.name + ' Business', // Default business name
           commissionRate: 0.05 // Default 5% commission
         };
+        console.log('Creating broker with data:', brokerData);
         await apiService.createBroker(brokerData);
+        console.log('Broker created successfully');
       } else if (modalType === 'edit' && selectedBroker) {
-        await apiService.updateBroker(selectedBroker.id, editingBroker);
+        await apiService.updateBroker(selectedBroker.id || selectedBroker.broker_id || '', editingBroker);
       }
       setShowModal(false);
-      onRefresh?.();
-    } catch (error) {
+      // Wait a bit for the database to update, then refresh
+      setTimeout(() => {
+        console.log('Refreshing brokers list...');
+        onRefresh?.();
+      }, 500);
+    } catch (error: any) {
       console.error('Error saving broker:', error);
-      alert('Failed to save broker: ' + (error.message || 'Unknown error'));
+      const errorMessage = error?.message || 'Unknown error';
+      alert(`Failed to save broker: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

@@ -19,11 +19,14 @@ router.post('/login', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    
+    // Normalize email (lowercase, trim)
+    email = email.toLowerCase().trim();
 
     // Find user by email
     const result = await pool.query(
-      'SELECT user_id, username, full_name, email, password_hash, user_type, status, last_login FROM users WHERE email = $1',
+      'SELECT user_id, username, full_name, email, password_hash, user_type, status, last_login FROM users WHERE LOWER(TRIM(email)) = $1',
       [email]
     );
 

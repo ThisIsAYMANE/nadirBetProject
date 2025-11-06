@@ -59,11 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="flex items-center px-6 py-4 border-b border-primary-green/20">
-          <Shield className="h-8 w-8 text-accent-green mr-2" />
-          <span className="text-xl font-bold text-white">
-            {dashboardType === 'super_admin' ? 'BetAdmin Pro' : 'BetBroker'}
-          </span>
+        <div className="flex justify-center px-6 py-2 border-b border-primary-green/20">
+          <img src="/freebet.png" alt="Freebet Logo" className="h-32 w-auto" />
         </div>
 
         {/* Navigation */}
@@ -99,9 +96,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-white">
-                {dashboardType === 'super_admin' ? 'Super Admin' : 'Broker Admin'}
+                {dashboardType === 'super_admin' ? 'Freebet Admin' : 'Freebet Broker'}
               </p>
-              <p className="text-xs text-gray-300">admin@platform.com</p>
+              <p className="text-xs text-gray-300">admin@freebet.com</p>
             </div>
           </div>
         </div>

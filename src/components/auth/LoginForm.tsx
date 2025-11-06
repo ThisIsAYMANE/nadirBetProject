@@ -30,9 +30,10 @@ export const LoginForm: React.FC = () => {
     <div className="min-h-screen bg-dark-bg flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <div className="p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Betting Platform</h1>
-            <p className="text-gray-400">Sign in to your account</p>
+          <div className="text-center mb-4">
+            <div className="flex justify-center mb-2">
+              <img src="/freebet.png" alt="Freebet Logo" className="h-56 w-auto" />
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -116,6 +117,7 @@ export const LoginForm: React.FC = () => {
     </div>
   );
 };
+
 
 
 

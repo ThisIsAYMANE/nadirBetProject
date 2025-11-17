@@ -44,11 +44,11 @@
 }
 
 .bet-card {
-  @apply bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-all duration-200 border border-gray-700 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10;
+  @apply bg-gray-800 rounded-lg p-3 sm:p-4 hover:bg-gray-700 transition-all duration-200 border border-gray-700 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10;
 }
 
 .odds-btn {
-  @apply bg-gray-700 hover:bg-green-500 text-white px-3 py-2 rounded transition-all duration-200 text-sm font-semibold min-w-[60px] text-center hover:scale-105;
+  @apply bg-gray-700 hover:bg-green-500 text-white px-2 sm:px-3 py-2 rounded transition-all duration-200 text-sm font-semibold min-w-[50px] sm:min-w-[60px] text-center hover:scale-105 active:scale-95;
 }
 
 .sport-nav-item {
@@ -56,11 +56,32 @@
 }
 
 .casino-game-card {
-  @apply bg-gray-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 cursor-pointer border border-gray-700 hover:border-green-500/50;
+  @apply bg-gray-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 cursor-pointer border border-gray-700 hover:border-green-500/50 active:scale-95;
 }
 
 .loading-skeleton {
   @apply animate-pulse bg-gray-700 rounded;
+}
+
+/* Mobile optimizations */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch target improvements */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 44px;
+  }
+  
+  input, select, textarea {
+    min-height: 44px;
+  }
 }
 
 /* Hide scrollbar toggles/buttons for a cleaner look */

@@ -28,11 +28,11 @@ export default function MatchCard({ match, showLeague = true }: MatchCardProps) 
     <Link href={`/details/${match.id}`}>
       <div className="bet-card group">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           {showLeague && (
-            <span className="text-xs text-gray-400 font-medium">{match.league}</span>
+            <span className="text-xs text-gray-400 font-medium truncate mr-2">{match.league}</span>
           )}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
             {match.status === 'live' && (
               <div className="flex items-center space-x-1">
                 <Play className="w-3 h-3 text-green-500 fill-current" />
@@ -45,25 +45,25 @@ export default function MatchCard({ match, showLeague = true }: MatchCardProps) 
             {match.status === 'upcoming' && (
               <div className="flex items-center space-x-1 text-gray-400">
                 <Clock className="w-3 h-3" />
-                <span className="text-xs">{formatDate(match.startTime)} {formatTime(match.startTime)}</span>
+                <span className="text-xs whitespace-nowrap">{formatDate(match.startTime)} {formatTime(match.startTime)}</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Teams */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-medium">{match.homeTeam}</span>
+              <span className="text-white font-medium text-sm sm:text-base truncate mr-2">{match.homeTeam}</span>
               {match.status === 'live' && match.homeScore !== undefined && (
-                <span className="text-lg font-bold text-green-500">{match.homeScore}</span>
+                <span className="text-base sm:text-lg font-bold text-green-500 flex-shrink-0">{match.homeScore}</span>
               )}
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-white font-medium">{match.awayTeam}</span>
+              <span className="text-white font-medium text-sm sm:text-base truncate mr-2">{match.awayTeam}</span>
               {match.status === 'live' && match.awayScore !== undefined && (
-                <span className="text-lg font-bold text-green-500">{match.awayScore}</span>
+                <span className="text-base sm:text-lg font-bold text-green-500 flex-shrink-0">{match.awayScore}</span>
               )}
             </div>
           </div>
@@ -71,21 +71,21 @@ export default function MatchCard({ match, showLeague = true }: MatchCardProps) 
 
         {/* Odds */}
         <div className="flex items-center justify-between space-x-2">
-          <button className="odds-btn flex-1 group-hover:bg-green-500">
-            <div className="text-xs text-gray-300 mb-1">1</div>
-            <div className="font-bold">{match.odds.home}</div>
+          <button className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]">
+            <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">1</div>
+            <div className="font-bold text-sm sm:text-base">{match.odds.home}</div>
           </button>
           
           {match.odds.draw && (
-            <button className="odds-btn flex-1 group-hover:bg-green-500">
-              <div className="text-xs text-gray-300 mb-1">X</div>
-              <div className="font-bold">{match.odds.draw}</div>
+            <button className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]">
+              <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">X</div>
+              <div className="font-bold text-sm sm:text-base">{match.odds.draw}</div>
             </button>
           )}
           
-          <button className="odds-btn flex-1 group-hover:bg-green-500">
-            <div className="text-xs text-gray-300 mb-1">2</div>
-            <div className="font-bold">{match.odds.away}</div>
+          <button className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]">
+            <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">2</div>
+            <div className="font-bold text-sm sm:text-base">{match.odds.away}</div>
           </button>
         </div>
       </div>

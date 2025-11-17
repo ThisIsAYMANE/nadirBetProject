@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "user:dev": "cd nadir-user && npm run dev",
     "db:start": "docker-compose up -d postgres",
     "db:stop": "docker-compose down",
     "db:restart": "docker-compose restart postgres",
@@ -19,7 +20,8 @@
     "server:dev": "cd server && npm run dev",
     "server:start": "cd server && npm start",
     "dev:full": "concurrently \"npm run dev\" \"npm run server:dev\"",
-    "start:full": "concurrently \"npm run preview\" \"npm run server:start\""
+    "start:full": "concurrently \"npm run preview\" \"npm run server:start\"",
+    "dev:all": "concurrently -n admin,api,user -c green,cyan,magenta \"npm run dev\" \"npm run server:dev\" \"npm run user:dev\""
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",

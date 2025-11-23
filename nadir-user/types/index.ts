@@ -36,6 +36,7 @@ export interface CasinoGame {
   isLive?: boolean;
   jackpot?: number;
   rtp?: number;
+  _pragmaticData?: any; // Store original Pragmatic game data
 }
 
 export interface User {

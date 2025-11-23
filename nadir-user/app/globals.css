@@ -43,6 +43,19 @@
   }
 }
 
+/* Add padding-top for fixed header */
+@layer utilities {
+  .header-spacer {
+    padding-top: 4rem; /* 64px for mobile h-16 */
+  }
+  
+  @media (min-width: 640px) {
+    .header-spacer {
+      padding-top: 5rem; /* 80px for sm:h-20 */
+    }
+  }
+}
+
 .bet-card {
   @apply bg-gray-800 rounded-lg p-3 sm:p-4 hover:bg-gray-700 transition-all duration-200 border border-gray-700 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10;
 }

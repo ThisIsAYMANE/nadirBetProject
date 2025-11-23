@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Search, User, Menu, Bell, Wallet } from 'lucide-react';
+import { Search, User, Menu, Bell, Wallet, Home, PlayCircle, Gamepad2, Star, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { sports } from '@/lib/mockData';
@@ -18,7 +18,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 shadow-lg overflow-visible">
+    <header className="bg-gray-900 border-b border-gray-800 fixed top-0 left-0 right-0 z-50 shadow-lg overflow-visible">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Top Navigation Bar - Mobile */}
         <div className="flex items-center justify-between py-2 border-b border-gray-800 md:hidden">
@@ -181,43 +181,115 @@ export default function Header() {
                     </SheetHeader>
                   </div>
                   <nav className="p-4 space-y-4 overflow-y-auto flex-1">
+                    {/* Main Navigation Items */}
                     <div className="space-y-2">
-                      <Link href="/" className="block text-gray-300 hover:text-green-500 transition-colors py-2">
-                        Home
+                      <Link 
+                        href="/" 
+                        className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                          isActive('/') && pathname !== '/live' && pathname !== '/casino' && pathname !== '/favorites'
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                            : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Home className="w-5 h-5" />
+                          <span className="text-sm font-medium">Home</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
                       </Link>
-                      <Link href="/live" className="block text-gray-300 hover:text-green-500 transition-colors py-2">
-                        Live
+                      <Link 
+                        href="/live" 
+                        className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                          isActive('/live')
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                            : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <PlayCircle className="w-5 h-5" />
+                          <span className="text-sm font-medium">Live</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
                       </Link>
-                      <Link href="/casino" className="block text-gray-300 hover:text-green-500 transition-colors py-2">
-                        Casino
+                      <Link 
+                        href="/casino" 
+                        className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                          isActive('/casino')
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                            : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Gamepad2 className="w-5 h-5" />
+                          <span className="text-sm font-medium">Casino</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
                       </Link>
-                      <Link href="/favorites" className="block text-gray-300 hover:text-green-500 transition-colors py-2">
-                        Favorites
+                      <Link 
+                        href="/favorites" 
+                        className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                          isActive('/favorites')
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                            : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Star className="w-5 h-5" />
+                          <span className="text-sm font-medium">Favorites</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
                       </Link>
-                      <Link href="/profile" className="block text-gray-300 hover:text-green-500 transition-colors py-2">
-                        Profile
+                      <Link 
+                        href="/profile" 
+                        className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                          isActive('/profile')
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                            : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <User className="w-5 h-5" />
+                          <span className="text-sm font-medium">Profile</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50" />
                       </Link>
                     </div>
-                    <div className="pt-2">
-                      <h3 className="text-gray-400 text-sm font-semibold uppercase tracking-wide mb-3">
+
+                    {/* Sports Section */}
+                    <div className="pt-4 border-t border-gray-800">
+                      <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wide mb-3 px-4">
                         Sports
                       </h3>
-                      <div className="space-y-1">
-                        {sports.map((sport) => (
-                          <Link
-                            key={sport.id}
-                            href={`/sports/${sport.id}`}
-                            className="flex items-center justify-between px-4 py-3 bg-gray-800/60 hover:bg-gray-800 rounded-lg transition-colors"
-                          >
-                            <span className="flex items-center space-x-3">
-                              <span className="text-lg">{sport.icon}</span>
-                              <span className="text-sm text-gray-200">{sport.name}</span>
-                            </span>
-                            <span className="ml-auto bg-green-500 text-black text-xs px-2 py-1 rounded-full">
-                              {sport.matchCount}
-                            </span>
-                          </Link>
-                        ))}
+                      <div className="space-y-2">
+                        {sports.map((sport) => {
+                          const isSportActive = pathname.startsWith(`/sports/${sport.id}`);
+                          return (
+                            <Link
+                              key={sport.id}
+                              href={`/sports/${sport.id}`}
+                              className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                                isSportActive
+                                  ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                                  : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                              }`}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <span className="text-lg">{sport.icon}</span>
+                                <span className="text-sm font-medium">{sport.name}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  isSportActive
+                                    ? 'bg-cyan-500/30 text-cyan-300'
+                                    : 'bg-green-500/20 text-green-400'
+                                }`}>
+                                  {sport.matchCount}
+                                </span>
+                                <ChevronRight className="w-4 h-4 opacity-50" />
+                              </div>
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   </nav>

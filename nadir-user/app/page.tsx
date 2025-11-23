@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
+import MatchListRow from '@/components/sports/MatchListRow';
+import ViewToggle from '@/components/sports/ViewToggle';
 import GameCard from '@/components/casino/GameCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalBanner from '@/components/ui/PromotionalBanner';
@@ -12,6 +14,7 @@ import Link from 'next/link';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000);
@@ -102,17 +105,48 @@ export default function HomePage() {
                 </div>
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Trending Matches</h2>
               </div>
-              <Link href="/sports" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
-                <span>Browse All Sports</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              <div className="flex items-center space-x-3">
+                <ViewToggle view={viewMode} onViewChange={setViewMode} />
+                <Link href="/sports" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
+                  <span>Browse All Sports</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {matches.slice(0, 8).map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-            </div>
+            {viewMode === 'cards' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {matches.slice(0, 8).map((match) => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+                {/* List View Header */}
+                <div className="flex items-center px-3 sm:px-4 py-2.5 bg-gray-800/60 border-b border-gray-700/50 text-xs text-gray-400 font-semibold uppercase tracking-wide">
+                  <div className="w-20 sm:w-24 flex-shrink-0">
+                    <span className="hidden sm:inline">HEURE</span>
+                    <span className="sm:hidden">H</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="hidden sm:inline">ÉQUIPES</span>
+                    <span className="sm:hidden">Match</span>
+                  </div>
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                    <div className="min-w-[55px] sm:min-w-[65px] text-center">1</div>
+                    {matches[0]?.odds.draw && (
+                      <div className="min-w-[55px] sm:min-w-[65px] text-center">X</div>
+                    )}
+                    <div className="min-w-[55px] sm:min-w-[65px] text-center">2</div>
+                  </div>
+                </div>
+                <div>
+                  {matches.slice(0, 8).map((match) => (
+                    <MatchListRow key={match.id} match={match} />
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Casino Preview */}

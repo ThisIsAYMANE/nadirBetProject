@@ -16,8 +16,11 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="hidden lg:block w-64 bg-gray-900 border-r border-gray-800 h-screen overflow-y-auto sticky top-16">
-      <div className="p-4">
+    <>
+      {/* Spacer to prevent content overlap when sidebar is fixed */}
+      <div className="hidden lg:block w-64 flex-shrink-0" aria-hidden="true" />
+      <aside className="hidden lg:block w-64 bg-gray-900 border-r border-gray-800 fixed top-16 left-0 h-[calc(100vh-4rem)] overflow-y-auto z-40">
+        <div className="p-4">
         {/* Quick Links */}
         <div className="mb-6">
           <div className="flex items-center space-x-2 px-4 py-3 bg-green-500/10 rounded-lg border border-green-500/20">
@@ -76,5 +79,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

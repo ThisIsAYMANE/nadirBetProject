@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import GameCard from '@/components/casino/GameCard';
+import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalBanner from '@/components/ui/PromotionalBanner';
-import { casinoGames } from '@/lib/mockData';
+import { pragmaticApi } from '@/lib/api';
+import { CasinoGame } from '@/types';
 import { 
   Search, 
   Home, 
@@ -23,11 +25,53 @@ export default function CasinoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
+  const [games, setGames] = useState<CasinoGame[]>([]);
+  const [selectedGame, setSelectedGame] = useState<CasinoGame | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    fetchGames();
   }, []);
+
+  const fetchGames = async () => {
+    try {
+      setIsLoading(true);
+      const response = await pragmaticApi.getGames();
+      
+      // Transform Pragmatic games to our CasinoGame format
+      const transformedGames: CasinoGame[] = response.games.map((game: any) => ({
+        id: game.id || game.symbol || game.gameId || String(Math.random()),
+        name: game.name || game.title || 'Unknown Game',
+        provider: 'Pragmatic Play',
+        category: game.category || game.type || 'slots',
+        isNew: game.isNew || false,
+        isLive: game.isLive || game.type === 'live',
+        jackpot: game.jackpot || undefined,
+        rtp: game.rtp || undefined,
+        // Store original game data for launching
+        _pragmaticData: game
+      }));
+      
+      setGames(transformedGames);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      // Fallback to mock data on error
+      const { casinoGames } = await import('@/lib/mockData');
+      setGames(casinoGames);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePlayGame = (game: CasinoGame) => {
+    setSelectedGame(game);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedGame(null);
+  };
 
   if (isLoading) {
     return (
@@ -103,9 +147,9 @@ export default function CasinoPage() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {casinoGames.slice(0, 5).map((game) => (
+            {games.slice(0, 5).map((game) => (
               <div key={game.id} className="relative">
-                <GameCard game={game} />
+                <GameCard game={game} onPlay={handlePlayGame} />
                 <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">
                   EXCLUSIVE
                 </div>
@@ -134,9 +178,9 @@ export default function CasinoPage() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {casinoGames.slice(0, 5).map((game) => (
+            {games.filter(g => g.isLive).slice(0, 5).map((game) => (
               <div key={`live-${game.id}`} className="relative">
-                <GameCard game={game} />
+                <GameCard game={game} onPlay={handlePlayGame} />
                 <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">
                   LIVE
                 </div>
@@ -156,12 +200,13 @@ export default function CasinoPage() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-            {casinoGames.map((game) => (
-              <GameCard key={game.id} game={game} />
-            ))}
-            
-            {/* Loading cards */}
-            {Array.from({ length: 12 }).map((_, i) => (
+            {games.length > 0 ? (
+              games.map((game) => (
+                <GameCard key={game.id} game={game} onPlay={handlePlayGame} />
+              ))
+            ) : (
+              // Loading cards
+              Array.from({ length: 12 }).map((_, i) => (
               <div key={`skeleton-${i}`} className="casino-game-card">
                 <div className="aspect-[4/3] loading-skeleton mb-3" />
                 <div className="p-2 sm:p-3">
@@ -169,9 +214,20 @@ export default function CasinoPage() {
                   <div className="loading-skeleton h-3 w-16" />
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </section>
+
+        {/* Game Launch Modal */}
+        {selectedGame && (
+          <GameLaunchModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            gameId={selectedGame._pragmaticData?.symbol || selectedGame._pragmaticData?.id || selectedGame.id}
+            gameName={selectedGame.name}
+          />
+        )}
       </main>
     </div>
   );

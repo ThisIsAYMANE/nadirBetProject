@@ -6,6 +6,9 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -16,9 +19,30 @@ import dashboardRoutes from './routes/dashboard.js';
 import kpiRoutes from './routes/kpis.js';
 import chartRoutes from './routes/charts.js';
 import cashoutRoutes from './routes/cashout.js';
+import pragmaticRoutes from './routes/pragmatic.js';
 import { authenticateToken } from './middleware/auth.js';
 
+// Load environment variables from 'env' file (not .env)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const envPath = join(__dirname, '..', 'env');
+
+try {
+  const envFile = readFileSync(envPath, 'utf-8');
+  envFile.split('\n').forEach(line => {
+    line = line.trim();
+    if (line && !line.startsWith('#') && line.includes('=')) {
+      const [key, ...valueParts] = line.split('=');
+      const value = valueParts.join('=').trim();
+      if (key && value) {
+        process.env[key.trim()] = value;
+      }
+    }
+  });
+} catch (error) {
+  // Fallback to dotenv if env file doesn't exist
 dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -73,6 +97,7 @@ app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/kpis', authenticateToken, kpiRoutes);
 app.use('/api/charts', authenticateToken, chartRoutes);
 app.use('/api/cashout-requests', authenticateToken, cashoutRoutes);
+app.use('/api', pragmaticRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

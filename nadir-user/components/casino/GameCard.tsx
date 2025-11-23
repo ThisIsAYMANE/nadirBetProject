@@ -4,9 +4,10 @@ import { CasinoGame } from '@/types';
 
 interface GameCardProps {
   game: CasinoGame;
+  onPlay?: (game: CasinoGame) => void;
 }
 
-export default function GameCard({ game }: GameCardProps) {
+export default function GameCard({ game, onPlay }: GameCardProps) {
   const formatJackpot = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -27,7 +28,10 @@ export default function GameCard({ game }: GameCardProps) {
         
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center">
-          <button className="bg-green-500 text-black px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-semibold opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center space-x-2 text-sm sm:text-base">
+          <button 
+            onClick={() => onPlay?.(game)}
+            className="bg-green-500 text-black px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-semibold opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center space-x-2 text-sm sm:text-base hover:bg-green-400"
+          >
             <Play className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
             <span className="hidden sm:inline">Play Now</span>
             <span className="sm:hidden">Play</span>

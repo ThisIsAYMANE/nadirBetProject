@@ -22,6 +22,14 @@ RATE_LIMIT_MAX_REQUESTS=100
 # CORS
 CORS_ORIGIN=http://localhost:5173
 
+# Pragmatic Play API Configuration
+PRAGMATIC_SECURE_LOGIN=sctfdstck_freebetzone
+PRAGMATIC_SECRET_KEY=testKey
+PRAGMATIC_PROVIDER_ID=PragmaticPlay
+PRAGMATIC_API_URL=https://api.prerelease-env.biz
+PRAGMATIC_CALLBACK_URL=https://kasie-overfrequent-nonaccentually.ngrok-free.dev/api
+
+
 
 
 

@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark overflow-x-hidden">
-      <body className={`${inter.className} bg-gray-900 text-white pb-14 lg:pb-0 overflow-x-hidden`}>
+      <body className={`${inter.className} bg-gray-900 text-white pb-14 lg:pb-0 overflow-x-hidden pt-16 sm:pt-20`}>
         {children}
         <MobileNav />
       </body>

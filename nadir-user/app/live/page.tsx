@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalBanner from '@/components/ui/PromotionalBanner';
+import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import { liveMatches } from '@/lib/mockData';
 import { Play, Filter, Zap } from 'lucide-react';
 
@@ -41,13 +41,32 @@ export default function LivePage() {
         <Sidebar />
         
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
-          {/* Promotional Banner - Live Casino Cashback */}
-          <PromotionalBanner
-            title="Daily Cashback on Live Games"
-            description="Get 10% daily cashback from what you spend on live games"
-            percentage="10%"
-            period="Daily"
-            type="live"
+          {/* Promotional Carousel */}
+          <PromotionalCarousel
+            promotions={[
+              {
+                title: "Daily Cashback on Live Games",
+                description: "Get 10% daily cashback from what you spend on live games",
+                percentage: "10%",
+                period: "Daily",
+                type: "live"
+              },
+              {
+                title: "Weekly Cashback on Sports Betting",
+                description: "Get 15% weekly cashback from what you spend on Paris sportive",
+                percentage: "15%",
+                period: "Weekly",
+                type: "sports"
+              },
+              {
+                title: "Daily Cashback on Slots",
+                description: "Get 15% daily cashback from what you spend on slot games",
+                percentage: "15%",
+                period: "Daily",
+                type: "slots"
+              }
+            ]}
+            autoplayDelay={5000}
           />
 
           {/* Header */}

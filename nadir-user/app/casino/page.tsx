@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import GameCard from '@/components/casino/GameCard';
 import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalBanner from '@/components/ui/PromotionalBanner';
+import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import { pragmaticApi } from '@/lib/api';
 import { CasinoGame } from '@/types';
 import { 
@@ -105,13 +105,32 @@ export default function CasinoPage() {
     <div className="min-h-screen bg-gray-900 overflow-x-hidden">
       <Header />
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 overflow-x-hidden">
-        {/* Promotional Banner - Slots Cashback */}
-        <PromotionalBanner
-          title="Daily Cashback on Slots"
-          description="Get 15% daily cashback from what you spend on slot games"
-          percentage="15%"
-          period="Daily"
-          type="slots"
+        {/* Promotional Carousel */}
+        <PromotionalCarousel
+          promotions={[
+            {
+              title: "Daily Cashback on Slots",
+              description: "Get 15% daily cashback from what you spend on slot games",
+              percentage: "15%",
+              period: "Daily",
+              type: "slots"
+            },
+            {
+              title: "Daily Cashback on Live Games",
+              description: "Get 10% daily cashback from what you spend on live games",
+              percentage: "10%",
+              period: "Daily",
+              type: "live"
+            },
+            {
+              title: "Weekly Cashback on Sports Betting",
+              description: "Get 15% weekly cashback from what you spend on Paris sportive",
+              percentage: "15%",
+              period: "Weekly",
+              type: "sports"
+            }
+          ]}
+          autoplayDelay={5000}
         />
 
         {/* Category Navigation */}
@@ -157,15 +176,6 @@ export default function CasinoPage() {
             ))}
           </div>
         </section>
-
-        {/* Promotional Banner - Live Casino Cashback */}
-        <PromotionalBanner
-          title="Daily Cashback on Live Games"
-          description="Get 10% daily cashback from what you spend on live games"
-          percentage="10%"
-          period="Daily"
-          type="live"
-        />
 
         {/* Live Casino Section */}
         <section className="mb-6 sm:mb-8">

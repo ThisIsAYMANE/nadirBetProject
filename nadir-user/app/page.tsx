@@ -7,7 +7,7 @@ import MatchListRow from '@/components/sports/MatchListRow';
 import ViewToggle from '@/components/sports/ViewToggle';
 import GameCard from '@/components/casino/GameCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalBanner from '@/components/ui/PromotionalBanner';
+import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import { matches, liveMatches, casinoGames } from '@/lib/mockData';
 import { TrendingUp, Flame, Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -39,13 +39,32 @@ export default function HomePage() {
         <Sidebar />
         
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
-          {/* Promotional Banner - Sports Cashback */}
-          <PromotionalBanner
-            title="Weekly Cashback on Sports Betting"
-            description="Get 15% weekly cashback from what you spend on Paris sportive"
-            percentage="15%"
-            period="Weekly"
-            type="sports"
+          {/* Promotional Carousel */}
+          <PromotionalCarousel
+            promotions={[
+              {
+                title: "Weekly Cashback on Sports Betting",
+                description: "Get 15% weekly cashback from what you spend on Paris sportive",
+                percentage: "15%",
+                period: "Weekly",
+                type: "sports"
+              },
+              {
+                title: "Daily Cashback on Slots",
+                description: "Get 15% daily cashback from what you spend on slot games",
+                percentage: "15%",
+                period: "Daily",
+                type: "slots"
+              },
+              {
+                title: "Daily Cashback on Live Games",
+                description: "Get 10% daily cashback from what you spend on live games",
+                percentage: "10%",
+                period: "Daily",
+                type: "live"
+              }
+            ]}
+            autoplayDelay={5000}
           />
 
           {/* Hero Banner */}

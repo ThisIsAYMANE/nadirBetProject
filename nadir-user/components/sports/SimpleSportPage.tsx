@@ -74,7 +74,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
         const sportsInResponse = advantages.map((adv: any) => 
           adv.market?.event?.competitionInstance?.competition?.sport
         ).filter(Boolean);
-        console.log('Sports in API response:', [...new Set(sportsInResponse)]);
+        console.log('Sports in API response:', Array.from(new Set(sportsInResponse)));
         
         const competitionsInResponse = advantages.map((adv: any) => {
           const comp = adv.market?.event?.competitionInstance?.competition;

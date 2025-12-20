@@ -157,15 +157,15 @@ export default function PromotionalCarousel({
 
       {/* Dots Indicator */}
       {promotions.length > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="flex justify-center gap-2 mt-3">
           {promotions.map((_, index) => (
             <button
               key={index}
               onClick={() => scrollTo(index)}
-              className={`transition-all rounded-full ${
+              className={`transition-all rounded-full w-2.5 h-2.5 ${
                 index === selectedIndex
-                  ? 'bg-green-500 w-8 h-2'
-                  : 'bg-gray-600 w-2 h-2 hover:bg-gray-500'
+                  ? 'bg-white opacity-100'
+                  : 'bg-gray-400 opacity-50 hover:opacity-75'
               }`}
               aria-label={`Go to promotion ${index + 1}`}
             />

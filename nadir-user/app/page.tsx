@@ -38,7 +38,7 @@ export default function HomePage() {
       <div className="flex overflow-x-hidden">
         <Sidebar />
         
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden mt-4 sm:mt-6">
           {/* Promotional Carousel */}
           <PromotionalCarousel
             promotions={[

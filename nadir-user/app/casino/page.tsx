@@ -134,7 +134,7 @@ export default function CasinoPage() {
         />
 
         {/* Category Navigation */}
-        <div className="-mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 py-3 border-y border-gray-800 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
+        <div className="-mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 py-4 sm:py-5 border-y border-gray-800 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
           <div className="flex items-center justify-start gap-3 sm:gap-4 md:gap-6 min-w-max">
             {categories.map((category) => {
               const Icon = category.icon;
@@ -143,12 +143,14 @@ export default function CasinoPage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex flex-col items-center space-y-1 px-2 sm:px-3 py-2 transition-colors min-w-[60px] sm:min-w-[70px] ${
-                    active ? 'text-green-500' : 'text-gray-300 hover:text-white'
+                  className={`flex flex-col items-center space-y-2 px-3 sm:px-4 py-3 sm:py-4 transition-colors min-w-[70px] sm:min-w-[85px] rounded-lg ${
+                    active 
+                      ? 'bg-green-500/20 text-green-500' 
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
                   }`}
                 >
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span className="text-xs font-medium whitespace-nowrap text-center">{category.name}</span>
+                  <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <span className="text-xs sm:text-sm font-medium whitespace-nowrap text-center">{category.name}</span>
                 </button>
               );
             })}

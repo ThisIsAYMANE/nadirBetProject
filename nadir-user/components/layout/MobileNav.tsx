@@ -23,10 +23,14 @@ export default function MobileNav() {
             <li key={href}>
               <Link
                 href={href}
-                className="flex flex-col items-center justify-center py-2 text-xs"
+                className={`flex flex-col items-center justify-center py-3 px-2 text-xs transition-colors ${
+                  active 
+                    ? 'bg-green-500/20 text-green-500' 
+                    : 'text-gray-400 hover:bg-gray-800/50'
+                }`}
               >
-                <Icon className={`w-5 h-5 mb-1 ${active ? 'text-green-500' : 'text-gray-400'}`} />
-                <span className={active ? 'text-green-500' : 'text-gray-400'}>{label}</span>
+                <Icon className={`w-6 h-6 mb-1.5 ${active ? 'text-green-500' : 'text-gray-400'}`} />
+                <span className={`text-xs ${active ? 'text-green-500' : 'text-gray-400'}`}>{label}</span>
               </Link>
             </li>
           );

@@ -43,16 +43,6 @@ export default function Header() {
             >
               Casino
             </Link>
-            <Link 
-              href="/favorites" 
-              className={`transition-colors text-sm font-medium py-1 ${
-                isActive('/favorites')
-                  ? 'text-green-500 font-semibold'
-                  : 'text-gray-300 hover:text-green-500'
-              }`}
-            >
-              Fantasy
-            </Link>
           </nav>
         </div>
 
@@ -67,7 +57,7 @@ export default function Header() {
                   size="sm" 
                   className="text-gray-300 hover:text-white p-2"
                 >
-                  <Menu className="w-6 h-6" />
+                  <Menu className="w-7 h-7" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 p-0 bg-gray-900 text-white border-gray-800">
@@ -297,7 +287,7 @@ export default function Header() {
 
             {/* Profile Icon - Always Visible */}
             <Link href="/profile" className="flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800 transition-colors p-2 md:p-2.5 rounded-lg">
-              <User className="w-5 h-5 md:w-5 md:h-5" />
+              <User className="w-6 h-6 md:w-7 md:h-7" />
             </Link>
           </div>
         </div>

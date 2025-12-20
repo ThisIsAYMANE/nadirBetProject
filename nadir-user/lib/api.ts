@@ -17,10 +17,25 @@ async function apiRequest<T>(
 ): Promise<T> {
   const token = getAuthToken();
   
-  const headers: HeadersInit = {
+  // Build headers object
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
+
+  // Merge existing headers if provided
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        headers[key] = value;
+      });
+    } else {
+      Object.assign(headers, options.headers);
+    }
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

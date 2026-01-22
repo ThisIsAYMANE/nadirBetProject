@@ -21,8 +21,7 @@ interface SidebarProps {
 
 const superAdminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
-  { id: 'brokers', label: 'Broker Management', icon: UserCheck },
-  { id: 'users', label: 'User Monitoring', icon: Users },
+  { id: 'users', label: 'User Management', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'system', label: 'System Health', icon: Activity },

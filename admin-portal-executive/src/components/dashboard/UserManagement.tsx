@@ -21,8 +21,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
     name: '',
     email: '',
     password: '',
-    role: 'regular_user' as 'super_admin' | 'broker' | 'regular_user',
-    status: 'active' as 'active' | 'inactive' | 'suspended'
+    role: 'regular_user' as 'owner' | 'super_admin' | 'admin' | 'broker' | 'regular_user',
+    status: 'active' as 'active' | 'inactive' | 'suspended',
+    businessName: '',
+    commissionRate: '0.05'
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);

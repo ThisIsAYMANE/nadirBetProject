@@ -147,32 +147,10 @@ const DashboardApp: React.FC = () => {
       );
     }
 
-    if (activeItem === 'brokers' && dashboardType === 'super_admin') {
-      // Use dedicated brokers hook instead of dashboard data
-      return (
-        <div className="space-y-6">
-          {brokersLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-green mx-auto mb-4"></div>
-                <p className="text-white">Loading brokers...</p>
-              </div>
-            </div>
-          ) : (
-            <BrokerManagementTable 
-              brokers={brokers || []} 
-              title="Broker Management"
-              onRefresh={refreshBrokers}
-            />
-          )}
-        </div>
-      );
-    }
-
     if (activeItem === 'users') {
       return (
         <UserManagement 
-          title={dashboardType === 'super_admin' ? 'User Monitoring' : 'User Management'}
+          title="User Management"
         />
       );
     }

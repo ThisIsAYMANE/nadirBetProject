@@ -22,33 +22,50 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
     const offset = (page - 1) * limit;
 
     let query = `
-      SELECT * FROM broker_dashboard_view
+      SELECT 
+        b.broker_id,
+        b.business_name,
+        b.commission_rate,
+        b.status,
+        b.created_at,
+        u.username,
+        u.email,
+        u.full_name,
+        COUNT(DISTINCT ub.user_id) as total_users_count,
+        COUNT(DISTINCT t.transaction_id) as total_transactions_processed,
+        COALESCE(SUM(t.amount), 0) as total_revenue
+      FROM brokers b
+      INNER JOIN users u ON b.broker_id = u.user_id
+      LEFT JOIN users ub ON ub.broker_id = b.broker_id
+      LEFT JOIN transactions t ON t.user_id = ub.user_id
       WHERE 1=1
     `;
     const params = [];
 
     if (search) {
-      query += ` AND (business_name ILIKE $${params.length + 1} OR username ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1})`;
-      params.push(`%${search}%`);
+      query += ` AND (LOWER(b.business_name) LIKE LOWER(?) OR LOWER(u.username) LIKE LOWER(?) OR LOWER(u.email) LIKE LOWER(?))`;
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam);
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit, offset);
+    query += ` GROUP BY b.broker_id, b.business_name, b.commission_rate, b.status, b.created_at, u.username, u.email, u.full_name
+               ORDER BY b.created_at DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
 
     const result = await pool.query(query, params);
-    const countResult = await pool.query('SELECT COUNT(*) FROM broker_dashboard_view');
+    const countResult = await pool.query('SELECT COUNT(*) as count FROM brokers');
 
     // Transform data to match frontend Broker interface
     const transformedData = result.rows.map(row => ({
       id: row.broker_id,
       broker_id: row.broker_id,
-      name: row.business_name || row.username || 'Unknown',
+      name: row.business_name || row.full_name || row.username || 'Unknown',
       email: row.email,
-      status: row.status,
-      totalUsers: row.total_users_count || 0,
+      status: row.status || 'active',
+      totalUsers: parseInt(row.total_users_count || 0),
       totalTransactions: parseInt(row.total_transactions_processed || 0),
       revenue: parseFloat(row.total_revenue || 0),
-      performanceScore: row.performance_score || 0,
+      performanceScore: 0,
       createdAt: row.created_at
     }));
 
@@ -70,10 +87,26 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await pool.query(
-      'SELECT * FROM broker_dashboard_view WHERE broker_id = ?',
-      [id]
-    );
+    const result = await pool.query(`
+      SELECT 
+        b.broker_id,
+        b.business_name,
+        b.commission_rate,
+        b.status,
+        b.created_at,
+        u.username,
+        u.email,
+        u.full_name,
+        COUNT(DISTINCT ub.user_id) as total_users_count,
+        COUNT(DISTINCT t.transaction_id) as total_transactions_processed,
+        COALESCE(SUM(t.amount), 0) as total_revenue
+      FROM brokers b
+      INNER JOIN users u ON b.broker_id = u.user_id
+      LEFT JOIN users ub ON ub.broker_id = b.broker_id
+      LEFT JOIN transactions t ON t.user_id = ub.user_id
+      WHERE b.broker_id = ?
+      GROUP BY b.broker_id, b.business_name, b.commission_rate, b.status, b.created_at, u.username, u.email, u.full_name
+    `, [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Broker not found' });
@@ -84,13 +117,13 @@ router.get('/:id', async (req, res) => {
     const transformedBroker = {
       id: row.broker_id,
       broker_id: row.broker_id,
-      name: row.business_name || row.username || 'Unknown',
+      name: row.business_name || row.full_name || row.username || 'Unknown',
       email: row.email,
-      status: row.status,
-      totalUsers: row.total_users_count || 0,
+      status: row.status || 'active',
+      totalUsers: parseInt(row.total_users_count || 0),
       totalTransactions: parseInt(row.total_transactions_processed || 0),
       revenue: parseFloat(row.total_revenue || 0),
-      performanceScore: row.performance_score || 0,
+      performanceScore: 0,
       createdAt: row.created_at
     };
 
@@ -103,7 +136,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new broker
-router.post('/', requireRole(['super_admin']), [
+// Owner and Super Admin can create brokers
+router.post('/', requireMinimumRole('super_admin'), [
   body('name').notEmpty().trim().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
@@ -151,22 +185,28 @@ router.post('/', requireRole(['super_admin']), [
     // Hash the password
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
+    const userId = db.generateUuid();
+    const now = new Date().toISOString();
 
     // Create broker user first
-    const userResult = await pool.query(`
-      INSERT INTO users (username, full_name, email, password_hash, user_type, status)
-      VALUES (?, ?, ?, ?, ?, ?)
-      RETURNING user_id
-    `, [email.split('@')[0], name, email, passwordHash, 'broker', 'active']);
-
-    const userId = userResult.rows[0].user_id;
+    await pool.query(`
+      INSERT INTO users (user_id, username, full_name, email, password_hash, user_type, status, created_at, updated_at, parent_id, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [userId, email.split('@')[0], name, email, passwordHash, 'broker', 'active', now, now, req.user.id, req.user.id]);
 
     // Create broker record
+    await pool.query(`
+      INSERT INTO brokers (broker_id, business_name, commission_rate, status, created_at, updated_at, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, [userId, businessName, commissionRate, 'active', now, now, req.user.id]);
+
+    // Fetch and return the created broker
     const brokerResult = await pool.query(`
-      INSERT INTO brokers (broker_id, business_name, commission_rate, created_by)
-      VALUES (?, ?, ?, ?)
-      RETURNING *
-    `, [userId, businessName, commissionRate, req.user.id]);
+      SELECT b.*, u.email, u.username, u.full_name
+      FROM brokers b
+      INNER JOIN users u ON b.broker_id = u.user_id
+      WHERE b.broker_id = ?
+    `, [userId]);
 
     res.status(201).json(brokerResult.rows[0]);
 
@@ -207,14 +247,13 @@ router.put('/:id', [
     if (name || email) {
       const userUpdates = [];
       const userParams = [];
-      let paramCount = 1;
 
       if (name) {
-        userUpdates.push(`full_name = $${paramCount++}`);
+        userUpdates.push(`full_name = ?`);
         userParams.push(name);
       }
       if (email) {
-        userUpdates.push(`email = $${paramCount++}`);
+        userUpdates.push(`email = ?`);
         userParams.push(email);
       }
 
@@ -226,7 +265,7 @@ router.put('/:id', [
         await pool.query(`
           UPDATE users 
           SET ${userUpdates.join(', ')}
-          WHERE user_id = $${paramCount}
+          WHERE user_id = ?
         `, userParams);
       }
     }
@@ -234,22 +273,21 @@ router.put('/:id', [
     // Update broker info
     const brokerUpdates = [];
     const brokerParams = [];
-    let paramCount = 1;
 
     if (businessName) {
-      brokerUpdates.push(`business_name = $${paramCount++}`);
+      brokerUpdates.push(`business_name = ?`);
       brokerParams.push(businessName);
     }
     if (commissionRate !== undefined) {
-      brokerUpdates.push(`commission_rate = $${paramCount++}`);
+      brokerUpdates.push(`commission_rate = ?`);
       brokerParams.push(commissionRate);
     }
     if (status) {
-      brokerUpdates.push(`status = $${paramCount++}`);
+      brokerUpdates.push(`status = ?`);
       brokerParams.push(status);
     }
     if (description !== undefined) {
-      brokerUpdates.push(`description = $${paramCount++}`);
+      brokerUpdates.push(`description = ?`);
       brokerParams.push(description);
     }
 
@@ -258,12 +296,19 @@ router.put('/:id', [
       brokerParams.push(new Date().toISOString());
       brokerParams.push(id);
 
-      const result = await pool.query(`
+      await pool.query(`
         UPDATE brokers 
         SET ${brokerUpdates.join(', ')}
-        WHERE broker_id = $${paramCount}
-        RETURNING *
+        WHERE broker_id = ?
       `, brokerParams);
+
+      // Fetch and return updated broker
+      const result = await pool.query(`
+        SELECT b.*, u.email, u.username, u.full_name
+        FROM brokers b
+        INNER JOIN users u ON b.broker_id = u.user_id
+        WHERE b.broker_id = ?
+      `, [id]);
 
       res.json(result.rows[0]);
     } else {

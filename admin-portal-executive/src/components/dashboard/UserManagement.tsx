@@ -47,8 +47,10 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
           name: user.name || '',
           email: user.email || '',
           password: '',
-          role: user.role as 'super_admin' | 'broker' | 'regular_user',
-          status: user.status as 'active' | 'inactive' | 'suspended'
+          role: user.role as 'owner' | 'super_admin' | 'admin' | 'broker' | 'regular_user',
+          status: user.status as 'active' | 'inactive' | 'suspended',
+          businessName: '',
+          commissionRate: '0.05'
         });
       } else {
         setFormData({
@@ -56,7 +58,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
           email: '',
           password: '',
           role: 'regular_user',
-          status: 'active'
+          status: 'active',
+          businessName: '',
+          commissionRate: '0.05'
         });
       }
       setShowModal(true);
@@ -83,20 +87,41 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
       setFormLoading(true);
       setFormError(null);
 
-      // Map form data to API format
-      const userData = {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        status: formData.status
-      };
-
       if (modalType === 'create') {
-        await apiService.createUser(userData);
+        // If creating a broker, use broker API
+        if (formData.role === 'broker') {
+          await apiService.createBroker({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            businessName: formData.businessName || formData.name,
+            commissionRate: parseFloat(formData.commissionRate) || 0.05,
+            status: formData.status,
+            totalUsers: 0,
+            totalTransactions: 0,
+            revenue: 0,
+            performanceScore: 0
+          });
+        } else {
+          // Create regular user
+          const userData = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+            status: formData.status
+          };
+          await apiService.createUser(userData);
+        }
       } else if (modalType === 'edit' && selectedUser) {
         // For updates, don't send password if empty
-        const updateData = { ...userData };
+        const updateData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          status: formData.status
+        };
         if (!updateData.password) {
           delete updateData.password;
         }
@@ -441,6 +466,36 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                     </select>
                   </div>
                 </div>
+
+                {/* Show broker-specific fields if role is broker */}
+                {formData.role === 'broker' && modalType === 'create' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Business Name *</label>
+                      <input
+                        type="text"
+                        value={formData.businessName}
+                        onChange={(e) => handleInputChange('businessName', e.target.value)}
+                        className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                        placeholder="e.g., ABC Gaming"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Commission Rate *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="1"
+                        value={formData.commissionRate}
+                        onChange={(e) => handleInputChange('commissionRate', e.target.value)}
+                        className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                        placeholder="0.05 (5%)"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Enter as decimal (e.g., 0.05 for 5%)</p>
+                    </div>
+                  </div>
+                )}
               )}
 
               <div className="flex justify-end space-x-3 mt-6">

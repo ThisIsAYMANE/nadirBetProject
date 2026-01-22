@@ -26,7 +26,7 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
     const offset = (page - 1) * limit;
 
     let query = `
-      SELECT 
+      SELECT
         b.broker_id,
         b.business_name,
         b.commission_rate,
@@ -37,7 +37,7 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
         u.full_name,
         COUNT(DISTINCT ub.user_id) as total_users_count,
         COUNT(DISTINCT t.transaction_id) as total_transactions_processed,
-        COALESCE(SUM(t.amount), 0) as total_revenue
+        COALESCE(SUM(t.cash_amount), 0) as total_revenue
       FROM brokers b
       INNER JOIN users u ON b.broker_id = u.user_id
       LEFT JOIN users ub ON ub.broker_id = b.broker_id
@@ -77,6 +77,9 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
       id: row.broker_id,
       broker_id: row.broker_id,
       name: row.business_name || row.full_name || row.username || 'Unknown',
+      business_name: row.business_name,
+      full_name: row.full_name,
+      username: row.username,
       email: row.email,
       status: row.status || 'active',
       totalUsers: parseInt(row.total_users_count || 0),
@@ -123,7 +126,7 @@ router.get('/:id', async (req, res) => {
         u.full_name,
         COUNT(DISTINCT ub.user_id) as total_users_count,
         COUNT(DISTINCT t.transaction_id) as total_transactions_processed,
-        COALESCE(SUM(t.amount), 0) as total_revenue
+        COALESCE(SUM(t.cash_amount), 0) as total_revenue
       FROM brokers b
       INNER JOIN users u ON b.broker_id = u.user_id
       LEFT JOIN users ub ON ub.broker_id = b.broker_id

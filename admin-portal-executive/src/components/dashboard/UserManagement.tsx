@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -11,12 +11,22 @@ interface UserManagementProps {
   title: string;
 }
 
+interface Broker {
+  broker_id: string;
+  business_name?: string;
+  username?: string;
+  full_name?: string;
+  name?: string;
+}
+
 export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'create' | 'edit' | 'view'>('create');
+  const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [brokersLoading, setBrokersLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,12 +34,31 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
     role: 'regular_user' as 'owner' | 'super_admin' | 'admin' | 'broker' | 'regular_user',
     status: 'active' as 'active' | 'inactive' | 'suspended',
     businessName: '',
-    commissionRate: '0.05'
+    commissionRate: '0.05',
+    brokerId: ''
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const { users, loading, error, total, refresh } = useUsers(currentPage, 10, searchTerm);
+
+  // Fetch brokers when component mounts
+  useEffect(() => {
+    fetchBrokers();
+  }, []);
+
+  const fetchBrokers = async () => {
+    try {
+      setBrokersLoading(true);
+      const response = await apiService.getBrokers(1, 100); // Get all brokers
+      console.log('Fetched brokers:', response);
+      setBrokers(response.data || []); // Backend returns 'data' not 'brokers'
+    } catch (err) {
+      console.error('Failed to fetch brokers:', err);
+    } finally {
+      setBrokersLoading(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +79,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
           role: user.role as 'owner' | 'super_admin' | 'admin' | 'broker' | 'regular_user',
           status: user.status as 'active' | 'inactive' | 'suspended',
           businessName: '',
-          commissionRate: '0.05'
+          commissionRate: '0.05',
+          brokerId: ''
         });
       } else {
         setFormData({
@@ -60,7 +90,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
           role: 'regular_user',
           status: 'active',
           businessName: '',
-          commissionRate: '0.05'
+          commissionRate: '0.05',
+          brokerId: ''
         });
       }
       setShowModal(true);
@@ -103,14 +134,20 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
             performanceScore: 0
           });
         } else {
-          // Create regular user
-          const userData = {
+          // Create regular user or admin+
+          const userData: any = {
             name: formData.name,
             email: formData.email,
             password: formData.password,
             role: formData.role,
             status: formData.status
           };
+          
+          // Add brokerId for regular users
+          if (formData.role === 'regular_user' && formData.brokerId) {
+            userData.brokerId = formData.brokerId;
+          }
+          
           await apiService.createUser(userData);
         }
       } else if (modalType === 'edit' && selectedUser) {
@@ -465,38 +502,68 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                       <option value="suspended">Suspended</option>
                     </select>
                   </div>
-                </div>
 
-                {/* Show broker-specific fields if role is broker */}
-                {formData.role === 'broker' && modalType === 'create' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Business Name *</label>
-                      <input
-                        type="text"
-                        value={formData.businessName}
-                        onChange={(e) => handleInputChange('businessName', e.target.value)}
-                        className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
-                        placeholder="e.g., ABC Gaming"
-                      />
+                  {/* Show broker-specific fields if role is broker */}
+                  {formData.role === 'broker' && modalType === 'create' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Business Name *</label>
+                        <input
+                          type="text"
+                          value={formData.businessName}
+                          onChange={(e) => handleInputChange('businessName', e.target.value)}
+                          className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                          placeholder="e.g., ABC Gaming"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Commission Rate *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="1"
+                          value={formData.commissionRate}
+                          onChange={(e) => handleInputChange('commissionRate', e.target.value)}
+                          className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                          placeholder="0.05 (5%)"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Enter as decimal (e.g., 0.05 for 5%)</p>
+                      </div>
                     </div>
+                  )}
+
+                  {/* Show broker assignment for regular users */}
+                  {formData.role === 'regular_user' && modalType === 'create' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Commission Rate *</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="1"
-                        value={formData.commissionRate}
-                        onChange={(e) => handleInputChange('commissionRate', e.target.value)}
-                        className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
-                        placeholder="0.05 (5%)"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">Enter as decimal (e.g., 0.05 for 5%)</p>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        Assign to Broker (Shop) *
+                      </label>
+                      {brokersLoading ? (
+                        <div className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-gray-400">
+                          Loading brokers...
+                        </div>
+                      ) : (
+                        <select
+                          value={formData.brokerId}
+                          onChange={(e) => handleInputChange('brokerId', e.target.value)}
+                          className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
+                          required
+                        >
+                          <option value="">Select a broker...</option>
+                          {brokers.map((broker) => (
+                            <option key={broker.broker_id} value={broker.broker_id}>
+                              {broker.business_name} ({broker.full_name || broker.username})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        Regular users must be assigned to a broker/shop
+                      </p>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
               )}
 
               <div className="flex justify-end space-x-3 mt-6">
@@ -510,7 +577,13 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                 {modalType !== 'view' && (
                   <Button 
                     onClick={handleSaveUser}
-                    disabled={formLoading || !formData.name || !formData.email || (modalType === 'create' && !formData.password)}
+                    disabled={
+                      formLoading || 
+                      !formData.name || 
+                      !formData.email || 
+                      (modalType === 'create' && !formData.password) ||
+                      (modalType === 'create' && formData.role === 'regular_user' && !formData.brokerId)
+                    }
                     className="bg-accent-green text-primary-green disabled:opacity-50"
                   >
                     {formLoading ? 'Saving...' : (modalType === 'create' ? 'Create' : 'Save')}

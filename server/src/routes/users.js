@@ -119,6 +119,37 @@ router.post('/', [
       });
     }
 
+    // Determine broker assignment
+    let assignedBrokerId = brokerId;
+    
+    // If creator is a broker, auto-assign to them
+    if (creatorRole === 'broker' && role === 'regular_user') {
+      assignedBrokerId = creatorId;
+    }
+    
+    // Validate that regular users MUST have a broker assigned
+    if (role === 'regular_user' && !assignedBrokerId) {
+      return res.status(400).json({ 
+        error: 'Regular users must be assigned to a broker',
+        message: 'Please select a broker to assign this user to'
+      });
+    }
+
+    // If broker is specified, validate it exists and is actually a broker
+    if (assignedBrokerId && role === 'regular_user') {
+      const brokerCheck = await pool.query(
+        'SELECT user_id, user_type FROM users WHERE user_id = ? AND user_type = ?',
+        [assignedBrokerId, 'broker']
+      );
+      
+      if (brokerCheck.rows.length === 0) {
+        return res.status(400).json({ 
+          error: 'Invalid broker',
+          message: 'The specified broker does not exist'
+        });
+      }
+    }
+
     // Check if email already exists
     const existingUser = await pool.query(
       'SELECT user_id FROM users WHERE email = ?',
@@ -151,7 +182,7 @@ router.post('/', [
         hashedPassword,
         role,
         'active',
-        brokerId || (role === 'regular_user' ? creatorId : null), // Auto-assign broker for regular users
+        assignedBrokerId || null, // Use validated broker assignment
         creatorId, // parent_id
         creatorId, // created_by
         now,

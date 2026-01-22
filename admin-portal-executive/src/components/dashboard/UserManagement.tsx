@@ -496,6 +496,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                     </div>
                   </div>
                 )}
+              </div>
               )}
 
               <div className="flex justify-end space-x-3 mt-6">

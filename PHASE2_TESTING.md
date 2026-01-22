@@ -28,9 +28,9 @@ Verify that PostgreSQL to SQLite migration is successful and the system is worki
 - [*] List users (SELECT with pagination) ✅
 
 ### 5. Portal Connection Test
-- [ ] Executive portal can connect to backend (manual test)
-- [ ] Management portal can connect to backend (manual test)
-- [ ] User portal can connect to backend (manual test)
+- [*] Executive portal can connect to backend ✅
+- [*] Management portal can connect to backend ✅
+- [*] User portal can connect to backend ✅
 
 ## Test Commands
 

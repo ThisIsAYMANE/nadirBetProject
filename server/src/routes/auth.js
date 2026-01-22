@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
-import { pool } from '../index.js';
+import { pool } from '../database/db.js';
 
 const router = express.Router();
 
@@ -38,7 +38,7 @@ router.post('/login', [
 
     // Find user by email
     const result = await pool.query(
-      'SELECT user_id, username, full_name, email, password_hash, user_type, status, last_login FROM users WHERE LOWER(TRIM(email)) = $1',
+      'SELECT user_id, username, full_name, email, password_hash, user_type, status, last_login FROM users WHERE email = ?',
       [email]
     );
 
@@ -66,9 +66,10 @@ router.post('/login', [
     }
 
     // Update last login
+    const currentTime = new Date().toISOString();
     await pool.query(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1',
-      [user.user_id]
+      'UPDATE users SET last_login = ? WHERE user_id = ?',
+      [currentTime, user.user_id]
     );
 
     // Generate JWT token
@@ -115,7 +116,7 @@ router.get('/me', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
     const result = await pool.query(
-      'SELECT user_id, username, full_name, email, user_type, status, created_at, last_login FROM users WHERE user_id = $1',
+      'SELECT user_id, username, full_name, email, user_type, status, created_at, last_login FROM users WHERE user_id = ?',
       [decoded.userId]
     );
 

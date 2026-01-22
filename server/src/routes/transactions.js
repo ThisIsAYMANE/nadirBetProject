@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 
 const router = express.Router();
 
@@ -108,7 +108,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     
     const result = await pool.query(
-      'SELECT * FROM transaction_dashboard_view WHERE id = $1',
+      'SELECT * FROM transaction_dashboard_view WHERE id = ?',
       [id]
     );
 
@@ -140,7 +140,7 @@ router.put('/:id', [
 
     // Check if transaction exists
     const existingTransaction = await pool.query(
-      'SELECT transaction_id FROM transactions WHERE transaction_id = $1',
+      'SELECT transaction_id FROM transactions WHERE transaction_id = ?',
       [id]
     );
 
@@ -149,8 +149,9 @@ router.put('/:id', [
     }
 
     // Update transaction
-    const updates = ['status = $1', 'processed_at = CURRENT_TIMESTAMP'];
-    const params = [status];
+    const currentTime = new Date().toISOString();
+    const updates = ['status = ?', 'processed_at = ?'];
+    const params = [status, currentTime];
     let paramCount = 2;
 
     if (description) {

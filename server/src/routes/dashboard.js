@@ -1,5 +1,5 @@
 import express from 'express';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 
 const router = express.Router();
 
@@ -56,13 +56,13 @@ router.get('/', async (req, res) => {
       const [usersResult, transactionsResult] = await Promise.all([
         pool.query(`
           SELECT * FROM user_dashboard_view 
-          WHERE broker_id = $1 
+          WHERE broker_id = ? 
           ORDER BY created_at DESC 
           LIMIT 50
         `, [userId]),
         pool.query(`
           SELECT * FROM transaction_dashboard_view 
-          WHERE broker_id = $1 
+          WHERE broker_id = ? 
           ORDER BY timestamp DESC 
           LIMIT 50
         `, [userId])
@@ -105,7 +105,7 @@ router.get('/kpis', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM transactions 
-        WHERE broker_id = $1 AND status = 'completed'
+        WHERE broker_id = ? AND status = 'completed'
         UNION ALL
         SELECT 
           'Active Users' as title,
@@ -113,7 +113,7 @@ router.get('/kpis', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM users 
-        WHERE broker_id = $1 AND status = 'active'
+        WHERE broker_id = ? AND status = 'active'
         UNION ALL
         SELECT 
           'Pending Cashouts' as title,
@@ -121,7 +121,7 @@ router.get('/kpis', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM cashout_requests 
-        WHERE broker_id = $1 AND status = 'pending'
+        WHERE broker_id = ? AND status = 'pending'
         UNION ALL
         SELECT 
           'Success Rate' as title,
@@ -132,7 +132,7 @@ router.get('/kpis', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM transactions 
-        WHERE broker_id = $1
+        WHERE broker_id = ?
       `, [userId]);
 
       kpis = result.rows;
@@ -161,7 +161,7 @@ router.get('/charts', async (req, res) => {
           SUM(cash_amount) as value
         FROM transactions 
         WHERE status = 'completed'
-        ${brokerId ? 'AND broker_id = $1' : ''}
+        ${brokerId ? 'AND broker_id = ?' : ''}
         AND created_at >= CURRENT_DATE - INTERVAL '12 months'
         GROUP BY DATE_TRUNC('month', created_at)
         ORDER BY DATE_TRUNC('month', created_at)
@@ -176,7 +176,7 @@ router.get('/charts', async (req, res) => {
           COUNT(*) as value
         FROM transactions 
         WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
-        ${brokerId ? 'AND broker_id = $1' : ''}
+        ${brokerId ? 'AND broker_id = ?' : ''}
         GROUP BY DATE(created_at)
         ORDER BY DATE(created_at)
         LIMIT 30

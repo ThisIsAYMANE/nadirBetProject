@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 import pragmaticApiService from '../services/PragmaticApiService.js';
 import { authenticateToken } from '../middleware/auth.js';
 import crypto from 'crypto';
@@ -51,7 +51,7 @@ router.post('/launch', [
 
     // Get user info
     const userResult = await pool.query(
-      'SELECT user_id, username, email FROM users WHERE user_id = $1',
+      'SELECT user_id, username, email FROM users WHERE user_id = ?',
       [userId]
     );
 
@@ -75,7 +75,7 @@ router.post('/launch', [
     await pool.query(
       `INSERT INTO pragmatic_sessions 
        (player_id, token, game_id, currency, status, expires_at, created_at) 
-       VALUES ($1, $2, $3, $4, 'active', $5, NOW())`,
+       VALUES (?, ?, ?, ?, 'active', ?, NOW())`,
       [user.user_id, token, gameId, currency, expiresAt]
     );
 
@@ -137,7 +137,7 @@ router.post('/authenticate', async (req, res) => {
       `SELECT ps.*, up.current_balance 
        FROM pragmatic_sessions ps
        LEFT JOIN user_points up ON ps.player_id = up.user_id
-       WHERE ps.token = $1 AND ps.status = 'active' AND ps.expires_at > NOW()`,
+       WHERE ps.token = ? AND ps.status = 'active' AND ps.expires_at > NOW()`,
       [token]
     );
 
@@ -188,7 +188,7 @@ router.post('/balance', async (req, res) => {
 
     // Get user balance
     const balanceResult = await pool.query(
-      'SELECT current_balance FROM user_points WHERE user_id = $1',
+      'SELECT current_balance FROM user_points WHERE user_id = ?',
       [userId]
     );
 
@@ -235,14 +235,14 @@ router.post('/bet', async (req, res) => {
 
     // Check if transaction already exists (idempotency)
     const existingTx = await pool.query(
-      'SELECT * FROM pragmatic_transactions WHERE reference = $1',
+      'SELECT * FROM pragmatic_transactions WHERE reference = ?',
       [reference]
     );
 
     if (existingTx.rows.length > 0) {
       // Return existing transaction balance
       const balanceResult = await pool.query(
-        'SELECT current_balance FROM user_points WHERE user_id = $1',
+        'SELECT current_balance FROM user_points WHERE user_id = ?',
         [userId]
       );
       const balance = balanceResult.rows[0]?.current_balance || 0;
@@ -254,7 +254,7 @@ router.post('/bet', async (req, res) => {
 
     // Get current balance
     const balanceResult = await pool.query(
-      'SELECT current_balance FROM user_points WHERE user_id = $1',
+      'SELECT current_balance FROM user_points WHERE user_id = ?',
       [userId]
     );
 
@@ -279,7 +279,7 @@ router.post('/bet', async (req, res) => {
     // Deduct balance
     const newBalance = currentBalance - betAmountPoints;
     await pool.query(
-      'UPDATE user_points SET current_balance = $1 WHERE user_id = $2',
+      'UPDATE user_points SET current_balance = ? WHERE user_id = ?',
       [newBalance, userId]
     );
 
@@ -287,7 +287,7 @@ router.post('/bet', async (req, res) => {
     const txResult = await pool.query(
       `INSERT INTO pragmatic_transactions 
        (player_id, external_player_id, transaction_type, reference, round_id, game_id, amount, balance_before, balance_after, status, created_at)
-       VALUES ($1, $2, 'bet', $3, $4, $5, $6, $7, $8, 'completed', NOW())
+       VALUES (?, ?, 'bet', ?, ?, ?, ?, ?, ?, 'completed', NOW())
        RETURNING id`,
       [userId, `player_${String(userId).replace(/-/g, '')}`, reference, roundId, gameId, betAmountPoints, currentBalance, newBalance]
     );
@@ -324,13 +324,13 @@ router.post('/result', async (req, res) => {
 
     // Check if transaction already exists (idempotency)
     const existingTx = await pool.query(
-      'SELECT * FROM pragmatic_transactions WHERE reference = $1',
+      'SELECT * FROM pragmatic_transactions WHERE reference = ?',
       [reference]
     );
 
     if (existingTx.rows.length > 0) {
       const balanceResult = await pool.query(
-        'SELECT current_balance FROM user_points WHERE user_id = $1',
+        'SELECT current_balance FROM user_points WHERE user_id = ?',
         [userId]
       );
       const balance = balanceResult.rows[0]?.current_balance || 0;
@@ -342,7 +342,7 @@ router.post('/result', async (req, res) => {
 
     // Get current balance
     const balanceResult = await pool.query(
-      'SELECT current_balance FROM user_points WHERE user_id = $1',
+      'SELECT current_balance FROM user_points WHERE user_id = ?',
       [userId]
     );
 
@@ -359,7 +359,7 @@ router.post('/result', async (req, res) => {
     // Add win amount to balance
     const newBalance = currentBalance + winAmountPoints;
     await pool.query(
-      'UPDATE user_points SET current_balance = $1 WHERE user_id = $2',
+      'UPDATE user_points SET current_balance = ? WHERE user_id = ?',
       [newBalance, userId]
     );
 
@@ -367,7 +367,7 @@ router.post('/result', async (req, res) => {
     const txResult = await pool.query(
       `INSERT INTO pragmatic_transactions 
        (player_id, external_player_id, transaction_type, reference, round_id, game_id, amount, balance_before, balance_after, status, created_at)
-       VALUES ($1, $2, 'win', $3, $4, $5, $6, $7, $8, 'completed', NOW())
+       VALUES (?, ?, 'win', ?, ?, ?, ?, ?, ?, 'completed', NOW())
        RETURNING id`,
       [userId, `player_${String(userId).replace(/-/g, '')}`, reference, roundId, gameId, winAmountPoints, currentBalance, newBalance]
     );

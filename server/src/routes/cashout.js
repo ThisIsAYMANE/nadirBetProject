@@ -1,5 +1,5 @@
 import express from 'express';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 
 const router = express.Router();
 
@@ -16,13 +16,13 @@ router.get('/', async (req, res) => {
         u.email as user_email
       FROM cashout_requests cr
       JOIN users u ON cr.user_id = u.user_id
-      WHERE cr.broker_id = $1
+      WHERE cr.broker_id = ?
     `;
     
     const params = [userId];
     
     if (status) {
-      query += ` AND cr.status = $2`;
+      query += ` AND cr.status = ?`;
       params.push(status);
     }
     
@@ -43,22 +43,28 @@ router.post('/:id/approve', async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const currentTime = new Date().toISOString();
     
     const result = await pool.query(
       `UPDATE cashout_requests 
        SET status = 'approved', 
-           processed_at = CURRENT_TIMESTAMP, 
-           processed_by = $1
-       WHERE request_id = $2 AND broker_id = $1 AND status = 'pending'
-       RETURNING *`,
-      [userId, id]
+           processed_at = ?, 
+           processed_by = ?
+       WHERE request_id = ? AND broker_id = ? AND status = 'pending'`,
+      [currentTime, userId, id, userId]
     );
     
-    if (result.rows.length === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Cashout request not found or already processed' });
     }
     
-    res.json({ message: 'Cashout request approved successfully', request: result.rows[0] });
+    // Fetch the updated record
+    const updated = await pool.query(
+      'SELECT * FROM cashout_requests WHERE request_id = ?',
+      [id]
+    );
+    
+    res.json({ message: 'Cashout request approved successfully', request: updated.rows[0] });
   } catch (error) {
     console.error('Approve cashout error:', error);
     res.status(500).json({ error: 'Failed to approve cashout request' });
@@ -76,22 +82,28 @@ router.post('/:id/reject', async (req, res) => {
       return res.status(400).json({ error: 'Rejection reason is required' });
     }
     
+    const currentTime = new Date().toISOString();
     const result = await pool.query(
       `UPDATE cashout_requests 
        SET status = 'rejected', 
-           processed_at = CURRENT_TIMESTAMP, 
-           processed_by = $1,
-           rejection_reason = $3
-       WHERE request_id = $2 AND broker_id = $1 AND status = 'pending'
-       RETURNING *`,
-      [userId, id, reason]
+           processed_at = ?, 
+           processed_by = ?,
+           rejection_reason = ?
+       WHERE request_id = ? AND broker_id = ? AND status = 'pending'`,
+      [currentTime, userId, reason, id, userId]
     );
     
-    if (result.rows.length === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Cashout request not found or already processed' });
     }
     
-    res.json({ message: 'Cashout request rejected successfully', request: result.rows[0] });
+    // Fetch the updated record
+    const updated = await pool.query(
+      'SELECT * FROM cashout_requests WHERE request_id = ?',
+      [id]
+    );
+    
+    res.json({ message: 'Cashout request rejected successfully', request: updated.rows[0] });
   } catch (error) {
     console.error('Reject cashout error:', error);
     res.status(500).json({ error: 'Failed to reject cashout request' });

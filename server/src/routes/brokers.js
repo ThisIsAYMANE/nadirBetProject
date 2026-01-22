@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -62,7 +62,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     
     const result = await pool.query(
-      'SELECT * FROM broker_dashboard_view WHERE broker_id = $1',
+      'SELECT * FROM broker_dashboard_view WHERE broker_id = ?',
       [id]
     );
 
@@ -131,7 +131,7 @@ router.post('/', requireRole(['super_admin']), [
 
     // Check if email already exists
     const existingUser = await pool.query(
-      'SELECT user_id FROM users WHERE LOWER(TRIM(email)) = $1',
+      'SELECT user_id FROM users WHERE LOWER(TRIM(email)) = ?',
       [email]
     );
 
@@ -146,7 +146,7 @@ router.post('/', requireRole(['super_admin']), [
     // Create broker user first
     const userResult = await pool.query(`
       INSERT INTO users (username, full_name, email, password_hash, user_type, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES (?, ?, ?, ?, ?, ?)
       RETURNING user_id
     `, [email.split('@')[0], name, email, passwordHash, 'broker', 'active']);
 
@@ -155,7 +155,7 @@ router.post('/', requireRole(['super_admin']), [
     // Create broker record
     const brokerResult = await pool.query(`
       INSERT INTO brokers (broker_id, business_name, commission_rate, created_by)
-      VALUES ($1, $2, $3, $4)
+      VALUES (?, ?, ?, ?)
       RETURNING *
     `, [userId, businessName, commissionRate, req.user.id]);
 
@@ -186,7 +186,7 @@ router.put('/:id', [
 
     // Check if broker exists
     const existingBroker = await pool.query(
-      'SELECT broker_id FROM brokers WHERE broker_id = $1',
+      'SELECT broker_id FROM brokers WHERE broker_id = ?',
       [id]
     );
 
@@ -210,7 +210,8 @@ router.put('/:id', [
       }
 
       if (userUpdates.length > 0) {
-        userUpdates.push(`updated_at = CURRENT_TIMESTAMP`);
+        userUpdates.push(`updated_at = ?`);
+        userParams.push(new Date().toISOString());
         userParams.push(id);
 
         await pool.query(`
@@ -244,7 +245,8 @@ router.put('/:id', [
     }
 
     if (brokerUpdates.length > 0) {
-      brokerUpdates.push(`updated_at = CURRENT_TIMESTAMP`);
+      brokerUpdates.push(`updated_at = ?`);
+      brokerParams.push(new Date().toISOString());
       brokerParams.push(id);
 
       const result = await pool.query(`
@@ -272,7 +274,7 @@ router.delete('/:id', async (req, res) => {
 
     // Check if broker exists
     const existingBroker = await pool.query(
-      'SELECT broker_id FROM brokers WHERE broker_id = $1',
+      'SELECT broker_id FROM brokers WHERE broker_id = ?',
       [id]
     );
 
@@ -281,9 +283,10 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Soft delete by setting user status to inactive
+    const currentTime = new Date().toISOString();
     await pool.query(
-      'UPDATE users SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
-      ['inactive', id]
+      'UPDATE users SET status = ?, updated_at = ? WHERE user_id = ?',
+      ['inactive', currentTime, id]
     );
 
     res.json({ message: 'Broker deleted successfully' });

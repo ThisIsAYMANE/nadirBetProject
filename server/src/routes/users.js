@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -48,7 +48,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     
     const result = await pool.query(
-      'SELECT * FROM user_dashboard_view WHERE id = $1',
+      'SELECT * FROM user_dashboard_view WHERE id = ?',
       [id]
     );
 
@@ -81,7 +81,7 @@ router.post('/', [
 
     // Check if email already exists
     const existingUser = await pool.query(
-      'SELECT user_id FROM users WHERE email = $1',
+      'SELECT user_id FROM users WHERE email = ?',
       [email]
     );
 
@@ -95,7 +95,7 @@ router.post('/', [
     // Create user
     const result = await pool.query(`
       INSERT INTO users (username, full_name, email, password_hash, user_type, broker_id)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES (?, ?, ?, ?, ?, ?)
       RETURNING user_id, username, full_name, email, user_type, status, created_at
     `, [email.split('@')[0], name, email, hashedPassword, role, brokerId || null]);
 
@@ -128,7 +128,7 @@ router.put('/:id', [
 
     // Check if user exists
     const existingUser = await pool.query(
-      'SELECT user_id FROM users WHERE user_id = $1',
+      'SELECT user_id FROM users WHERE user_id = ?',
       [id]
     );
 
@@ -166,7 +166,8 @@ router.put('/:id', [
       return res.status(400).json({ error: 'No valid fields to update' });
     }
 
-    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    updates.push(`updated_at = ?`);
+    params.push(new Date().toISOString());
     params.push(id);
 
     const result = await pool.query(`
@@ -191,7 +192,7 @@ router.delete('/:id', async (req, res) => {
 
     // Check if user exists
     const existingUser = await pool.query(
-      'SELECT user_id FROM users WHERE user_id = $1',
+      'SELECT user_id FROM users WHERE user_id = ?',
       [id]
     );
 
@@ -200,9 +201,10 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Soft delete by setting status to inactive
+    const currentTime = new Date().toISOString();
     await pool.query(
-      'UPDATE users SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
-      ['inactive', id]
+      'UPDATE users SET status = ?, updated_at = ? WHERE user_id = ?',
+      ['inactive', currentTime, id]
     );
 
     res.json({ message: 'User deleted successfully' });

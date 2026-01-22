@@ -1,5 +1,5 @@
 import express from 'express';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM transactions 
-        WHERE broker_id = $1 AND status = 'completed'
+        WHERE broker_id = ? AND status = 'completed'
         UNION ALL
         SELECT 
           'Active Users' as title,
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM users 
-        WHERE broker_id = $1 AND status = 'active'
+        WHERE broker_id = ? AND status = 'active'
         UNION ALL
         SELECT 
           'Pending Cashouts' as title,
@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM cashout_requests 
-        WHERE broker_id = $1 AND status = 'pending'
+        WHERE broker_id = ? AND status = 'pending'
         UNION ALL
         SELECT 
           'Success Rate' as title,
@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
           0 as change,
           'stable' as trend
         FROM transactions 
-        WHERE broker_id = $1
+        WHERE broker_id = ?
       `, [userId]);
 
       kpis = result.rows;

@@ -1,5 +1,5 @@
 import express from 'express';
-import { pool } from '../index.js';
+import { pool, db } from '../database/db.js';
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
           SUM(cash_amount) as value
         FROM transactions 
         WHERE status = 'completed'
-        ${brokerId ? 'AND broker_id = $1' : ''}
+        ${brokerId ? 'AND broker_id = ?' : ''}
         AND created_at >= CURRENT_DATE - INTERVAL '12 months'
         GROUP BY DATE_TRUNC('month', created_at)
         ORDER BY DATE_TRUNC('month', created_at)
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
           COUNT(*) as value
         FROM transactions 
         WHERE created_at >= CURRENT_DATE - INTERVAL '12 months'
-        ${brokerId ? 'AND broker_id = $1' : ''}
+        ${brokerId ? 'AND broker_id = ?' : ''}
         GROUP BY DATE_TRUNC('month', created_at)
         ORDER BY DATE_TRUNC('month', created_at)
       `, brokerId ? [brokerId] : []);

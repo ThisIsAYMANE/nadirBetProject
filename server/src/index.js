@@ -5,10 +5,10 @@ import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import { Pool } from 'pg';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { pool, db } from './database/db.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -47,16 +47,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://admin:admin123@localhost:5432/betting_platform',
-  ssl: false, // Disable SSL for Docker containers
-});
-
-// Test database connection
-pool.connect()
-  .then(() => console.log('✅ Database connected successfully'))
-  .catch(err => console.error('❌ Database connection failed:', err));
+// Database initialized automatically via db.js
+console.log('✅ SQLite database initialized successfully');
 
 // Middleware
 app.set('trust proxy', 1); // Trust proxy for rate limiting

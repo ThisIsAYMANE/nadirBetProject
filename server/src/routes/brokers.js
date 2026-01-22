@@ -196,9 +196,9 @@ router.post('/', requireMinimumRole('super_admin'), [
 
     // Create broker record
     await pool.query(`
-      INSERT INTO brokers (broker_id, business_name, commission_rate, status, created_at, updated_at, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [userId, businessName, commissionRate, 'active', now, now, req.user.id]);
+      INSERT INTO brokers (broker_id, business_name, commission_rate, created_by, verification_status)
+      VALUES (?, ?, ?, ?, ?)
+    `, [userId, businessName, commissionRate, req.user.id, 'verified']);
 
     // Fetch and return the created broker
     const brokerResult = await pool.query(`
@@ -244,7 +244,7 @@ router.put('/:id', [
     }
 
     // Update user info if provided
-    if (name || email) {
+    if (name || email || status) {
       const userUpdates = [];
       const userParams = [];
 
@@ -255,6 +255,10 @@ router.put('/:id', [
       if (email) {
         userUpdates.push(`email = ?`);
         userParams.push(email);
+      }
+      if (status) {
+        userUpdates.push(`status = ?`);
+        userParams.push(status);
       }
 
       if (userUpdates.length > 0) {
@@ -282,18 +286,9 @@ router.put('/:id', [
       brokerUpdates.push(`commission_rate = ?`);
       brokerParams.push(commissionRate);
     }
-    if (status) {
-      brokerUpdates.push(`status = ?`);
-      brokerParams.push(status);
-    }
-    if (description !== undefined) {
-      brokerUpdates.push(`description = ?`);
-      brokerParams.push(description);
-    }
+    // Note: status is stored in users table, not brokers table
 
     if (brokerUpdates.length > 0) {
-      brokerUpdates.push(`updated_at = ?`);
-      brokerParams.push(new Date().toISOString());
       brokerParams.push(id);
 
       await pool.query(`

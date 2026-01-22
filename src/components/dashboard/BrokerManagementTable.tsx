@@ -89,8 +89,12 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
           name: editingBroker.name,
           email: editingBroker.email,
           password: editingBroker.password,
-          businessName: editingBroker.name + ' Business', // Default business name
-          commissionRate: 0.05 // Default 5% commission
+          status: (editingBroker.status || 'active') as 'active' | 'inactive',
+          totalUsers: 0,
+          totalTransactions: 0,
+          revenue: 0,
+          performanceScore: editingBroker.performanceScore || 0,
+          createdAt: new Date().toISOString()
         };
         console.log('Creating broker with data:', brokerData);
         await apiService.createBroker(brokerData);
@@ -199,7 +203,7 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleDeleteBroker(broker.id || broker.broker_id)}
+                        onClick={() => handleDeleteBroker(broker.id || broker.broker_id || '')}
                         title="Delete Broker"
                         className="text-red-400 hover:text-red-300"
                         disabled={loading}
@@ -275,7 +279,7 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => handleDeleteBroker(broker.id || broker.broker_id)}
+                  onClick={() => handleDeleteBroker(broker.id || broker.broker_id || '')}
                   title="Delete Broker"
                   className="text-red-400 hover:text-red-300"
                   disabled={loading}

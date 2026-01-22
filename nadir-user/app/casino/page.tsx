@@ -37,7 +37,8 @@ export default function CasinoPage() {
       const response = await pragmaticApi.getGames();
       
       // Transform Pragmatic games to our CasinoGame format
-      const transformedGames: CasinoGame[] = response.games.map((game: Record<string, unknown>) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const transformedGames: CasinoGame[] = response.games.map((game: any) => ({
         id: game.id || game.symbol || game.gameId || String(Math.random()),
         name: game.name || game.title || 'Unknown Game',
         provider: 'Pragmatic Play',
@@ -230,14 +231,20 @@ export default function CasinoPage() {
         </section>
 
         {/* Game Launch Modal */}
-        {selectedGame && (
-          <GameLaunchModal
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            gameId={selectedGame._pragmaticData?.symbol || selectedGame._pragmaticData?.id || selectedGame.id}
-            gameName={selectedGame.name}
-          />
-        )}
+        {selectedGame && (() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const pragmaticData = selectedGame._pragmaticData as any;
+          const gameId = pragmaticData?.symbol || pragmaticData?.id || selectedGame.id;
+          
+          return (
+            <GameLaunchModal
+              isOpen={isModalOpen}
+              onClose={handleCloseModal}
+              gameId={gameId}
+              gameName={selectedGame.name}
+            />
+          );
+        })()}
       </main>
     </div>
   );

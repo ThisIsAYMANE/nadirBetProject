@@ -71,12 +71,14 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
         console.log('Advantages array length:', advantages.length); // Debug log
         
         // Debug: Show all sports and competitions in the response
-        const sportsInResponse = advantages.map((adv: Record<string, unknown>) => 
-          (adv.market as Record<string, unknown>)?.event
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sportsInResponse = advantages.map((adv: any) => 
+          adv.market?.event?.competitionInstance?.competition?.sport
         ).filter(Boolean);
         console.log('Sports in API response:', Array.from(new Set(sportsInResponse)));
         
-        const competitionsInResponse = advantages.map((adv: Record<string, unknown>) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const competitionsInResponse = advantages.map((adv: any) => {
           const comp = adv.market?.event?.competitionInstance?.competition;
           return comp ? `${comp.sport} - ${comp.name}` : null;
         }).filter(Boolean).slice(0, 10);
@@ -89,7 +91,8 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
         } else {
           // Filter by sport type first
           const sportKeywords = getSportKeywords(config.key);
-          const filteredAdvantages = advantages.filter((advantage: Record<string, unknown>) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const filteredAdvantages = advantages.filter((advantage: any) => {
             const sport = advantage.market?.event?.competitionInstance?.competition?.sport?.toLowerCase() || '';
             const competitionName = advantage.market?.event?.competitionInstance?.competition?.name?.toLowerCase() || '';
             const eventName = advantage.market?.event?.name?.toLowerCase() || '';
@@ -114,7 +117,8 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
             // Transform advantages to matches
             const transformedMatches: Match[] = filteredAdvantages
             .slice(0, 12) // Limit to 12 matches
-            .map((advantage: Record<string, unknown>, index: number) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((advantage: any, index: number) => {
               const event = advantage.market?.event;
               const participants = event?.participants || [];
               const outcomes = advantage.outcomes || [];

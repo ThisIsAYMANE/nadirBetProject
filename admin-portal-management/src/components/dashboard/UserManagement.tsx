@@ -129,8 +129,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'owner':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       case 'super_admin':
         return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      case 'admin':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       case 'broker':
         return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'regular_user':
@@ -415,7 +419,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                     >
                       <option value="regular_user">Regular User</option>
                       <option value="broker">Broker</option>
+                      <option value="admin">Admin</option>
                       <option value="super_admin">Super Admin</option>
+                      <option value="owner">Owner</option>
                     </select>
                   </div>
 

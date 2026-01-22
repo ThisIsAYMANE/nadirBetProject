@@ -32,12 +32,16 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
 
   const getRoleColor = (role: User['role']) => {
     switch (role) {
+      case 'owner':
+        return 'text-red-500'; // Highest level
       case 'super_admin':
-        return 'text-purple-500';
+        return 'text-purple-500'; // Very high level
+      case 'admin':
+        return 'text-yellow-500'; // Mid-high level
       case 'broker':
-        return 'text-blue-500';
+        return 'text-blue-500'; // Mid level
       case 'regular_user':
-        return 'text-gray-400';
+        return 'text-gray-400'; // Standard level
       default:
         return 'text-gray-400';
     }

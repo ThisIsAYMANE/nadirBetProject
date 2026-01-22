@@ -23,21 +23,31 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
     const offset = (page - 1) * limit;
 
     let query = `
-      SELECT * FROM user_dashboard_view
+      SELECT 
+        user_id,
+        username,
+        full_name as name,
+        email,
+        user_type as role,
+        status,
+        created_at,
+        updated_at,
+        broker_id
+      FROM users
       WHERE 1=1
     `;
     const params = [];
 
     if (search) {
-      query += ` AND (name ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1})`;
-      params.push(`%${search}%`);
+      query += ` AND (LOWER(full_name) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))`;
+      params.push(`%${search}%`, `%${search}%`);
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit, offset);
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), parseInt(offset));
 
     const result = await pool.query(query, params);
-    const countResult = await pool.query('SELECT COUNT(*) FROM user_dashboard_view');
+    const countResult = await pool.query('SELECT COUNT(*) as count FROM users');
 
     res.json({
       data: result.rows,

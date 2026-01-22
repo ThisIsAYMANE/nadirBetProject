@@ -18,6 +18,10 @@ router.use(authenticateToken);
 // Only admins and above can view brokers
 router.get('/', requireMinimumRole('admin'), async (req, res) => {
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/79668295-0b4a-49ab-ac73-bab0f354ce6f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brokers.js:22',message:'GET /brokers started',data:{query:req.query,userRole:req.user?.role},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
     const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (page - 1) * limit;
 
@@ -26,8 +30,8 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
         b.broker_id,
         b.business_name,
         b.commission_rate,
-        b.status,
-        b.created_at,
+        u.status,
+        u.created_at,
         u.username,
         u.email,
         u.full_name,
@@ -48,12 +52,25 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
       params.push(searchParam, searchParam, searchParam);
     }
 
-    query += ` GROUP BY b.broker_id, b.business_name, b.commission_rate, b.status, b.created_at, u.username, u.email, u.full_name
-               ORDER BY b.created_at DESC LIMIT ? OFFSET ?`;
+    query += ` GROUP BY b.broker_id, b.business_name, b.commission_rate, u.status, u.created_at, u.username, u.email, u.full_name
+               ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), parseInt(offset));
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/79668295-0b4a-49ab-ac73-bab0f354ce6f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brokers.js:56',message:'About to execute query',data:{query:query.substring(0,200),paramsLength:params.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
     const result = await pool.query(query, params);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/79668295-0b4a-49ab-ac73-bab0f354ce6f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brokers.js:60',message:'Query executed',data:{rowCount:result.rows.length,firstRow:result.rows[0]},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     const countResult = await pool.query('SELECT COUNT(*) as count FROM brokers');
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/79668295-0b4a-49ab-ac73-bab0f354ce6f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brokers.js:65',message:'Before transformation',data:{count:countResult.rows[0]?.count,resultRowsLength:result.rows.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     // Transform data to match frontend Broker interface
     const transformedData = result.rows.map(row => ({
@@ -69,6 +86,10 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
       createdAt: row.created_at
     }));
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/79668295-0b4a-49ab-ac73-bab0f354ce6f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brokers.js:82',message:'After transformation',data:{transformedCount:transformedData.length,firstTransformed:transformedData[0]},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+
     res.json({
       data: transformedData,
       total: parseInt(countResult.rows[0].count),
@@ -77,6 +98,9 @@ router.get('/', requireMinimumRole('admin'), async (req, res) => {
     });
 
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/79668295-0b4a-49ab-ac73-bab0f354ce6f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brokers.js:94',message:'Error caught',data:{errorMessage:error.message,errorCode:error.code,errorStack:error.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     console.error('Get brokers error:', error);
     res.status(500).json({ error: 'Failed to fetch brokers' });
   }
@@ -92,8 +116,8 @@ router.get('/:id', async (req, res) => {
         b.broker_id,
         b.business_name,
         b.commission_rate,
-        b.status,
-        b.created_at,
+        u.status,
+        u.created_at,
         u.username,
         u.email,
         u.full_name,
@@ -105,7 +129,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users ub ON ub.broker_id = b.broker_id
       LEFT JOIN transactions t ON t.user_id = ub.user_id
       WHERE b.broker_id = ?
-      GROUP BY b.broker_id, b.business_name, b.commission_rate, b.status, b.created_at, u.username, u.email, u.full_name
+      GROUP BY b.broker_id, b.business_name, b.commission_rate, u.status, u.created_at, u.username, u.email, u.full_name
     `, [id]);
 
     if (result.rows.length === 0) {

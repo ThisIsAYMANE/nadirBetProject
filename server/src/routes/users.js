@@ -2,12 +2,22 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import { pool, db } from '../database/db.js';
-import { requireRole } from '../middleware/auth.js';
+import { 
+  authenticateToken,
+  requireRole, 
+  requireMinimumRole,
+  canCreateRole,
+  requireManagePermission
+} from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Apply authentication to all routes
+router.use(authenticateToken);
+
 // Get all users with pagination and search
-router.get('/', async (req, res) => {
+// Only admins and above can view all users
+router.get('/', requireMinimumRole('admin'), async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (page - 1) * limit;
@@ -69,7 +79,7 @@ router.post('/', [
   body('name').notEmpty().trim(),
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
-  body('role').isIn(['super_admin', 'broker', 'regular_user'])
+  body('role').isIn(['owner', 'super_admin', 'admin', 'broker', 'regular_user'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -78,6 +88,26 @@ router.post('/', [
     }
 
     const { name, email, password, role, brokerId } = req.body;
+    const creatorId = req.user.id;
+    const creatorRole = req.user.role;
+
+    // Define role creation permissions
+    const roleCreationRules = {
+      'owner': ['super_admin', 'admin', 'broker', 'regular_user'],
+      'super_admin': ['admin', 'broker', 'regular_user'],
+      'admin': ['broker', 'regular_user'],
+      'broker': ['regular_user'],
+      'regular_user': []
+    };
+
+    // Check if creator can create this role
+    const allowedRoles = roleCreationRules[creatorRole] || [];
+    if (!allowedRoles.includes(role)) {
+      return res.status(403).json({ 
+        error: `${creatorRole} cannot create ${role}`,
+        allowedToCreate: allowedRoles
+      });
+    }
 
     // Check if email already exists
     const existingUser = await pool.query(
@@ -91,15 +121,47 @@ router.post('/', [
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
+    const userId = db.generateUuid();
+    const now = new Date().toISOString();
 
-    // Create user
-    const result = await pool.query(`
-      INSERT INTO users (username, full_name, email, password_hash, user_type, broker_id)
-      VALUES (?, ?, ?, ?, ?, ?)
-      RETURNING user_id, username, full_name, email, user_type, status, created_at
-    `, [email.split('@')[0], name, email, hashedPassword, role, brokerId || null]);
+    try {
+      // Create user with hierarchy tracking
+      await pool.query(`
+        INSERT INTO users (
+          user_id, username, full_name, email, password_hash, 
+          user_type, status, broker_id, parent_id, created_by,
+          created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        userId,
+        email.split('@')[0],
+        name,
+        email,
+        hashedPassword,
+        role,
+        'active',
+        brokerId || (role === 'regular_user' ? creatorId : null), // Auto-assign broker for regular users
+        creatorId, // parent_id
+        creatorId, // created_by
+        now,
+        now
+      ]);
 
-    res.status(201).json(result.rows[0]);
+      // Fetch created user
+      const result = await pool.query(
+        'SELECT user_id, username, full_name, email, user_type, status, created_by, parent_id, created_at FROM users WHERE user_id = ?',
+        [userId]
+      );
+
+      res.status(201).json({
+        message: 'User created successfully',
+        user: result.rows[0]
+      });
+    } catch (dbError) {
+      console.error('Database error creating user:', dbError);
+      throw dbError;
+    }
 
   } catch (error) {
     console.error('Create user error:', error);
@@ -107,8 +169,8 @@ router.post('/', [
   }
 });
 
-// Update user
-router.put('/:id', [
+// Update user (requires management permission)
+router.put('/:id', requireManagePermission, [
   body('name').optional().notEmpty().trim(),
   body('email').optional().isEmail().normalizeEmail(),
   body('role').optional().isIn(['super_admin', 'broker', 'regular_user']),
@@ -185,8 +247,8 @@ router.put('/:id', [
   }
 });
 
-// Delete user
-router.delete('/:id', async (req, res) => {
+// Delete user (requires management permission)
+router.delete('/:id', requireManagePermission, async (req, res) => {
   try {
     const { id } = req.params;
 

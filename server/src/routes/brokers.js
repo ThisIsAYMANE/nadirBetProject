@@ -2,12 +2,21 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import { pool, db } from '../database/db.js';
-import { requireRole } from '../middleware/auth.js';
+import { 
+  authenticateToken,
+  requireRole,
+  requireMinimumRole,
+  requireManagePermission
+} from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Apply authentication to all routes
+router.use(authenticateToken);
+
 // Get all brokers with pagination and search
-router.get('/', async (req, res) => {
+// Only admins and above can view brokers
+router.get('/', requireMinimumRole('admin'), async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (page - 1) * limit;

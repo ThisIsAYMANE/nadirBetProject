@@ -86,10 +86,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', (req, res, next) => {
-  console.log('Auth route hit:', req.method, req.path, req.body);
-  next();
-}, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/brokers', authenticateToken, brokerRoutes);
 app.use('/api/transactions', authenticateToken, transactionRoutes);

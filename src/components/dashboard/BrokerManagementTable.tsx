@@ -3,7 +3,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Broker } from '../../types';
-import { MoreHorizontal, Eye, Edit, TrendingUp, Plus, Trash2, Save, X } from 'lucide-react';
+import { Eye, Edit, TrendingUp, Plus, Trash2, Save, X } from 'lucide-react';
 import { apiService } from '../../services/api';
 
 interface BrokerManagementTableProps {
@@ -104,9 +104,9 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
         console.log('Refreshing brokers list...');
         onRefresh?.();
       }, 500);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving broker:', error);
-      const errorMessage = error?.message || 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       alert(`Failed to save broker: ${errorMessage}`);
     } finally {
       setLoading(false);

@@ -13,12 +13,12 @@ export async function GET(request: NextRequest) {
       type: type,
       data: data
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching arbitrage data:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Failed to fetch arbitrage data',
+        error: error instanceof Error ? error.message : 'Failed to fetch arbitrage data',
         data: null 
       },
       { status: 500 }

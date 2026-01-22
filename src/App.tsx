@@ -11,10 +11,9 @@ import { BrokerManagementTable } from './components/dashboard/BrokerManagementTa
 import { Settings } from './components/dashboard/Settings';
 import { CashoutQueue } from './components/dashboard/CashoutQueue';
 import { useDashboardData, useBrokers } from './hooks/useDashboardData';
-import { DashboardType } from './types';
 
 const DashboardApp: React.FC = () => {
-  const { user, isAuthenticated, isLoading, dashboardType, setDashboardType } = useAuth();
+  const { user, isAuthenticated, isLoading, dashboardType } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeItem, setActiveItem] = useState('dashboard');
 

@@ -3,7 +3,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiService } from '../../services/api';
-import { User, Lock, Mail, Shield, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Shield, Save, Eye, EyeOff } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { user, updateUser } = useAuth();

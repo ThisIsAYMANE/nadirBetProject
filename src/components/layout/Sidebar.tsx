@@ -7,8 +7,7 @@ import {
   Settings, 
   UserCheck,
   DollarSign,
-  Activity,
-  Shield
+  Activity
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { DashboardType } from '../../types';

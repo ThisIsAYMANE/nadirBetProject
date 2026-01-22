@@ -1,4 +1,4 @@
-import { User, Broker, Transaction, KPIData, ChartData } from '../types';
+import { User, Broker, Transaction } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -131,7 +131,7 @@ class ApiService {
 
 
   // Transactions
-  async getTransactions(page = 1, limit = 10, filters: any = {}) {
+  async getTransactions(page = 1, limit = 10, filters: Record<string, string | number | boolean> = {}) {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -266,7 +266,8 @@ class ApiService {
   }
 
   // Real-time updates
-  async subscribeToUpdates(callback: (data: any) => void) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async subscribeToUpdates(callback: (data: unknown) => void) {
     // For now, return a no-op function since we don't have real-time updates set up
     // In a real application, this would be WebSocket or Server-Sent Events
     console.log('Real-time updates not implemented yet');

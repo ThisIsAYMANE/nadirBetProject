@@ -4,7 +4,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { User } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Eye, Edit } from 'lucide-react';
 
 interface UserManagementTableProps {
   users: User[];

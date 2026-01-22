@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useUsers } from '../../hooks/useDashboardData';
 import { User } from '../../types';
-import { Search, Plus, Edit, Trash2, Eye, Filter } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { apiService } from '../../services/api';
 
 interface UserManagementProps {

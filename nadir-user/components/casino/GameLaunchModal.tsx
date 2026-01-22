@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -17,16 +17,6 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && gameId) {
-      launchGame();
-    } else {
-      // Reset state when modal closes
-      setGameUrl(null);
-      setError(null);
-    }
-  }, [isOpen, gameId]);
-
   const launchGame = async () => {
     setIsLoading(true);
     setError(null);
@@ -41,13 +31,24 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
       });
 
       setGameUrl(response.gameUrl);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error launching game:', err);
-      setError(err.message || 'Failed to launch game. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to launch game. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && gameId) {
+      launchGame();
+    } else {
+      // Reset state when modal closes
+      setGameUrl(null);
+      setError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, gameId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

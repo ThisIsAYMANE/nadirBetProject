@@ -115,7 +115,7 @@ const getFetchOptions = (method: string = 'GET'): RequestInit => ({
 /**
  * Fetch arbitrage opportunities
  */
-export async function fetchArbitrageData(type: string = 'ARBITRAGE'): Promise<any> {
+export async function fetchArbitrageData(type: string = 'ARBITRAGE'): Promise<unknown> {
   try {
     const response = await fetch(
       `${API_BASE_URL}/advantages/?type=${type}`,
@@ -157,7 +157,7 @@ export async function fetchOddsBySport(sportKey: string, region: string = 'us', 
 /**
  * Fetch all available sports
  */
-export async function fetchAvailableSports(): Promise<any[]> {
+export async function fetchAvailableSports(): Promise<unknown[]> {
   try {
     const response = await fetch(
       `${API_BASE_URL}/sports`,
@@ -198,7 +198,7 @@ export async function fetchOddsForMultipleSports(sportKeys: string[], region: st
 /**
  * Transform API data to our Match interface
  */
-export function transformToMatch(event: SportsbookOdds): any {
+export function transformToMatch(event: SportsbookOdds): Record<string, unknown> {
   const h2hMarket = event.bookmakers?.[0]?.markets?.find(m => m.key === 'h2h');
   
   let homeOdds = 2.00;

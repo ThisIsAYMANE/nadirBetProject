@@ -8,7 +8,6 @@ import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import { pragmaticApi } from '@/lib/api';
 import { CasinoGame } from '@/types';
 import { 
-  Search, 
   Home, 
   Percent, 
   Star, 
@@ -24,7 +23,6 @@ import {
 export default function CasinoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('home');
-  const [searchQuery, setSearchQuery] = useState('');
   const [games, setGames] = useState<CasinoGame[]>([]);
   const [selectedGame, setSelectedGame] = useState<CasinoGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,7 +37,7 @@ export default function CasinoPage() {
       const response = await pragmaticApi.getGames();
       
       // Transform Pragmatic games to our CasinoGame format
-      const transformedGames: CasinoGame[] = response.games.map((game: any) => ({
+      const transformedGames: CasinoGame[] = response.games.map((game: Record<string, unknown>) => ({
         id: game.id || game.symbol || game.gameId || String(Math.random()),
         name: game.name || game.title || 'Unknown Game',
         provider: 'Pragmatic Play',

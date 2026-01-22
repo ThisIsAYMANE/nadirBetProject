@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { fetchAvailableSports } from '@/lib/sportsbookApi';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const sports = await fetchAvailableSports();
 
@@ -10,12 +10,12 @@ export async function GET(request: NextRequest) {
       count: sports.length,
       sports: sports
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching available sports:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Failed to fetch sports',
+        error: error instanceof Error ? error.message : 'Failed to fetch sports',
         sports: [] 
       },
       { status: 500 }

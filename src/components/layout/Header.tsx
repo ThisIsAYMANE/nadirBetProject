@@ -10,7 +10,7 @@ interface HeaderProps {
   onSettingsClick: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onMenuClick, dashboardType, onSettingsClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, onSettingsClick }) => {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 

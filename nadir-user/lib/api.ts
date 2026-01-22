@@ -60,7 +60,7 @@ export const pragmaticApi = {
    * Get list of available games
    */
   async getGames() {
-    return apiRequest<{ success: boolean; games: any[]; count: number }>('/pragmatic/games');
+    return apiRequest<{ success: boolean; games: Record<string, unknown>[]; count: number }>('/pragmatic/games');
   },
 
   /**

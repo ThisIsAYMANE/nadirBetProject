@@ -32,12 +32,12 @@ export async function GET(
       count: matches.length,
       matches: matches
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error in sports API route:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Failed to fetch sports data',
+        error: error instanceof Error ? error.message : 'Failed to fetch sports data',
         matches: [] 
       },
       { status: 500 }

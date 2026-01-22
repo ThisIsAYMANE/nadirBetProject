@@ -7,7 +7,6 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalBanner from '@/components/ui/PromotionalBanner';
 import { useSportsData } from '@/hooks/useSportsData';
 import { Filter, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react';
-import { formatLeagueName } from '@/lib/sportsbookApi';
 
 interface SportConfig {
   key: string;

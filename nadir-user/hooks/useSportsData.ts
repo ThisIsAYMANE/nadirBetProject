@@ -35,9 +35,9 @@ export function useSportsData(sportKey: string, selectedLeague: string = 'all'):
       } else {
         throw new Error(data.error || 'Failed to fetch matches');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching sports data:', err);
-      setError(err.message || 'Failed to load data');
+      setError(err instanceof Error ? err.message : 'Failed to load data');
       setMatches([]);
     } finally {
       setIsLoading(false);
@@ -46,6 +46,7 @@ export function useSportsData(sportKey: string, selectedLeague: string = 'all'):
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sportKey, selectedLeague]);
 
   return {

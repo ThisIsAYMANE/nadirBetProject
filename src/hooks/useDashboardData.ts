@@ -200,7 +200,7 @@ export const useBrokers = (page = 1, limit = 10, search = '', enabled = true) =>
   return { brokers, loading, error, total, refresh: fetchBrokers };
 };
 
-export const useTransactions = (page = 1, limit = 10, filters: any = {}) => {
+export const useTransactions = (page = 1, limit = 10, filters: Record<string, string | number | boolean> = {}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -377,6 +377,7 @@ export const BrokerManagementTable: React.FC<BrokerManagementTableProps> = ({ br
                       required
                     />
                   </div>
+                  
                 )}
                 <div>
                   <label className="text-sm text-gray-400">Status</label>

@@ -24,8 +24,8 @@
 - [*] No TypeScript compilation errors
 
 ### 4. Backend Server (Port 3001)
-- [ ] Database is running: `docker-compose up -d postgres`
-- [ ] Start server: `cd server && npm start`
+- [*] Database is running: `docker-compose up -d postgres`
+- [*] Start server: `cd server && npm start`
 - [ ] Health check: `curl http://localhost:3001/health`
 - [ ] Returns `{"status":"OK"}`
 

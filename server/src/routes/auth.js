@@ -6,6 +6,18 @@ import { pool } from '../index.js';
 
 const router = express.Router();
 
+// Helper function to get portal URL based on role
+function getPortalUrl(role) {
+  const portals = {
+    owner: process.env.EXECUTIVE_PORTAL_URL || 'http://localhost:5173',
+    super_admin: process.env.EXECUTIVE_PORTAL_URL || 'http://localhost:5173',
+    admin: process.env.MANAGEMENT_PORTAL_URL || 'http://localhost:5174',
+    broker: process.env.MANAGEMENT_PORTAL_URL || 'http://localhost:5174',
+    regular_user: process.env.USER_PORTAL_URL || 'http://localhost:3002'
+  };
+  return portals[role] || portals.regular_user;
+}
+
 // Login endpoint
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
@@ -70,7 +82,7 @@ router.post('/login', [
       { expiresIn: '7d' }
     );
 
-    // Return user data and token
+    // Return user data, token, and redirect URL based on role
     res.json({
       user: {
         id: user.user_id,
@@ -80,7 +92,8 @@ router.post('/login', [
         status: user.status,
         createdAt: user.last_login
       },
-      token
+      token,
+      redirectTo: getPortalUrl(user.user_type)
     });
 
   } catch (error) {

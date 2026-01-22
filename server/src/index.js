@@ -63,8 +63,17 @@ app.set('trust proxy', 1); // Trust proxy for rate limiting
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
+// CORS for all 3 portals
+const corsOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',')
+  : [
+      'http://localhost:5173', // Executive Portal
+      'http://localhost:5174', // Management Portal
+      'http://localhost:3002'  // User Portal
+    ];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: corsOrigins,
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));

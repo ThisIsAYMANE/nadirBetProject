@@ -1,53 +1,110 @@
 version: '3.8'
 
 services:
+  # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: betting_platform_db
-    restart: unless-stopped
     environment:
-      POSTGRES_DB: betting_platform
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin123
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      POSTGRES_DB: betting_platform
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/datanp
+      - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
-      - ./database/backups:/backups
-    networks:
-      - betting_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d betting_platform"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: betting_platform_pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@bettingplatform.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+  # Backend API Server
+  backend:
+    build:
+      context: ./server
+      dockerfile: ../Dockerfile.backend
+    container_name: betting_platform_backend
     ports:
-      - "8081:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - betting_network
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://admin:admin123@postgres:5432/betting_platform
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=betting_platform
+      - DB_USER=admin
+      - DB_PASSWORD=admin123
+      - JWT_SECRET=your_super_secret_jwt_key_here_change_in_production
+      - CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:3002
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  # Executive Portal (Owner + Super Admin) - Port 5173
+  admin-executive:
+    build:
+      context: ./admin-portal-executive
+      dockerfile: Dockerfile
+    container_name: betting_platform_executive
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+      - VITE_PORTAL_TYPE=executive
+      - VITE_ALLOWED_ROLES=owner,super_admin
+    depends_on:
+      - backend
+
+  # Management Portal (Admin + Broker) - Port 5174
+  admin-management:
+    build:
+      context: ./admin-portal-management
+      dockerfile: Dockerfile
+    container_name: betting_platform_management
+    ports:
+      - "5174:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+      - VITE_PORTAL_TYPE=management
+      - VITE_ALLOWED_ROLES=admin,broker
+    depends_on:
+      - backend
+
+  # User Portal (Regular Users) - Port 3002
+  user-portal:
+    build:
+      context: ./nadir-user
+      dockerfile: ../Dockerfile.frontend
+    container_name: betting_platform_user
+    ports:
+      - "3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
+    depends_on:
+      - backend
+
+  # pgAdmin (Database Management Tool)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: betting_platform_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
     driver: local
-  pgadmin_data:
-    driver: local
 
 networks:
-  betting_network:
-    driver: bridge
+  default:
+    name: betting_platform_network

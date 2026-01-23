@@ -265,6 +265,95 @@ class ApiService {
     return response.json();
   }
 
+  // Points Management
+  async getPointsBalance() {
+    const response = await fetch(`${API_BASE_URL}/points/balance`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch balance');
+    return response.json();
+  }
+
+  async getPointsStats() {
+    const response = await fetch(`${API_BASE_URL}/points/stats`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    return response.json();
+  }
+
+  async getPointsHistory(limit = 50) {
+    const response = await fetch(`${API_BASE_URL}/points/history?limit=${limit}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch history');
+    return response.json();
+  }
+
+  async getPointsAllocations(type = 'all') {
+    const response = await fetch(`${API_BASE_URL}/points/allocations?type=${type}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch allocations');
+    return response.json();
+  }
+
+  async allocatePoints(toUserId: string, amount: number, notes = '') {
+    const response = await fetch(`${API_BASE_URL}/points/allocate`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ toUserId, amount, notes }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to allocate points');
+    }
+    return response.json();
+  }
+
+  async requestPoints(requestedFromId: string, amount: number, message = '') {
+    const response = await fetch(`${API_BASE_URL}/points/request`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ requestedFromId, amount, message }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to request points');
+    }
+    return response.json();
+  }
+
+  async getPointsRequests(type = 'all') {
+    const response = await fetch(`${API_BASE_URL}/points/requests?type=${type}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch requests');
+    return response.json();
+  }
+
+  async respondToPointsRequest(requestId: string, status: 'approved' | 'rejected', message = '') {
+    const response = await fetch(`${API_BASE_URL}/points/requests/${requestId}/respond`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ status, message }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to respond to request');
+    }
+    return response.json();
+  }
+
+  async getPointsHierarchy(rootUserId?: string) {
+    const params = rootUserId ? `?rootUserId=${rootUserId}` : '';
+    const response = await fetch(`${API_BASE_URL}/points/hierarchy${params}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch hierarchy');
+    return response.json();
+  }
+
   // Real-time updates
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async subscribeToUpdates(callback: (data: unknown) => void) {

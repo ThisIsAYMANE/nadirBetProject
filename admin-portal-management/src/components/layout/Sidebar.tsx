@@ -6,7 +6,8 @@ import {
   BarChart3, 
   Settings, 
   UserCheck,
-  DollarSign
+  DollarSign,
+  Coins
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { DashboardType } from '../../types';
@@ -21,6 +22,7 @@ interface SidebarProps {
 // Management Portal - Admin and Broker navigation
 const adminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
+  { id: 'points', label: 'Points Management', icon: Coins },
   { id: 'brokers', label: 'Broker Management', icon: UserCheck },
   { id: 'users', label: 'User Monitoring', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
@@ -30,6 +32,7 @@ const adminNavItems = [
 
 const brokerNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
+  { id: 'points', label: 'Points Management', icon: Coins },
   { id: 'users', label: 'User Management', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
   { id: 'cashouts', label: 'Cashout Queue', icon: DollarSign },

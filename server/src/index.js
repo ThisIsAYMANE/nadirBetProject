@@ -20,6 +20,7 @@ import kpiRoutes from './routes/kpis.js';
 import chartRoutes from './routes/charts.js';
 import cashoutRoutes from './routes/cashout.js';
 import pragmaticRoutes from './routes/pragmatic.js';
+import pointsRoutes from './routes/points.js';
 import { authenticateToken } from './middleware/auth.js';
 
 // Load environment variables from 'env' file (not .env)
@@ -65,7 +66,15 @@ const corsOrigins = process.env.CORS_ORIGIN
     ];
 
 app.use(cors({
-  origin: corsOrigins,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (corsOrigins.indexOf(origin) === -1) {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+    callback(null, true);
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -86,11 +95,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/brokers', authenticateToken, brokerRoutes);
 app.use('/api/transactions', authenticateToken, transactionRoutes);
+app.use('/api/points', pointsRoutes); // Points routes have auth built-in
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/kpis', authenticateToken, kpiRoutes);
 app.use('/api/charts', authenticateToken, chartRoutes);

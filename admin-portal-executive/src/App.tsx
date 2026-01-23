@@ -10,6 +10,8 @@ import { UserManagement } from './components/dashboard/UserManagement';
 import { BrokerManagementTable } from './components/dashboard/BrokerManagementTable';
 import { Settings } from './components/dashboard/Settings';
 import { CashoutQueue } from './components/dashboard/CashoutQueue';
+import { PointsManagement } from './components/dashboard/PointsManagement';
+import { PointsBalanceCard } from './components/dashboard/PointsBalanceCard';
 import { useDashboardData, useBrokers } from './hooks/useDashboardData';
 
 const DashboardApp: React.FC = () => {
@@ -119,6 +121,9 @@ const DashboardApp: React.FC = () => {
 
       return (
         <div className="space-y-6">
+          {/* Points Balance Widget - Hidden for Owner (has infinite points) */}
+          {user?.role !== 'owner' && <PointsBalanceCard compact={true} />}
+
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {(data.kpis.length > 0 ? data.kpis : fallbackKPIs).map((kpi, index) => (
@@ -145,6 +150,10 @@ const DashboardApp: React.FC = () => {
           />
         </div>
       );
+    }
+
+    if (activeItem === 'points') {
+      return <PointsManagement />;
     }
 
     if (activeItem === 'users') {

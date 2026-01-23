@@ -1,347 +1,313 @@
-# Nadir - Multi-Portal Betting Platform
+# 🎰 FREEBET - Multi-Portal Betting Platform
 
-A modern, scalable betting platform with separate portals for executives, managers, and end users. Built with React, Next.js, Node.js, and SQLite.
+A comprehensive betting platform with role-based portals for Owner, Super Admin, Admin, Broker, and Regular Users.
 
-## 🏗️ Architecture
+## 📁 **PROJECT STRUCTURE**
 
-### Three Independent Portals
-
-1. **Executive Portal** (Port 5173)
-   - For: Platform Owner & Super Admins
-   - Tech: React + Vite + TypeScript
-   - Features: Full system management, super admin creation, platform-wide analytics
-
-2. **Management Portal** (Port 5174)
-   - For: Admins & Brokers
-   - Tech: React + Vite + TypeScript
-   - Features: Broker management, user management, shop operations
-
-3. **User Portal** (Port 3002)
-   - For: Regular Users (Bettors)
-   - Tech: Next.js 13+ + TypeScript
-   - Features: Sports betting, casino games, balance management
-
-### Backend API (Port 3001)
-
-- **Tech Stack**: Node.js + Express + SQLite
-- **Database**: SQLite with WAL mode (file-based, portable)
-- **Auth**: JWT tokens + bcrypt password hashing
-- **API**: RESTful endpoints for all operations
+```
+nadir/
+├── server/                    # Node.js + Express + SQLite Backend
+│   ├── src/
+│   │   ├── database/         # Database schema & connection
+│   │   ├── middleware/       # Auth & validation
+│   │   ├── routes/           # API endpoints
+│   │   └── services/         # Business logic
+│   └── package.json
+│
+├── admin-portal-executive/   # Owner & Super Admin Portal (Vite + React)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   └── services/
+│   └── package.json
+│
+├── admin-portal-management/  # Admin & Broker Portal (Vite + React)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   └── services/
+│   └── package.json
+│
+└── nadir-user/               # User Portal (Next.js 13+)
+    ├── app/
+    ├── components/
+    └── package.json
+```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 **QUICK START**
 
-### Prerequisites
-
-```bash
-- Node.js 18+ installed
+### **Prerequisites**
+- Node.js 18+ 
 - npm or yarn
-- Git
-```
 
-### 1. Clone Repository
-
-```bash
-git clone <repository-url>
-cd nadir
-```
-
-### 2. Start Backend
-
+### **1. Backend Setup**
 ```bash
 cd server
 npm install
 npm start
+# Runs on http://localhost:3001
 ```
 
-Backend runs on: http://localhost:3001
-
-### 3. Start Executive Portal
-
+### **2. Owner/Super Admin Portal**
 ```bash
 cd admin-portal-executive
 npm install
 npm run dev
+# Runs on http://localhost:5173
 ```
 
-Portal runs on: http://localhost:5173
-
-### 4. Start Management Portal
-
+### **3. Admin/Broker Portal**
 ```bash
 cd admin-portal-management
 npm install
 npm run dev
+# Runs on http://localhost:5174
 ```
 
-Portal runs on: http://localhost:5174
-
-### 5. Start User Portal
-
+### **4. User Portal**
 ```bash
 cd nadir-user
 npm install
 npm run dev
-```
-
-Portal runs on: http://localhost:3002
-
----
-
-## 🧪 Test Accounts
-
-All passwords: `password123`
-
-| Role | Email | Portal URL |
-|------|-------|------------|
-| Owner | owner@example.com | http://localhost:5173 |
-| Super Admin | superadmin@example.com | http://localhost:5173 |
-| Admin | admin@example.com | http://localhost:5174 |
-| Broker | broker@example.com | http://localhost:5174 |
-| Regular User | user@example.com | http://localhost:3002 |
-
----
-
-## 📂 Project Structure
-
-```
-nadir/
-├── admin-portal-executive/    # Owner/Super Admin portal (React+Vite)
-├── admin-portal-management/   # Admin/Broker portal (React+Vite)
-├── nadir-user/                # User portal (Next.js)
-├── server/                    # Backend API (Node.js+Express+SQLite)
-│   ├── src/
-│   │   ├── database/          # SQLite schema and connection
-│   │   ├── middleware/        # Auth middleware
-│   │   ├── routes/            # API endpoints
-│   │   └── services/          # Business logic
-│   ├── data/                  # SQLite database files
-│   ├── scripts/               # Utility scripts
-│   ├── seed-database.js       # Database seeder
-│   └── test-phase2.js         # Test suite
-├── archive/                   # Archived PostgreSQL files
-├── docs/                      # Detailed documentation
-├── PHASE1_TESTING.md          # Phase 1 test checklist
-├── PHASE2_TESTING.md          # Phase 2 test checklist
-├── PHASE2_SUMMARY.md          # Phase 2 implementation summary
-└── PHASE3_PLAN.md             # Phase 3 implementation plan
+# Runs on http://localhost:3002
 ```
 
 ---
 
-## 🗄️ Database
+## 🧪 **TESTING**
 
-### SQLite Database
-
-- **Location**: `server/data/betting_platform.db`
-- **Mode**: WAL (Write-Ahead Logging) for better concurrency
-- **Auto-Init**: Schema initializes automatically on first run
-
-### Seeding Test Data
-
+### **Phase 4 Testing (Current)**
 ```bash
+# See PHASE4_TESTING.md for complete guide
+```
+
+**Test Accounts:**
+| Role | Portal | Email | Password |
+|------|--------|-------|----------|
+| Owner | :5173 | owner@example.com | password123 |
+| Super Admin | :5173 | superadmin@example.com | password123 |
+| Admin | :5174 | admin@example.com | password123 |
+| Broker | :5174 | broker@example.com | password123 |
+| User | :3002 | user@example.com | password123 |
+
+---
+
+## ✅ **COMPLETED PHASES**
+
+### **Phase 1: Initial Setup**
+- ✅ Database schema (SQLite)
+- ✅ Backend API
+- ✅ Authentication system
+- ✅ Frontend portals structure
+
+### **Phase 2: SQLite Migration**
+- ✅ Migrated from PostgreSQL to SQLite
+- ✅ WAL mode for performance
+- ✅ Optimized queries
+- ✅ Database views for dashboards
+
+### **Phase 3: Role-Based Access Control**
+- ✅ 5-tier role hierarchy
+- ✅ JWT authentication
+- ✅ Protected routes
+- ✅ Broker assignment to users
+- ✅ User management UI
+
+### **Phase 4: Points Hierarchy System**
+- ✅ Points allocation flow
+- ✅ Points request/approval workflow
+- ✅ Dynamic user data (name, email, balances)
+- ✅ Auto-refresh balances (30s)
+- ✅ Points management UI (all portals)
+- ✅ Placeholder UI for betting features
+
+---
+
+## 🎯 **CURRENT FEATURES**
+
+### **For Owners/Super Admins:**
+- Create points from nothing
+- Allocate to any user
+- View hierarchy and stats
+- Approve point requests
+- Monitor all allocations
+
+### **For Admins/Brokers:**
+- Allocate points to lower roles
+- Approve user requests
+- View assigned users
+- Monitor allocations and balances
+
+### **For Users:**
+- View real-time points balance
+- Request points from broker
+- View transaction history
+- Profile with dynamic data
+- Cashout requests
+
+---
+
+## 📊 **TECHNOLOGY STACK**
+
+### **Backend:**
+- Node.js + Express.js
+- SQLite (better-sqlite3)
+- JWT Authentication
+- bcrypt for passwords
+
+### **Frontend:**
+- **Executive Portal:** Vite + React + TypeScript
+- **Management Portal:** Vite + React + TypeScript
+- **User Portal:** Next.js 13+ + TypeScript
+- Tailwind CSS
+- Lucide Icons
+
+### **Database:**
+- SQLite with WAL mode
+- Foreign key constraints
+- Indexed queries
+- Database views for analytics
+
+---
+
+## 📝 **API ENDPOINTS**
+
+### **Authentication:**
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `GET /api/auth/me` - Get current user
+
+### **Users:**
+- `GET /api/users` - List users (paginated)
+- `POST /api/users` - Create user
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
+
+### **Points:**
+- `GET /api/points/balance` - Get user balance
+- `POST /api/points/allocate` - Allocate points
+- `POST /api/points/request` - Request points
+- `POST /api/points/requests/:id/respond` - Approve/reject
+- `GET /api/points/history` - Transaction history
+- `GET /api/points/hierarchy` - View hierarchy
+
+### **Brokers:**
+- `GET /api/brokers` - List brokers
+- `GET /api/brokers/:id/users` - Get broker's users
+
+### **Dashboard:**
+- `GET /api/dashboard/stats` - Dashboard KPIs
+- `GET /api/charts/revenue` - Revenue charts
+- `GET /api/kpis` - Key metrics
+
+---
+
+## 🔐 **SECURITY**
+
+- JWT tokens for authentication
+- bcrypt password hashing
+- Role-based authorization
+- Protected API routes
+- Input validation
+- SQL injection prevention (parameterized queries)
+
+---
+
+## 🗄️ **DATABASE SCHEMA**
+
+### **Key Tables:**
+- `users` - User accounts with roles
+- `user_points` - Points balances
+- `points_allocation` - Allocation records
+- `points_ledger` - Transaction history
+- `points_requests` - Request workflow
+- `transactions` - Betting transactions
+- `cashout_requests` - Cashout workflow
+
+### **Views:**
+- `user_dashboard_view` - User KPIs
+- `broker_dashboard_view` - Broker stats
+- `admin_dashboard_view` - Admin analytics
+
+---
+
+## 📖 **DOCUMENTATION**
+
+- `PHASE4_TESTING.md` - Complete testing guide
+- `PHASE4_IMPLEMENTATION.md` - Technical implementation
+- `PHASE4_USER_PROFILE_INTEGRATION.md` - Profile features
+- `PHASE3_COMPLETE.md` - RBAC implementation
+- `DOCKER-DEPLOYMENT.md` - Docker deployment
+
+---
+
+## 🐛 **TROUBLESHOOTING**
+
+### **Backend won't start:**
+```bash
+# Check if port 3001 is in use
+netstat -ano | findstr :3001
+# Kill the process if needed
+taskkill /PID <PID> /F
+```
+
+### **Database errors:**
+```bash
+# Reset database (WARNING: Deletes all data)
 cd server
-node seed-database.js
+rm data/*.db
+npm start  # Will recreate with seed data
 ```
 
-Creates 5 test users (one for each role) + broker profile + points balance.
-
-### Database Schema
-
-12 main tables:
-- users, brokers, user_points
-- transactions, bets, cashout_requests
-- points_allocation, messages
-- broker_reviews, alerts
-- audit_logs, fraud_alerts
-
----
-
-## 🔐 Authentication & Authorization
-
-### JWT-Based Authentication
-
-- Login returns JWT token
-- Token expires in 24 hours
-- Token required for all protected routes
-
-### Role Hierarchy
-
-```
-Owner (Highest)
-  ↓
-Super Admin
-  ↓
-Admin
-  ↓
-Broker
-  ↓
-Regular User (Lowest)
-```
-
-### Role-Based Access Control
-
-**Phase 3** will implement:
-- Role validation middleware
-- Route protection
-- Hierarchy enforcement
-- Permission checks
-
----
-
-## 🎮 Features
-
-### Current (Phase 1-2 Complete)
-
-✅ Multi-portal architecture  
-✅ SQLite database migration  
-✅ User authentication  
-✅ JWT token management  
-✅ Basic CRUD operations  
-✅ Test data seeding  
-
-### In Progress (Phase 3)
-
-🚧 Role-based access control  
-🚧 User creation validation  
-🚧 Hierarchy enforcement  
-🚧 Permission middleware  
-
-### Planned (Phase 4+)
-
-⏳ Points allocation system  
-⏳ Betting/casino integration  
-⏳ Transaction management  
-⏳ Cashout system  
-⏳ Commission calculation  
-
----
-
-## 🧪 Testing
-
-### Automated Tests
-
+### **Frontend won't build:**
 ```bash
-cd server
-node test-phase2.js
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-Runs 7 automated tests covering:
-- Database creation
-- Authentication
-- CRUD operations
-- API endpoints
+---
 
-### Manual Testing
+## 🚀 **NEXT PHASE (Phase 5)**
 
-See `MANUAL_TESTING_GUIDE.md` and `TESTING_NOW.md` in docs.
+### **Planned Features:**
+- Casino games integration
+- Sports betting functionality
+- Real bet placement
+- Win/loss tracking
+- Betting history (replace placeholders)
+- Win rate calculation
+- Recent activity feed
+- Points usage for betting
 
 ---
 
-## 🐳 Docker Deployment
+## 📞 **SUPPORT**
 
-**Note**: Docker configuration available but currently optimized for local development.
-
-```bash
-docker-compose up -d
-```
-
-See `DOCKER-DEPLOYMENT.md` for production deployment.
+For issues:
+1. Check `PHASE4_TESTING.md` troubleshooting section
+2. Verify all services are running
+3. Check browser console for errors
+4. Review API responses in Network tab
 
 ---
 
-## 📝 Development Workflow
+## 📄 **LICENSE**
 
-### Adding New Features
-
-1. Create feature branch
-2. Implement in appropriate portal/backend
-3. Test with existing test accounts
-4. Update documentation
-5. Create pull request
-
-### Code Style
-
-- TypeScript for all frontend code
-- ES6+ for backend
-- ESLint configured for all projects
-- Follow existing patterns
+Proprietary - All rights reserved
 
 ---
 
-## 🔧 Configuration
+## 👥 **TEAM**
 
-### Backend Environment Variables
-
-Copy `server/env.example` to `server/env`:
-
-```env
-PORT=3001
-JWT_SECRET=your_secret_key_here
-CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:3002
-```
-
-### Portal Configuration
-
-Each portal has `.env.example` file. Copy to `.env.local` and configure API URLs.
+- Development: Nadir Team
+- Testing: In Progress (Phase 4)
+- Deployment: Pending
 
 ---
 
-## 📚 Documentation
+**Current Status:** ✅ Phase 4 Complete - Ready for Testing
 
-- `PHASE1_TESTING.md` - Multi-portal setup testing
-- `PHASE2_TESTING.md` - SQLite migration testing
-- `PHASE2_SUMMARY.md` - Phase 2 implementation details
-- `PHASE3_PLAN.md` - Role system implementation plan
-- `MANUAL_TESTING_GUIDE.md` - Manual testing procedures
-- `DOCKER-DEPLOYMENT.md` - Docker deployment guide
-
----
-
-## 🤝 Contributing
-
-1. Follow existing code structure
-2. Test thoroughly before committing
-3. Update documentation for new features
-4. Use meaningful commit messages
-
----
-
-## 📜 License
-
-[Your License Here]
-
----
-
-## 🆘 Support & Issues
-
-For issues or questions:
-1. Check existing documentation
-2. Review test files for examples
-3. Check terminal logs for errors
-4. Open an issue with detailed description
-
----
-
-## 🎯 Project Status
-
-**Current Phase**: Phase 2 Complete ✅  
-**Next Phase**: Phase 3 (Role System & Access Control)  
-**Overall Progress**: ~30% Complete
-
-### Milestones
-
-- [x] Phase 0: Code cleanup
-- [x] Phase 1: Multi-portal architecture
-- [x] Phase 2: SQLite migration
-- [ ] Phase 3: Role system
-- [ ] Phase 4: Points hierarchy
-- [ ] Phase 5: Casino integration
-- [ ] Phase 6: Sports betting
-- [ ] Phase 7: Commission system
-- [ ] Phase 8: Production deployment
-
----
-
-**Built with ❤️ using React, Next.js, Node.js, and SQLite**
+**Next Milestone:** Casino & Sports Integration (Phase 5)

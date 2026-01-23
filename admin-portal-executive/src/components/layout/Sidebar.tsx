@@ -7,7 +7,8 @@ import {
   Settings, 
   UserCheck,
   DollarSign,
-  Activity
+  Activity,
+  Coins
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { DashboardType } from '../../types';
@@ -21,6 +22,7 @@ interface SidebarProps {
 
 const superAdminNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
+  { id: 'points', label: 'Points Management', icon: Coins },
   { id: 'users', label: 'User Management', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },

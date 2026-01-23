@@ -2,13 +2,21 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Search, User, Menu, Bell, Wallet, Home, PlayCircle, Gamepad2, Star, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, User, Menu, Bell, Home, PlayCircle, Gamepad2, Star, ChevronRight, Coins, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { sports } from '@/lib/mockData';
+import LoginModal from '@/components/auth/LoginModal';
+import ProfileDropdown from '@/components/layout/ProfileDropdown';
 
 export default function Header() {
   const pathname = usePathname();
+  const [pointsBalance, setPointsBalance] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   
   const isActive = (path: string) => {
     if (path === '/') {
@@ -17,8 +25,82 @@ export default function Header() {
     return pathname.startsWith(path);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  };
+
+  useEffect(() => {
+    // Check login status and load user data
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    setIsLoggedIn(!!token);
+    
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setUserName(user.full_name || user.name || user.username || 'User');
+        setUserEmail(user.email || '');
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+      }
+    }
+
+    // Listen for custom event to open login modal from mobile nav
+    const handleOpenLoginModal = () => setIsLoginModalOpen(true);
+    window.addEventListener('openLoginModal', handleOpenLoginModal);
+
+    // Load points balance
+    const loadBalances = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsLoggedIn(false);
+          return;
+        }
+
+        setIsLoggedIn(true);
+
+        // Add 5 second timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch('http://localhost:3001/api/points/balance', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          setPointsBalance(data.balance || 0);
+        }
+      } catch (err) {
+        console.error('Error loading balances:', err);
+      }
+    };
+
+    loadBalances();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadBalances, 30000);
+    
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal);
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
-    <header className="bg-gray-900 border-b border-gray-800 fixed top-0 left-0 right-0 z-50 shadow-lg overflow-visible">
+    <>
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      
+      <header className="bg-gray-900 border-b border-gray-800 fixed top-0 left-0 right-0 z-50 shadow-lg overflow-visible">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Top Navigation Bar - Mobile */}
         <div className="flex items-center justify-between py-2 border-b border-gray-800 md:hidden">
@@ -126,20 +208,33 @@ export default function Header() {
                         </div>
                         <ChevronRight className="w-4 h-4 opacity-50" />
                       </Link>
-                      <Link 
-                        href="/profile" 
-                        className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
-                          isActive('/profile')
-                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
-                            : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <User className="w-5 h-5" />
-                          <span className="text-sm font-medium">Profile</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 opacity-50" />
-                      </Link>
+                      {isLoggedIn ? (
+                        <Link 
+                          href="/profile" 
+                          className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                            isActive('/profile')
+                              ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                              : 'bg-gray-800/40 border-gray-700/50 text-gray-300 hover:bg-gray-800/60 hover:border-gray-600'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <User className="w-5 h-5" />
+                            <span className="text-sm font-medium">Profile</span>
+                          </div>
+                          <ChevronRight className="w-4 h-4 opacity-50" />
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => setIsLoginModalOpen(true)}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-gradient-to-r from-green-600 to-green-500 border-green-500/50 text-white hover:from-green-700 hover:to-green-600 transition-all"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <LogIn className="w-5 h-5" />
+                            <span className="text-sm font-medium">Login</span>
+                          </div>
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Sports Section */}
@@ -179,6 +274,22 @@ export default function Header() {
                         })}
                       </div>
                     </div>
+
+                    {/* Logout Button - Mobile Sidebar (only when logged in) */}
+                    {isLoggedIn && (
+                      <div className="pt-4 border-t border-gray-800 px-4">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20 transition-all"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <LogOut className="w-5 h-5" />
+                            <span className="text-sm font-medium">Logout</span>
+                          </div>
+                          <ChevronRight className="w-4 h-4 opacity-50" />
+                        </button>
+                      </div>
+                    )}
                   </nav>
                 </div>
               </SheetContent>
@@ -275,20 +386,37 @@ export default function Header() {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3 sm:space-x-4 lg:space-x-5">
-            <Button variant="ghost" size="sm" className="hidden md:flex text-gray-300 hover:text-white hover:bg-gray-800 p-2.5 rounded-lg transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
-            
-            <div className="hidden sm:flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-gray-700 hover:border-green-500/50 transition-all cursor-pointer">
-              <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-              <span className="text-green-500 font-bold text-sm sm:text-base">$1,247.50</span>
-            </div>
+            {isLoggedIn ? (
+              <>
+                <Button variant="ghost" size="sm" className="hidden md:flex text-gray-300 hover:text-white hover:bg-gray-800 p-2.5 rounded-lg transition-colors">
+                  <Bell className="w-5 h-5" />
+                  <span className="sr-only">Notifications</span>
+                </Button>
+                
+                {/* Points Balance */}
+                <Link 
+                  href="/profile?tab=points"
+                  className="hidden sm:flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border border-gray-700 hover:border-green-500/50 transition-all"
+                >
+                  <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                  <span className="text-green-500 font-bold text-sm sm:text-base">
+                    {pointsBalance !== null ? pointsBalance.toLocaleString() : '---'}
+                  </span>
+                </Link>
 
-            {/* Profile Icon - Always Visible */}
-            <Link href="/profile" className="flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800 transition-colors p-2 md:p-2.5 rounded-lg">
-              <User className="w-6 h-6 md:w-7 md:h-7" />
-            </Link>
+                {/* Profile Dropdown - When Logged In */}
+                <ProfileDropdown userName={userName} userEmail={userEmail} />
+              </>
+            ) : (
+              /* Login Button - When NOT Logged In */
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all shadow-lg shadow-green-500/30"
+              >
+                <LogIn className="w-5 h-5" />
+                <span className="text-sm sm:text-base">Login</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -305,5 +433,6 @@ export default function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

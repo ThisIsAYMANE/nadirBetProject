@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       let redirectUrl = '/';
       if (userData.role === 'regular_user') {
         redirectUrl = import.meta.env.VITE_USER_APP_URL || 'http://localhost:3002';
-      } else if (userData.role === 'admin' || userData.role === 'broker') {
+      } else if (userData.role === 'admin' || userData.role === 'broker' || userData.role === 'shop') {
         redirectUrl = 'http://localhost:5174'; // Management Portal
       }
       

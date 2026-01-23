@@ -52,7 +52,23 @@ class ApiService {
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch users');
-    return response.json();
+    const data = await response.json();
+    
+    // Map backend field names to frontend User interface
+    return {
+      ...data,
+      data: data.data.map((user: any) => ({
+        id: user.user_id || user.id,
+        name: user.name || user.full_name,
+        email: user.email,
+        role: user.role || user.user_type,
+        status: user.status,
+        createdAt: user.created_at || user.createdAt,
+        lastLogin: user.last_login || user.lastLogin,
+        totalPoints: user.total_points || user.totalPoints || 0,
+        avatar: user.avatar
+      }))
+    };
   }
 
   async getUserById(id: string) {
@@ -262,6 +278,95 @@ class ApiService {
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete broker');
+    return response.json();
+  }
+
+  // Points Management
+  async getPointsBalance() {
+    const response = await fetch(`${API_BASE_URL}/points/balance`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch balance');
+    return response.json();
+  }
+
+  async getPointsStats() {
+    const response = await fetch(`${API_BASE_URL}/points/stats`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    return response.json();
+  }
+
+  async getPointsHistory(limit = 50) {
+    const response = await fetch(`${API_BASE_URL}/points/history?limit=${limit}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch history');
+    return response.json();
+  }
+
+  async getPointsAllocations(type = 'all') {
+    const response = await fetch(`${API_BASE_URL}/points/allocations?type=${type}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch allocations');
+    return response.json();
+  }
+
+  async allocatePoints(toUserId: string, amount: number, notes = '') {
+    const response = await fetch(`${API_BASE_URL}/points/allocate`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ toUserId, amount, notes }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to allocate points');
+    }
+    return response.json();
+  }
+
+  async requestPoints(requestedFromId: string, amount: number, message = '') {
+    const response = await fetch(`${API_BASE_URL}/points/request`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ requestedFromId, amount, message }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to request points');
+    }
+    return response.json();
+  }
+
+  async getPointsRequests(type = 'all') {
+    const response = await fetch(`${API_BASE_URL}/points/requests?type=${type}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch requests');
+    return response.json();
+  }
+
+  async respondToPointsRequest(requestId: string, status: 'approved' | 'rejected', message = '') {
+    const response = await fetch(`${API_BASE_URL}/points/requests/${requestId}/respond`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ status, message }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to respond to request');
+    }
+    return response.json();
+  }
+
+  async getPointsHierarchy(rootUserId?: string) {
+    const params = rootUserId ? `?rootUserId=${rootUserId}` : '';
+    const response = await fetch(`${API_BASE_URL}/points/hierarchy${params}`, {
+      headers: this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch hierarchy');
     return response.json();
   }
 

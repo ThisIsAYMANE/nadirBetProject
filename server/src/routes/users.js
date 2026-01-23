@@ -89,7 +89,7 @@ router.post('/', [
   body('name').notEmpty().trim(),
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
-  body('role').isIn(['owner', 'super_admin', 'admin', 'broker', 'regular_user'])
+  body('role').isIn(['owner', 'super_admin', 'admin', 'shop', 'broker', 'regular_user'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -103,9 +103,10 @@ router.post('/', [
 
     // Define role creation permissions
     const roleCreationRules = {
-      'owner': ['super_admin', 'admin', 'broker', 'regular_user'],
-      'super_admin': ['admin', 'broker', 'regular_user'],
-      'admin': ['broker', 'regular_user'],
+      'owner': ['super_admin', 'admin', 'shop', 'broker', 'regular_user'],
+      'super_admin': ['admin', 'shop', 'broker', 'regular_user'],
+      'admin': ['shop', 'broker', 'regular_user'],
+      'shop': ['regular_user'],
       'broker': ['regular_user'],
       'regular_user': []
     };
@@ -119,33 +120,33 @@ router.post('/', [
       });
     }
 
-    // Determine broker assignment
+    // Determine broker/shop assignment
     let assignedBrokerId = brokerId;
     
-    // If creator is a broker, auto-assign to them
-    if (creatorRole === 'broker' && role === 'regular_user') {
+    // If creator is a broker or shop, auto-assign to them
+    if ((creatorRole === 'broker' || creatorRole === 'shop') && role === 'regular_user') {
       assignedBrokerId = creatorId;
     }
     
-    // Validate that regular users MUST have a broker assigned
+    // Validate that regular users MUST have a broker/shop assigned
     if (role === 'regular_user' && !assignedBrokerId) {
       return res.status(400).json({ 
-        error: 'Regular users must be assigned to a broker',
-        message: 'Please select a broker to assign this user to'
+        error: 'Regular users must be assigned to a broker or shop',
+        message: 'Please select a broker or shop to assign this user to'
       });
     }
 
-    // If broker is specified, validate it exists and is actually a broker
+    // If broker/shop is specified, validate it exists and is actually a broker or shop
     if (assignedBrokerId && role === 'regular_user') {
-      const brokerCheck = await pool.query(
-        'SELECT user_id, user_type FROM users WHERE user_id = ? AND user_type = ?',
-        [assignedBrokerId, 'broker']
+      const assigneeCheck = await pool.query(
+        'SELECT user_id, user_type FROM users WHERE user_id = ? AND user_type IN (?, ?)',
+        [assignedBrokerId, 'broker', 'shop']
       );
       
-      if (brokerCheck.rows.length === 0) {
+      if (assigneeCheck.rows.length === 0) {
         return res.status(400).json({ 
-          error: 'Invalid broker',
-          message: 'The specified broker does not exist'
+          error: 'Invalid broker or shop',
+          message: 'The specified broker or shop does not exist'
         });
       }
     }
@@ -214,7 +215,7 @@ router.post('/', [
 router.put('/:id', requireManagePermission, [
   body('name').optional().notEmpty().trim(),
   body('email').optional().isEmail().normalizeEmail(),
-  body('role').optional().isIn(['super_admin', 'broker', 'regular_user']),
+  body('role').optional().isIn(['super_admin', 'admin', 'shop', 'broker', 'regular_user']),
   body('status').optional().isIn(['active', 'inactive', 'suspended'])
 ], async (req, res) => {
   try {
@@ -242,26 +243,25 @@ router.put('/:id', requireManagePermission, [
     // Build update query
     const updates = [];
     const params = [];
-    let paramCount = 1;
 
     if (name) {
-      updates.push(`full_name = $${paramCount++}`);
+      updates.push(`full_name = ?`);
       params.push(name);
     }
     if (email) {
-      updates.push(`email = $${paramCount++}`);
+      updates.push(`email = ?`);
       params.push(email);
     }
     if (role) {
-      updates.push(`user_type = $${paramCount++}`);
+      updates.push(`user_type = ?`);
       params.push(role);
     }
     if (status) {
-      updates.push(`status = $${paramCount++}`);
+      updates.push(`status = ?`);
       params.push(status);
     }
     if (brokerId !== undefined) {
-      updates.push(`broker_id = $${paramCount++}`);
+      updates.push(`broker_id = ?`);
       params.push(brokerId);
     }
 
@@ -273,12 +273,17 @@ router.put('/:id', requireManagePermission, [
     params.push(new Date().toISOString());
     params.push(id);
 
-    const result = await pool.query(`
+    await pool.query(`
       UPDATE users 
       SET ${updates.join(', ')}
-      WHERE user_id = $${paramCount}
-      RETURNING user_id, username, full_name, email, user_type, status, updated_at
+      WHERE user_id = ?
     `, params);
+
+    // Fetch updated user
+    const result = await pool.query(`
+      SELECT user_id, username, full_name, email, user_type, status, updated_at 
+      FROM users WHERE user_id = ?
+    `, [id]);
 
     res.json(result.rows[0]);
 

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
@@ -9,13 +10,21 @@ import { matches, casinoGames } from '@/lib/mockData';
 import { Star, Heart, Trash2 } from 'lucide-react';
 
 export default function FavoritesPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('matches');
 
   useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/');
+      return;
+    }
+
     const timer = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   if (isLoading) {
     return (

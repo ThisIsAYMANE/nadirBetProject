@@ -38,14 +38,20 @@ CREATE TABLE brokers (
 );
 
 -- Points allocation table
+-- Points allocation tracking (full hierarchy support)
 CREATE TABLE points_allocation (
     allocation_id TEXT PRIMARY KEY,
-    broker_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    allocated_by TEXT NOT NULL REFERENCES users(user_id),
+    from_user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    to_user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     points_allocated INTEGER NOT NULL CHECK (points_allocated > 0),
+    points_used INTEGER DEFAULT 0 CHECK (points_used >= 0),
     points_remaining INTEGER NOT NULL CHECK (points_remaining >= 0),
     allocation_date TEXT NOT NULL,
-    expiry_date TEXT
+    expiry_date TEXT,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'expired', 'revoked')),
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
 -- User points table
@@ -193,6 +199,35 @@ CREATE INDEX idx_cashout_requests_user_id ON cashout_requests(user_id);
 CREATE INDEX idx_cashout_requests_broker_id ON cashout_requests(broker_id);
 CREATE INDEX idx_cashout_requests_status ON cashout_requests(status);
 
+-- Points ledger for complete transaction history
+CREATE TABLE IF NOT EXISTS points_ledger (
+    ledger_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    transaction_type TEXT NOT NULL CHECK (transaction_type IN ('allocation_received', 'allocation_given', 'bet_placed', 'bet_won', 'bet_lost', 'cashout', 'refund', 'admin_adjustment')),
+    points_change INTEGER NOT NULL,
+    balance_before INTEGER NOT NULL,
+    balance_after INTEGER NOT NULL,
+    related_allocation_id TEXT REFERENCES points_allocation(allocation_id),
+    related_transaction_id TEXT REFERENCES transactions(transaction_id),
+    description TEXT,
+    created_at TEXT NOT NULL,
+    created_by TEXT REFERENCES users(user_id)
+);
+
+-- Points requests table
+CREATE TABLE IF NOT EXISTS points_requests (
+    request_id TEXT PRIMARY KEY,
+    requester_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    requested_from_id TEXT NOT NULL REFERENCES users(user_id),
+    points_requested INTEGER NOT NULL CHECK (points_requested > 0),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+    request_message TEXT,
+    response_message TEXT,
+    created_at TEXT NOT NULL,
+    responded_at TEXT,
+    responded_by TEXT REFERENCES users(user_id)
+);
+
 CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_messages_recipient_id ON messages(recipient_id);
 CREATE INDEX idx_messages_is_read ON messages(is_read);
@@ -208,3 +243,16 @@ CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
 
 CREATE INDEX idx_fraud_alerts_user_id ON fraud_alerts(user_id);
 CREATE INDEX idx_fraud_alerts_status ON fraud_alerts(status);
+
+-- Indexes for points system
+CREATE INDEX idx_points_allocation_from_user ON points_allocation(from_user_id);
+CREATE INDEX idx_points_allocation_to_user ON points_allocation(to_user_id);
+CREATE INDEX idx_points_allocation_status ON points_allocation(status);
+
+CREATE INDEX idx_points_ledger_user_id ON points_ledger(user_id);
+CREATE INDEX idx_points_ledger_created_at ON points_ledger(created_at);
+CREATE INDEX idx_points_ledger_transaction_type ON points_ledger(transaction_type);
+
+CREATE INDEX idx_points_requests_requester ON points_requests(requester_id);
+CREATE INDEX idx_points_requests_requested_from ON points_requests(requested_from_id);
+CREATE INDEX idx_points_requests_status ON points_requests(status);

@@ -31,7 +31,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
     name: '',
     email: '',
     password: '',
-    role: 'regular_user' as 'owner' | 'super_admin' | 'admin' | 'broker' | 'regular_user',
+    role: 'regular_user' as 'owner' | 'super_admin' | 'admin' | 'shop' | 'broker' | 'regular_user',
     status: 'active' as 'active' | 'inactive' | 'suspended',
     businessName: '',
     commissionRate: '0.05',
@@ -76,7 +76,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
           name: user.name || '',
           email: user.email || '',
           password: '',
-          role: user.role as 'owner' | 'super_admin' | 'admin' | 'broker' | 'regular_user',
+          role: user.role as 'owner' | 'super_admin' | 'admin' | 'shop' | 'broker' | 'regular_user',
           status: user.status as 'active' | 'inactive' | 'suspended',
           businessName: '',
           commissionRate: '0.05',
@@ -119,8 +119,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
       setFormError(null);
 
       if (modalType === 'create') {
-        // If creating a broker, use broker API
-        if (formData.role === 'broker') {
+        // If creating a broker or shop, use broker API
+        if (formData.role === 'broker' || formData.role === 'shop') {
           await apiService.createBroker({
             name: formData.name,
             email: formData.email,
@@ -128,6 +128,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
             businessName: formData.businessName || formData.name,
             commissionRate: parseFloat(formData.commissionRate) || 0.05,
             status: formData.status,
+            role: formData.role,
             totalUsers: 0,
             totalTransactions: 0,
             revenue: 0,
@@ -199,6 +200,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
         return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
       case 'admin':
         return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'shop':
+        return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
       case 'broker':
         return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'regular_user':
@@ -482,6 +485,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                       aria-label="User role selection"
                     >
                       <option value="regular_user">Regular User</option>
+                      <option value="shop">Shop</option>
                       <option value="broker">Broker</option>
                       <option value="admin">Admin</option>
                       <option value="super_admin">Super Admin</option>
@@ -503,8 +507,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                     </select>
                   </div>
 
-                  {/* Show broker-specific fields if role is broker */}
-                  {formData.role === 'broker' && modalType === 'create' && (
+                  {/* Show broker/shop-specific fields if role is broker or shop */}
+                  {(formData.role === 'broker' || formData.role === 'shop') && modalType === 'create' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Business Name *</label>
@@ -533,15 +537,15 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                     </div>
                   )}
 
-                  {/* Show broker assignment for regular users */}
+                  {/* Show broker/shop assignment for regular users */}
                   {formData.role === 'regular_user' && modalType === 'create' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Assign to Broker (Shop) *
+                        Assign to Broker or Shop *
                       </label>
                       {brokersLoading ? (
                         <div className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-gray-400">
-                          Loading brokers...
+                          Loading brokers and shops...
                         </div>
                       ) : (
                         <select
@@ -550,16 +554,16 @@ export const UserManagement: React.FC<UserManagementProps> = ({ title }) => {
                           className="w-full px-3 py-2 bg-card-bg border border-gray-600 rounded-lg text-white focus:outline-none focus:border-accent-green focus:ring-1 focus:ring-accent-green"
                           required
                         >
-                          <option value="">Select a broker...</option>
+                          <option value="">Select a broker or shop...</option>
                           {brokers.map((broker) => (
                             <option key={broker.broker_id} value={broker.broker_id}>
-                              {broker.business_name} ({broker.full_name || broker.username})
+                              {broker.business_name || broker.full_name || broker.username} - {(broker as any).user_type === 'shop' ? 'Shop' : 'Broker'}
                             </option>
                           ))}
                         </select>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
-                        Regular users must be assigned to a broker/shop
+                        Regular users must be assigned to a broker or shop
                       </p>
                     </div>
                   )}

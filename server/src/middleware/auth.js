@@ -6,16 +6,18 @@ const ROLE_HIERARCHY = {
   'owner': 5,
   'super_admin': 4,
   'admin': 3,
+  'shop': 2,          // Same level as broker, just different business name
   'broker': 2,
   'regular_user': 1
 };
 
 // Role creation permissions (who can create what)
 const ROLE_CREATION_RULES = {
-  'owner': ['super_admin', 'admin', 'broker', 'regular_user'],
-  'super_admin': ['admin', 'broker', 'regular_user'],
-  'admin': ['broker', 'regular_user'],
-  'broker': ['regular_user'],
+  'owner': ['super_admin', 'admin', 'shop', 'broker', 'regular_user'],
+  'super_admin': ['admin', 'shop', 'broker', 'regular_user'],
+  'admin': ['shop', 'broker', 'regular_user'],
+  'shop': ['regular_user'],      // Shop can only create regular users
+  'broker': ['regular_user'],    // Broker can only create regular users
   'regular_user': []
 };
 

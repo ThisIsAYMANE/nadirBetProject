@@ -236,6 +236,60 @@ class PointsService {
   }
 
   /**
+   * Credit points to user (for bet wins, refunds, manual adjustments, etc.)
+   * @param {string} userId
+   * @param {number} amount - positive integer points to add
+   * @param {string} reason - human-readable description
+   * @param {Object} options
+   *    - transactionType: 'bet_won' | 'refund' | 'admin_adjustment' | 'cashout'
+   *    - relatedTransactionId: optional transaction id
+   */
+  async addPoints(userId, amount, reason, options = {}) {
+    const {
+      transactionType = 'bet_won',
+      relatedTransactionId = null,
+    } = options;
+
+    if (amount <= 0) {
+      throw new Error('Amount to add must be positive');
+    }
+
+    const balance = await this.getUserBalance(userId);
+    const ledgerId = db.generateUuid();
+    const now = new Date().toISOString();
+    const newBalance = balance.current_balance + amount;
+
+    try {
+      await pool.query('BEGIN TRANSACTION');
+
+      // Update balance; for now we only bump current_balance and last_updated.
+      // Aggregates like total_purchased / total_cashed_out are handled by higher-level flows.
+      await pool.query(
+        `UPDATE user_points 
+         SET current_balance = ?, last_updated = ?
+         WHERE user_id = ?`,
+        [newBalance, now, userId]
+      );
+
+      // Create ledger entry
+      await pool.query(
+        `INSERT INTO points_ledger (
+          ledger_id, user_id, transaction_type, points_change, 
+          balance_before, balance_after, related_transaction_id, description, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [ledgerId, userId, transactionType, amount, balance.current_balance, newBalance, relatedTransactionId, reason, now]
+      );
+
+      await pool.query('COMMIT');
+
+      return { success: true, newBalance };
+    } catch (error) {
+      await pool.query('ROLLBACK');
+      throw error;
+    }
+  }
+
+  /**
    * Get points history for a user
    */
   async getPointsHistory(userId, limit = 50) {

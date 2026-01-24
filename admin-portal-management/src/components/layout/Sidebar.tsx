@@ -7,7 +7,8 @@ import {
   Settings, 
   UserCheck,
   DollarSign,
-  Coins
+  Coins,
+  Activity
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { DashboardType } from '../../types';
@@ -26,6 +27,7 @@ const adminNavItems = [
   { id: 'brokers', label: 'Broker Management', icon: UserCheck },
   { id: 'users', label: 'User Monitoring', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
+  { id: 'betting-monitor', label: 'Bet Monitoring', icon: Activity },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
@@ -35,6 +37,7 @@ const brokerNavItems = [
   { id: 'points', label: 'Points Management', icon: Coins },
   { id: 'users', label: 'User Management', icon: Users },
   { id: 'transactions', label: 'Transactions', icon: CreditCard },
+  { id: 'betting-monitor', label: 'Bet Monitoring', icon: Activity },
   { id: 'cashouts', label: 'Cashout Queue', icon: DollarSign },
   { id: 'analytics', label: 'Performance', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },

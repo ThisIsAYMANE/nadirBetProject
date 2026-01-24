@@ -1,27 +1,114 @@
 'use client';
+
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { matches } from '@/lib/mockData';
 import { ArrowLeft, Heart, Share2, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
+import type { Match, MatchMarket, MatchMarketOutcome } from '@/types';
 
 export default function MatchDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [match, setMatch] = useState(matches[0]); // Use first match as default
+  const [match, setMatch] = useState<Match | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Find match by ID (for demo, just use first match)
-      const foundMatch = matches.find(m => m.id === params.matchId) || matches[0];
-      setMatch(foundMatch);
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [params.matchId]);
+    const fetchMatch = async () => {
+      try {
+        const rawId = (params as { matchId?: string }).matchId;
+        const matchId = Array.isArray(rawId) ? rawId[0] : rawId;
+        const category = searchParams.get('category');
+        const sportKey = searchParams.get('sportKey'); // underlying Odds API league key, e.g. soccer_epl
+
+        if (!matchId || !category || !sportKey) {
+          setError('Match details are not available.');
+          setIsLoading(false);
+          return;
+        }
+
+        const BACKEND_BASE_URL =
+          process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
+        let matchData: Match | null = null;
+
+        // First, try the event-specific endpoint which supports btts and totals
+        try {
+          const eventQuery = new URLSearchParams({
+            regions: 'eu',
+            markets: 'h2h,totals,btts',
+            oddsFormat: 'decimal',
+          }).toString();
+
+          const eventRes = await fetch(
+            `${BACKEND_BASE_URL}/api/betting/event/${encodeURIComponent(matchId)}/odds?${eventQuery}`,
+            { cache: 'no-store' },
+          );
+
+          if (eventRes.ok) {
+            const eventData = await eventRes.json();
+            if (eventData && eventData.bookmakers && eventData.bookmakers.length > 0) {
+              const { transformToMatch } = await import('@/lib/sportsbookApi');
+              matchData = transformToMatch(eventData as any) as Match;
+            }
+          }
+        } catch (eventErr) {
+          console.warn('Event endpoint failed, trying sport endpoint:', eventErr);
+        }
+
+        // Fallback to sport endpoint if event endpoint failed or returned no data
+        if (!matchData) {
+          const sportQuery = new URLSearchParams({
+            league: sportKey,
+            eventId: matchId,
+            markets: 'h2h,totals',
+          }).toString();
+
+          const sportRes = await fetch(
+            `/api/sports/${encodeURIComponent(category)}?${sportQuery}`,
+            { cache: 'no-store' },
+          );
+
+          if (!sportRes.ok) {
+            throw new Error(`Failed to fetch match details: ${sportRes.statusText}`);
+          }
+
+          const sportData = await sportRes.json();
+          if (
+            !sportData.success ||
+            !Array.isArray(sportData.matches) ||
+            sportData.matches.length === 0
+          ) {
+            setError('Match not found or no odds available at the moment.');
+            setIsLoading(false);
+            return;
+          }
+
+          matchData = sportData.matches[0] as Match;
+        }
+
+        if (!matchData) {
+          setError('Match not found or no odds available at the moment.');
+          setIsLoading(false);
+          return;
+        }
+
+        setMatch(matchData);
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error('Error loading match details:', err);
+        setError(
+          err instanceof Error ? err.message : 'Failed to load match details. Please try again.',
+        );
+        setIsLoading(false);
+      }
+    };
+
+    fetchMatch();
+  }, [params, searchParams]);
 
   if (isLoading) {
     return (
@@ -38,6 +125,102 @@ export default function MatchDetailsPage() {
         </div>
       </div>
     );
+  }
+
+  if (!match || error) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-gray-300 mb-4">
+                {error || 'Match details are not available at the moment.'}
+              </p>
+              <Link
+                href="/"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-green-500 text-black font-semibold hover:bg-green-600 transition-colors text-sm"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Home
+              </Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Derive markets for display (match result, totals, BTTS, etc.)
+  const normalizeName = (name?: string) => (name || '').toLowerCase();
+
+  // Ensure markets array exists
+  if (!match.markets) {
+    match.markets = [];
+  }
+
+  const h2hMarket: MatchMarket | undefined = match.markets.find(
+    (m) => m.key === 'h2h',
+  );
+  const homeH2H: MatchMarketOutcome | undefined = h2hMarket?.outcomes.find(
+    (o) => o.name === match.homeTeam,
+  );
+  const awayH2H: MatchMarketOutcome | undefined = h2hMarket?.outcomes.find(
+    (o) => o.name === match.awayTeam,
+  );
+  const drawH2H: MatchMarketOutcome | undefined = h2hMarket?.outcomes.find((o) =>
+    normalizeName(o.name).includes('draw'),
+  );
+
+  const homePrice = homeH2H?.price ?? match.odds.home;
+  const awayPrice = awayH2H?.price ?? match.odds.away;
+  const drawPrice = drawH2H?.price ?? match.odds.draw;
+
+  const totalsMarket: MatchMarket | undefined =
+    match.markets.find((m) => m.key === 'totals') || undefined;
+  const overOutcome: MatchMarketOutcome | undefined = totalsMarket?.outcomes.find((o) =>
+    normalizeName(o.name).startsWith('over'),
+  );
+  const underOutcome: MatchMarketOutcome | undefined = totalsMarket?.outcomes.find((o) =>
+    normalizeName(o.name).startsWith('under'),
+  );
+  const totalsLine =
+    overOutcome?.line !== undefined
+      ? overOutcome.line
+      : underOutcome?.line !== undefined
+      ? underOutcome.line
+      : undefined;
+  const hasTotals =
+    totalsMarket && overOutcome && underOutcome && typeof totalsLine === 'number';
+
+  const bttsMarket: MatchMarket | undefined =
+    match.markets.find(
+      (m) => m.key === 'btts' || m.key === 'both_teams_to_score',
+    ) || undefined;
+  const bttsYes: MatchMarketOutcome | undefined = bttsMarket?.outcomes.find((o) =>
+    normalizeName(o.name).includes('yes'),
+  );
+  const bttsNo: MatchMarketOutcome | undefined = bttsMarket?.outcomes.find((o) =>
+    normalizeName(o.name).includes('no'),
+  );
+  const hasBtts = bttsMarket && bttsYes && bttsNo;
+
+  const popularBets: { selection: string; odds: number }[] = [];
+  if (homePrice) {
+    popularBets.push({ selection: `${match.homeTeam} to Win`, odds: homePrice });
+  }
+  if (typeof totalsLine === 'number' && overOutcome) {
+    popularBets.push({
+      selection: `Over ${totalsLine} Goals`,
+      odds: overOutcome.price,
+    });
+  }
+  if (bttsYes) {
+    popularBets.push({
+      selection: 'Both Teams to Score - Yes',
+      odds: bttsYes.price,
+    });
   }
 
   return (
@@ -71,10 +254,18 @@ export default function MatchDetailsPage() {
               </div>
               
               <div className="flex items-center space-x-3">
-                <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
+                <button
+                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  aria-label="Add to favorites"
+                  title="Add to favorites"
+                >
                   <Heart className="w-4 h-4" />
                 </button>
-                <button className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
+                <button
+                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  aria-label="Share match"
+                  title="Share match"
+                >
                   <Share2 className="w-4 h-4" />
                 </button>
               </div>
@@ -152,17 +343,17 @@ export default function MatchDetailsPage() {
                     <div className="grid grid-cols-3 gap-3">
                       <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
                         <div className="text-sm text-gray-300 mb-1">{match.homeTeam}</div>
-                        <div className="font-bold">{match.odds.home}</div>
+                        <div className="font-bold">{homePrice}</div>
                       </button>
-                      {match.odds.draw && (
+                      {drawPrice && (
                         <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
                           <div className="text-sm text-gray-300 mb-1">Draw</div>
-                          <div className="font-bold">{match.odds.draw}</div>
+                          <div className="font-bold">{drawPrice}</div>
                         </button>
                       )}
                       <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
                         <div className="text-sm text-gray-300 mb-1">{match.awayTeam}</div>
-                        <div className="font-bold">{match.odds.away}</div>
+                        <div className="font-bold">{awayPrice}</div>
                       </button>
                     </div>
                   </div>
@@ -170,31 +361,47 @@ export default function MatchDetailsPage() {
                   {/* Over/Under */}
                   <div className="border border-gray-700 rounded-lg p-4">
                     <h4 className="text-white font-semibold mb-3">Total Goals</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                        <div className="text-sm text-gray-300 mb-1">Over 2.5</div>
-                        <div className="font-bold">1.85</div>
-                      </button>
-                      <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                        <div className="text-sm text-gray-300 mb-1">Under 2.5</div>
-                        <div className="font-bold">1.95</div>
-                      </button>
-                    </div>
+                    {hasTotals ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
+                          <div className="text-sm text-gray-300 mb-1">
+                            Over {totalsLine}
+                          </div>
+                          <div className="font-bold">{overOutcome?.price}</div>
+                        </button>
+                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
+                          <div className="text-sm text-gray-300 mb-1">
+                            Under {totalsLine}
+                          </div>
+                          <div className="font-bold">{underOutcome?.price}</div>
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400">
+                        Total goals market is not available for this match.
+                      </p>
+                    )}
                   </div>
 
                   {/* Both Teams to Score */}
                   <div className="border border-gray-700 rounded-lg p-4">
                     <h4 className="text-white font-semibold mb-3">Both Teams to Score</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                        <div className="text-sm text-gray-300 mb-1">Yes</div>
-                        <div className="font-bold">1.70</div>
-                      </button>
-                      <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                        <div className="text-sm text-gray-300 mb-1">No</div>
-                        <div className="font-bold">2.10</div>
-                      </button>
-                    </div>
+                    {hasBtts ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
+                          <div className="text-sm text-gray-300 mb-1">Yes</div>
+                          <div className="font-bold">{bttsYes?.price}</div>
+                        </button>
+                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
+                          <div className="text-sm text-gray-300 mb-1">No</div>
+                          <div className="font-bold">{bttsNo?.price}</div>
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400">
+                        Both Teams to Score market is not available for this match.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -206,101 +413,89 @@ export default function MatchDetailsPage() {
                   <span>Match Statistics</span>
                 </h3>
                 
-                <div className="space-y-4">
-                  {[
-                    { label: 'Possession', home: 58, away: 42 },
-                    { label: 'Shots', home: 12, away: 8 },
-                    { label: 'Shots on Target', home: 5, away: 3 },
-                    { label: 'Corners', home: 7, away: 4 },
-                    { label: 'Fouls', home: 11, away: 14 }
-                  ].map((stat, index) => (
-                    <div key={index} className="border border-gray-700 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-white font-medium">{stat.home}%</span>
-                        <span className="text-gray-400">{stat.label}</span>
-                        <span className="text-white font-medium">{stat.away}%</span>
-                      </div>
-                      <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className="bg-green-500 h-full transition-all duration-500"
-                          style={{ width: `${stat.home}%` }}
-                        />
+                <div className="space-y-3 text-sm text-gray-300">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Kick-off</span>
+                    <span className="text-white">
+                      {new Date(match.startTime).toLocaleString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                      })}
+                    </span>
+                  </div>
+                  {match.primaryBookmaker && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Odds source</span>
+                      <span className="text-white">{match.primaryBookmaker}</span>
+                    </div>
+                  )}
+                  {match.lastUpdate && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Odds last updated</span>
+                      <span className="text-white">
+                        {new Date(match.lastUpdate).toLocaleString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false,
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  {match.markets && match.markets.length > 0 && (
+                    <div>
+                      <span className="text-gray-400 block mb-1">
+                        Markets available from this bookmaker
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {match.markets.map((m) => (
+                          <span
+                            key={m.key}
+                            className="inline-flex items-center px-2 py-1 rounded-full bg-gray-700 text-xs text-gray-200"
+                          >
+                            {m.key}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    In-play statistics such as possession and shots are not provided by the odds
+                    API, so they are not displayed here.
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Popular Bets */}
+              {/* Key Markets (derived from real odds) */}
               <div className="bg-gray-800 rounded-xl p-6">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
                   <Users className="w-5 h-5" />
-                  <span>Popular Bets</span>
+                  <span>Key Markets</span>
                 </h3>
                 
-                <div className="space-y-3">
-                  {[
-                    { selection: `${match.homeTeam} to Win`, odds: match.odds.home, percentage: 45 },
-                    { selection: `Over 2.5 Goals`, odds: 1.85, percentage: 67 },
-                    { selection: `Both Teams Score`, odds: 1.70, percentage: 52 }
-                  ].map((bet, index) => (
-                    <div key={index} className="border border-gray-700 rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-white text-sm">{bet.selection}</span>
-                        <span className="text-green-500 font-bold">{bet.odds}</span>
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {bet.percentage}% of users backed this
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Form */}
-              <div className="bg-gray-800 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-white mb-4">Recent Form</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-white font-medium mb-2">{match.homeTeam}</div>
-                    <div className="flex space-x-1">
-                      {['W', 'W', 'D', 'L', 'W'].map((result, i) => (
-                        <div 
-                          key={i}
-                          className={`w-6 h-6 rounded text-xs font-bold flex items-center justify-center ${
-                            result === 'W' ? 'bg-green-500 text-white' :
-                            result === 'D' ? 'bg-gray-500 text-white' :
-                            'bg-red-500 text-white'
-                          }`}
-                        >
-                          {result}
+                {popularBets.length > 0 ? (
+                  <div className="space-y-3">
+                    {popularBets.map((bet, index) => (
+                      <div key={index} className="border border-gray-700 rounded-lg p-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white text-sm">{bet.selection}</span>
+                          <span className="text-green-500 font-bold">{bet.odds}</span>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div>
-                    <div className="text-white font-medium mb-2">{match.awayTeam}</div>
-                    <div className="flex space-x-1">
-                      {['L', 'W', 'W', 'D', 'W'].map((result, i) => (
-                        <div 
-                          key={i}
-                          className={`w-6 h-6 rounded text-xs font-bold flex items-center justify-center ${
-                            result === 'W' ? 'bg-green-500 text-white' :
-                            result === 'D' ? 'bg-gray-500 text-white' :
-                            'bg-red-500 text-white'
-                          }`}
-                        >
-                          {result}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-sm text-gray-400">
+                    Key betting markets for this match are currently unavailable.
+                  </p>
+                )}
               </div>
             </div>
           </div>

@@ -354,6 +354,58 @@ class ApiService {
     return response.json();
   }
 
+  // Betting monitoring
+  async getMonitoredBets(filters: {
+    status?: string;
+    sportKey?: string;
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const params = new URLSearchParams();
+
+    if (filters.status && filters.status !== 'all') {
+      params.set('status', filters.status);
+    }
+    if (filters.sportKey && filters.sportKey !== 'all') {
+      params.set('sportKey', filters.sportKey);
+    }
+    if (typeof filters.limit === 'number') {
+      params.set('limit', String(filters.limit));
+    }
+    if (typeof filters.offset === 'number') {
+      params.set('offset', String(filters.offset));
+    }
+
+    const query = params.toString();
+    const url = `${API_BASE_URL}/betting/monitor/bets${query ? `?${query}` : ''}`;
+
+    const response = await fetch(url, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Get monitored bets error:', response.status, errorData);
+      throw new Error(errorData.error || 'Failed to fetch monitored bets');
+    }
+
+    return response.json();
+  }
+
+  async getBetDetails(betId: string) {
+    const response = await fetch(`${API_BASE_URL}/betting/bet/${betId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Get bet details error:', response.status, errorData);
+      throw new Error(errorData.error || 'Failed to fetch bet details');
+    }
+
+    return response.json();
+  }
+
   // Real-time updates
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async subscribeToUpdates(callback: (data: unknown) => void) {

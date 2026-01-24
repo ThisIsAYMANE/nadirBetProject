@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
@@ -8,28 +8,7 @@ import ViewToggle from '@/components/sports/ViewToggle';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalBanner from '@/components/ui/PromotionalBanner';
 import { Filter, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react';
-import { Match } from '@/types';
-
-// Helper function to get sport keywords for filtering
-function getSportKeywords(sportKey: string): string[] {
-  const sportMap: Record<string, string[]> = {
-    'football': ['soccer', 'football'],
-    'basketball': ['basketball'],
-    'american-football': ['american_football', 'americanfootball', 'nfl'],
-    'tennis': ['tennis'],
-    'baseball': ['baseball'],
-    'ice-hockey': ['hockey', 'ice_hockey', 'icehockey'],
-    'boxing': ['boxing'],
-    'mma': ['mma', 'mixed_martial_arts'],
-    'cricket': ['cricket'],
-    'rugby': ['rugby'],
-    'handball': ['handball'],
-    'futsal': ['futsal'],
-    'table-tennis': ['table_tennis', 'tabletennis', 'ping_pong']
-  };
-  
-  return sportMap[sportKey] || [sportKey];
-}
+import { useSportsData } from '@/hooks/useSportsData';
 
 interface SportConfig {
   key: string;
@@ -44,133 +23,8 @@ interface SimpleSportPageProps {
 }
 
 export default function SimpleSportPage({ config }: SimpleSportPageProps) {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'cards' | 'list'>('cards');
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Use arbitrage endpoint - simpler and more reliable
-      const response = await fetch('/api/arbitrage?type=ARBITRAGE');
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('API Response:', result); // Debug log
-      
-      if (result.success && result.data) {
-        // Extract advantages array from the response
-        const advantages = result.data.advantages || [];
-        
-        console.log('Advantages array length:', advantages.length); // Debug log
-        
-        // Debug: Show all sports and competitions in the response
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sportsInResponse = advantages.map((adv: any) => 
-          adv.market?.event?.competitionInstance?.competition?.sport
-        ).filter(Boolean);
-        console.log('Sports in API response:', Array.from(new Set(sportsInResponse)));
-        
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const competitionsInResponse = advantages.map((adv: any) => {
-          const comp = adv.market?.event?.competitionInstance?.competition;
-          return comp ? `${comp.sport} - ${comp.name}` : null;
-        }).filter(Boolean).slice(0, 10);
-        console.log('Sample competitions:', competitionsInResponse);
-        
-        if (advantages.length === 0) {
-          // No data from API - show empty state
-          setMatches([]);
-          setError('No live betting opportunities available at the moment.');
-        } else {
-          // Filter by sport type first
-          const sportKeywords = getSportKeywords(config.key);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const filteredAdvantages = advantages.filter((advantage: any) => {
-            const sport = advantage.market?.event?.competitionInstance?.competition?.sport?.toLowerCase() || '';
-            const competitionName = advantage.market?.event?.competitionInstance?.competition?.name?.toLowerCase() || '';
-            const eventName = advantage.market?.event?.name?.toLowerCase() || '';
-            
-            // Check if any keyword matches the sport, competition, or event
-            return sportKeywords.some(keyword => 
-              sport.includes(keyword) || 
-              competitionName.includes(keyword) ||
-              eventName.includes(keyword)
-            );
-          });
-          
-          console.log(`Filtered ${filteredAdvantages.length} ${config.key} matches from ${advantages.length} total`);
-          
-          if (filteredAdvantages.length === 0) {
-            setMatches([]);
-            setError(`No ${config.name.toLowerCase()} betting opportunities available at the moment. Try refreshing in a few minutes.`);
-          } else {
-            // Clear any previous error since we have data
-            setError(null);
-            
-            // Transform advantages to matches
-            const transformedMatches: Match[] = filteredAdvantages
-            .slice(0, 12) // Limit to 12 matches
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((advantage: any, index: number) => {
-              const event = advantage.market?.event;
-              const participants = event?.participants || [];
-              const outcomes = advantage.outcomes || [];
-              
-              // Get team names
-              const homeTeam = participants[0]?.name || participants[0]?.shortName || 'Team A';
-              const awayTeam = participants[1]?.name || participants[1]?.shortName || 'Team B';
-              
-              // Get odds from outcomes
-              const homeOdds = outcomes[0]?.payout || 2.00;
-              const awayOdds = outcomes[1]?.payout || 2.00;
-              const drawOdds = outcomes[2]?.payout;
-              
-              return {
-                id: advantage.key || `match-${index}`,
-                homeTeam: homeTeam,
-                awayTeam: awayTeam,
-                sport: event?.competitionInstance?.competition?.sport || config.key,
-                league: event?.competitionInstance?.competition?.name || 
-                        event?.competitionInstance?.name || 
-                        'Live Betting',
-                startTime: event?.startTime || new Date().toISOString(),
-                status: outcomes[0]?.live ? 'live' : 'upcoming' as const,
-                odds: {
-                  home: homeOdds,
-                  away: awayOdds,
-                  draw: drawOdds
-                }
-              };
-            });
-            
-            setMatches(transformedMatches);
-          }
-        }
-      } else {
-        // API returned but no data
-        setMatches([]);
-        setError('API is working but returned no betting data. This could be due to rate limits or no active events.');
-      }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(`Unable to fetch live data: ${err instanceof Error ? err.message : 'Unknown error'}. The API may have rate limits or connectivity issues.`);
-      setMatches([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { matches, isLoading, error, refetch } = useSportsData(config.key);
 
   if (isLoading) {
     return (
@@ -220,7 +74,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <ViewToggle view={view} onViewChange={setView} />
               <button
-                onClick={fetchData}
+                onClick={refetch}
                 className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base min-h-[44px]"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -245,7 +99,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
                 <h3 className="text-red-500 font-semibold mb-1">Error Loading Data</h3>
                 <p className="text-red-400 text-sm">{error}</p>
                 <button 
-                  onClick={fetchData}
+                  onClick={refetch}
                   className="mt-2 text-sm text-red-400 hover:text-red-300 underline"
                 >
                   Try Again
@@ -261,13 +115,13 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
                 Showing {matches.length} live betting opportunities
               </div>
               
-              {view === 'cards' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {matches.map((match) => (
-                    <MatchCard key={match.id} match={match} />
-                  ))}
-                </div>
-              ) : (
+            {view === 'cards' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {matches.map((match) => (
+                  <MatchCard key={match.id} match={match} category={config.key} />
+                ))}
+              </div>
+            ) : (
                 <div className="bg-gray-800/40 rounded-lg border border-gray-700/50 overflow-hidden">
                   {/* Table Header */}
                   <div className="border-b border-gray-700/50 bg-gray-800/60">

@@ -11,10 +11,19 @@ import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import { matches, liveMatches, casinoGames } from '@/lib/mockData';
 import { TrendingUp, Flame, Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useLiveOdds } from '@/hooks/useLiveOdds';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+
+  // Live odds for the "Live Now" section. We fall back to mockData
+  // if the API returns no matches to keep the UI populated.
+  const {
+    matches: liveApiMatches,
+  } = useLiveOdds('all', 0);
+
+  const liveNowMatches = liveApiMatches.length ? liveApiMatches : liveMatches;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000);
@@ -99,7 +108,7 @@ export default function HomePage() {
                 </div>
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Live Now</h2>
                 <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {liveMatches.length} LIVE
+                  {liveNowMatches.length} LIVE
                 </span>
               </div>
               <Link href="/live" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
@@ -109,7 +118,7 @@ export default function HomePage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {liveMatches.map((match) => (
+              {liveNowMatches.map((match) => (
                 <MatchCard key={match.id} match={match} />
               ))}
             </div>

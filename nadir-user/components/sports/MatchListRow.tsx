@@ -2,12 +2,14 @@
 import Link from 'next/link';
 import { Clock, Play, BarChart3 } from 'lucide-react';
 import { Match } from '@/types';
+import { useBetting } from '@/contexts/BettingContext';
 
 interface MatchListRowProps {
   match: Match;
 }
 
 export default function MatchListRow({ match }: MatchListRowProps) {
+  const { addSelection } = useBetting();
   const formatTime = (timeString: string) => {
     const date = new Date(timeString);
     const today = new Date();
@@ -29,6 +31,28 @@ export default function MatchListRow({ match }: MatchListRowProps) {
       const monthNames = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
       return `${dayNames[date.getDay()]} ${date.getDate()} ${monthNames[date.getMonth()]} ${time}`;
     }
+  };
+
+  const handleAddSelection = (selection: 'home' | 'away' | 'draw') => {
+    const odds =
+      selection === 'home'
+        ? match.odds.home
+        : selection === 'away'
+        ? match.odds.away
+        : match.odds.draw || 0;
+
+    addSelection({
+      id: '',
+      sportKey: match.sport || 'unknown',
+      league: match.league,
+      eventId: match.id,
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      marketType: 'match_winner',
+      selection,
+      odds,
+      commenceTime: match.startTime,
+    });
   };
 
   return (
@@ -120,9 +144,10 @@ export default function MatchListRow({ match }: MatchListRowProps) {
           {/* Odds Columns - Fixed Width */}
           <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <button 
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
-                // Handle bet placement
+                handleAddSelection('home');
               }}
               className="bg-gray-700 hover:bg-green-500 text-white px-3 sm:px-4 py-2.5 rounded font-semibold text-sm sm:text-base min-w-[55px] sm:min-w-[65px] text-center transition-colors"
             >
@@ -132,21 +157,27 @@ export default function MatchListRow({ match }: MatchListRowProps) {
             
             {match.odds.draw && (
               <button 
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  // Handle bet placement
+                  handleAddSelection('draw');
                 }}
                 className="bg-gray-700 hover:bg-green-500 text-white px-3 sm:px-4 py-2.5 rounded font-semibold text-sm sm:text-base min-w-[55px] sm:min-w-[65px] text-center transition-colors"
+                aria-label="Bet on draw (X)"
+                title="Bet on draw"
               >
-                <div className="text-xs text-gray-300 mb-0.5">X</div>
+              <div className="text-xs text-gray-300 mb-0.5" aria-hidden="true">
+                X
+              </div>
                 <div className="font-bold text-yellow-400">{match.odds.draw}</div>
               </button>
             )}
             
             <button 
+              type="button"
               onClick={(e) => {
                 e.preventDefault();
-                // Handle bet placement
+                handleAddSelection('away');
               }}
               className="bg-gray-700 hover:bg-green-500 text-white px-3 sm:px-4 py-2.5 rounded font-semibold text-sm sm:text-base min-w-[55px] sm:min-w-[65px] text-center transition-colors"
             >

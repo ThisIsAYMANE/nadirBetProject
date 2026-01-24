@@ -1,21 +1,16 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
-import { liveMatches } from '@/lib/mockData';
 import { Play, Filter, Zap } from 'lucide-react';
+import { useLiveOdds } from '@/hooks/useLiveOdds';
 
 export default function LivePage() {
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState('all');
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+  const { matches, isLoading, error, refetch } = useLiveOdds(selectedSport);
 
   if (isLoading) {
     return (
@@ -88,7 +83,9 @@ export default function LivePage() {
               </button>
               <div className="flex items-center space-x-2 bg-green-500/10 px-3 py-2 rounded-lg border border-green-500/20 min-h-[44px]">
                 <Zap className="w-4 h-4 text-green-500" />
-                <span className="text-green-500 font-semibold text-sm sm:text-base">{liveMatches.length} Live</span>
+                <span className="text-green-500 font-semibold text-sm sm:text-base">
+                  {matches.length} Live
+                </span>
               </div>
             </div>
           </div>
@@ -110,9 +107,22 @@ export default function LivePage() {
             ))}
           </div>
 
+          {/* Error state */}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6">
+              <p className="text-red-400 text-sm">{error}</p>
+              <button
+                onClick={refetch}
+                className="mt-2 text-sm text-red-400 hover:text-red-300 underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
           {/* Live Matches Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {liveMatches.map((match) => (
+            {matches.map((match) => (
               <div key={match.id} className="relative">
                 <MatchCard match={match} />
                 <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse">
@@ -139,7 +149,7 @@ export default function LivePage() {
           </div>
 
           {/* Empty State */}
-          {liveMatches.length === 0 && (
+          {matches.length === 0 && !error && (
             <div className="text-center py-16">
               <Play className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">No Live Matches</h3>

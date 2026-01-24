@@ -29,6 +29,13 @@ PRAGMATIC_PROVIDER_ID=PragmaticPlay
 PRAGMATIC_API_URL=https://api.prerelease-env.biz
 PRAGMATIC_CALLBACK_URL=https://kasie-overfrequent-nonaccentually.ngrok-free.dev/api
 
+# Sports Odds API (The Odds API)
+SPORTS_API_URL=https://api.the-odds-api.com/v4
+SPORTS_API_KEY=404cfffc9b5859cf33f141b1fb9568d8
+SPORTS_API_REGION=eu
+SPORTS_API_DEFAULT_MARKETS=h2h
+SPORTS_API_ODDS_FORMAT=decimal
+
 
 
 

@@ -2,13 +2,17 @@
 import Link from 'next/link';
 import { Clock, Play } from 'lucide-react';
 import { Match } from '@/types';
+import { useBetting } from '@/contexts/BettingContext';
 
 interface MatchCardProps {
   match: Match;
   showLeague?: boolean;
+  category?: string; // high-level sport category slug, e.g. "football"
 }
 
-export default function MatchCard({ match, showLeague = true }: MatchCardProps) {
+export default function MatchCard({ match, showLeague = true, category }: MatchCardProps) {
+  const { addSelection } = useBetting();
+
   const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -24,8 +28,37 @@ export default function MatchCard({ match, showLeague = true }: MatchCardProps) 
     });
   };
 
+  const handleAddSelection = (selection: 'home' | 'away' | 'draw') => {
+    const odds =
+      selection === 'home'
+        ? match.odds.home
+        : selection === 'away'
+        ? match.odds.away
+        : match.odds.draw || 0;
+
+    addSelection({
+      id: '',
+      sportKey: match.sport || 'unknown',
+      league: match.league,
+      eventId: match.id,
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      marketType: 'match_winner',
+      selection,
+      odds,
+      commenceTime: match.startTime,
+    });
+  };
+
+  const detailsHref =
+    category && match.sport
+      ? `/details/${match.id}?category=${encodeURIComponent(
+          category,
+        )}&sportKey=${encodeURIComponent(match.sport)}`
+      : `/details/${match.id}`;
+
   return (
-    <Link href={`/details/${match.id}`}>
+    <Link href={detailsHref}>
       <div className="bet-card group">
         {/* Header */}
         <div className="flex items-center justify-between mb-2 sm:mb-3">
@@ -71,19 +104,40 @@ export default function MatchCard({ match, showLeague = true }: MatchCardProps) 
 
         {/* Odds */}
         <div className="flex items-center justify-between space-x-2">
-          <button className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddSelection('home');
+            }}
+            className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]"
+          >
             <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">1</div>
             <div className="font-bold text-sm sm:text-base">{match.odds.home}</div>
           </button>
           
           {match.odds.draw && (
-            <button className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                handleAddSelection('draw');
+              }}
+              className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]"
+            >
               <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">X</div>
               <div className="font-bold text-sm sm:text-base">{match.odds.draw}</div>
             </button>
           )}
           
-          <button className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddSelection('away');
+            }}
+            className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]"
+          >
             <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">2</div>
             <div className="font-bold text-sm sm:text-base">{match.odds.away}</div>
           </button>

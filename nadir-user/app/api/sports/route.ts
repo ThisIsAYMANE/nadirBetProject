@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
-import { fetchAvailableSports } from '@/lib/sportsbookApi';
+import { getFilteredSports } from '@/lib/sportsbookApi';
 
 export async function GET() {
   try {
-    const sports = await fetchAvailableSports();
+    const { all, byCategory } = await getFilteredSports();
 
     return NextResponse.json({
       success: true,
-      count: sports.length,
-      sports: sports
+      count: all.length,
+      sports: all,
+      byCategory,
     });
   } catch (error) {
     console.error('Error fetching available sports:', error);
@@ -16,9 +17,12 @@ export async function GET() {
       { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to fetch sports',
-        sports: [] 
+        sports: [],
+        byCategory: {},
       },
-      { status: 500 }
+      // Return 200 with success=false so the frontend
+      // doesn't see this as a hard network error (500).
+      { status: 200 }
     );
   }
 }

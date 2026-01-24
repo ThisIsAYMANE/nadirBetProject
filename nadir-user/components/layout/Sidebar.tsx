@@ -1,11 +1,48 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Star, TrendingUp } from 'lucide-react';
 import { sports } from '@/lib/mockData';
 
+type CategoryCounts = Record<string, number>;
+
+interface ApiSportCategoryResponse {
+  success: boolean;
+  count: number;
+  sports: {
+    sportKey: string;
+    category: string;
+    isOutright: boolean;
+  }[];
+  byCategory: Record<string, { sportKey: string; category: string; isOutright: boolean }[]>;
+}
+
 export default function Sidebar() {
   const [expandedSports, setExpandedSports] = useState<string[]>(['football']);
+  const [categoryCounts, setCategoryCounts] = useState<CategoryCounts>({});
+
+  useEffect(() => {
+    const fetchCategoryCounts = async () => {
+      try {
+        const res = await fetch('/api/sports', { cache: 'no-store' });
+        if (!res.ok) return;
+
+        const data = (await res.json()) as ApiSportCategoryResponse;
+        if (!data.success || !data.byCategory) return;
+
+        const counts: CategoryCounts = {};
+        for (const [category, list] of Object.entries(data.byCategory)) {
+          // For sidebar counts, we only care about regular leagues, not outrights
+          counts[category] = list.filter((s) => !s.isOutright).length;
+        }
+        setCategoryCounts(counts);
+      } catch (err) {
+        console.error('Error loading sports categories', err);
+      }
+    };
+
+    fetchCategoryCounts();
+  }, []);
 
   const toggleSport = (sportId: string) => {
     setExpandedSports(prev => 
@@ -54,7 +91,9 @@ export default function Sidebar() {
                     <span className="text-sm">{sport.name}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-400">{sport.matchCount}</span>
+                    <span className="text-xs text-gray-400">
+                      {categoryCounts[sport.id] ?? sport.matchCount}
+                    </span>
                     <ChevronRight 
                       className={`w-3 h-3 transition-transform ${
                         expandedSports.includes(sport.id) ? 'rotate-90' : ''

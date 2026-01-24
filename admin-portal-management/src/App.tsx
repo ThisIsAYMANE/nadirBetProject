@@ -13,6 +13,7 @@ import { CashoutQueue } from './components/dashboard/CashoutQueue';
 import { PointsManagement } from './components/dashboard/PointsManagement';
 import { PointsBalanceCard } from './components/dashboard/PointsBalanceCard';
 import { useDashboardData, useBrokers } from './hooks/useDashboardData';
+import { BetMonitoringDashboard } from './components/betting/BetMonitoringDashboard';
 
 const DashboardApp: React.FC = () => {
   const { user, isAuthenticated, isLoading, dashboardType } = useAuth();
@@ -214,6 +215,10 @@ const DashboardApp: React.FC = () => {
           </div>
         </div>
       );
+    }
+
+    if (activeItem === 'betting-monitor') {
+      return <BetMonitoringDashboard dashboardType={dashboardType} />;
     }
 
     if (activeItem === 'analytics') {

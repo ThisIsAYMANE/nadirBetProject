@@ -1,3 +1,14 @@
+export interface MatchMarketOutcome {
+  name: string;
+  price: number;
+  line?: number;
+}
+
+export interface MatchMarket {
+  key: string;
+  outcomes: MatchMarketOutcome[];
+}
+
 export interface Match {
   id: string;
   homeTeam: string;
@@ -17,6 +28,9 @@ export interface Match {
   };
   isLive?: boolean;
   minute?: number;
+  markets?: MatchMarket[];
+  primaryBookmaker?: string;
+  lastUpdate?: string;
 }
 
 export interface Sport {

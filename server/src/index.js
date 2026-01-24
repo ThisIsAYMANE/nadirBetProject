@@ -9,6 +9,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { pool, db } from './database/db.js';
+import settlementService from './services/SettlementService.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -21,6 +22,7 @@ import chartRoutes from './routes/charts.js';
 import cashoutRoutes from './routes/cashout.js';
 import pragmaticRoutes from './routes/pragmatic.js';
 import pointsRoutes from './routes/points.js';
+import bettingRoutes from './routes/betting.js';
 import { authenticateToken } from './middleware/auth.js';
 
 // Load environment variables from 'env' file (not .env)
@@ -107,6 +109,7 @@ app.use('/api/kpis', authenticateToken, kpiRoutes);
 app.use('/api/charts', authenticateToken, chartRoutes);
 app.use('/api/cashout-requests', authenticateToken, cashoutRoutes);
 app.use('/api', pragmaticRoutes);
+app.use('/api/betting', bettingRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -126,6 +129,8 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Dashboard API: http://localhost:${PORT}/api`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  // Start automatic betting settlement worker
+  settlementService.startSettlementWorker();
 });
 
 export { pool };

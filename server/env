@@ -36,6 +36,16 @@ SPORTS_API_REGION=eu
 SPORTS_API_DEFAULT_MARKETS=h2h
 SPORTS_API_ODDS_FORMAT=decimal
 
+# ----------------------------------------------
+# SLOTEGRATOR CASINO API
+# ----------------------------------------------
+CASINO_MERCHANT_ID=918cde05a40c71c00e2794acdd196337
+CASINO_MERCHANT_KEY=f6d370556591267f4aacf4496144f7a8352af612
+CASINO_API_BASE_URL=https://staging.slotegrator.com/api/index.php/v1
+CASINO_DEFAULT_CURRENCY=EUR
+CASINO_CALLBACK_URL=https://mazencallback.ngrok.app/api/casino/callback
+CASINO_RETURN_URL=https://mazenapp.ngrok.app/casino
+
 
 
 

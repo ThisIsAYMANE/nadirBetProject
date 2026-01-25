@@ -23,6 +23,7 @@ import cashoutRoutes from './routes/cashout.js';
 import pragmaticRoutes from './routes/pragmatic.js';
 import pointsRoutes from './routes/points.js';
 import bettingRoutes from './routes/betting.js';
+import casinoRoutes from './routes/casino.js';
 import { authenticateToken } from './middleware/auth.js';
 
 // Load environment variables from 'env' file (not .env)
@@ -44,7 +45,7 @@ try {
   });
 } catch (error) {
   // Fallback to dotenv if env file doesn't exist
-dotenv.config();
+  dotenv.config();
 }
 
 const app = express();
@@ -110,6 +111,7 @@ app.use('/api/charts', authenticateToken, chartRoutes);
 app.use('/api/cashout-requests', authenticateToken, cashoutRoutes);
 app.use('/api', pragmaticRoutes);
 app.use('/api/betting', bettingRoutes);
+app.use('/api/casino', casinoRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -6,6 +6,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PointsTab from '@/components/profile/PointsTab';
 import { BetHistory } from '@/components/betting/BetHistory';
+import CurrencySelector from '@/components/settings/CurrencySelector';
 import { User, History, Settings, Star, Trophy, MessageCircle, DollarSign, Send, Clock, Coins } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -17,6 +18,7 @@ export default function ProfilePage() {
   const [pointsBalance, setPointsBalance] = useState(0);
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
+  const [userCurrency, setUserCurrency] = useState<string>('EUR');
 
   useEffect(() => {
     // Check authentication immediately
@@ -58,6 +60,26 @@ export default function ProfilePage() {
         if (pointsResponse.ok) {
           const pointsData = await pointsResponse.json();
           setPointsBalance(pointsData.balance || 0);
+        }
+
+        // Fetch user profile for currency
+        try {
+          const profileResponse = await fetch('http://localhost:3001/api/users/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (profileData.profile?.currency) {
+              setUserCurrency(profileData.profile.currency);
+            }
+          }
+        } catch (err) {
+          // Profile endpoint might not exist yet, use default
+          console.warn('Could not fetch profile:', err);
         }
       } catch (err) {
         console.error('Error loading user data:', err);
@@ -370,7 +392,23 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Other tabs would go here... */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <div className="bg-gray-800 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
+                  <Settings className="w-5 h-5" />
+                  <span>Settings</span>
+                </h3>
+                
+                <CurrencySelector 
+                  currentCurrency={userCurrency}
+                  onCurrencyChange={(currency) => {
+                    setUserCurrency(currency);
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

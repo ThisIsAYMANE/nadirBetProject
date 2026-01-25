@@ -1,5 +1,6 @@
 'use client';
 import { Play, Star, Crown } from 'lucide-react';
+import Image from 'next/image';
 import { CasinoGame } from '@/types';
 
 interface GameCardProps {
@@ -17,14 +18,32 @@ export default function GameCard({ game, onPlay }: GameCardProps) {
     }).format(amount);
   };
 
+  // Get game image - prefer high-quality image from images array, fallback to main image
+  const gameImage = game.images?.find(img => img.type === 'regular')?.url || 
+                    game.images?.[0]?.url || 
+                    game.image || 
+                    null;
+
   return (
     <div className="casino-game-card group">
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-        {/* Game Icon/Name Display */}
-        <div className="text-center p-2 sm:p-4">
-          <div className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">{game.name.charAt(0)}</div>
-          <div className="text-xs text-gray-300 uppercase tracking-wider">{game.category}</div>
-        </div>
+        {/* Game Image */}
+        {gameImage ? (
+          <Image
+            src={gameImage}
+            alt={game.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            unoptimized // Slotegrator images may not be optimized
+          />
+        ) : (
+          // Fallback: Game Icon/Name Display
+          <div className="text-center p-2 sm:p-4">
+            <div className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">{game.name.charAt(0)}</div>
+            <div className="text-xs text-gray-300 uppercase tracking-wider">{game.category || game.type}</div>
+          </div>
+        )}
         
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center">

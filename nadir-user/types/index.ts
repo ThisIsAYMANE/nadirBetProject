@@ -58,15 +58,47 @@ export interface Sport {
 }
 
 export interface CasinoGame {
-  id: string;
+  uuid: string; // Slotegrator UUID (primary identifier)
+  id?: string; // Legacy/compatibility field
   name: string;
-  provider: string;
-  category: string;
-  isNew?: boolean;
-  isLive?: boolean;
-  jackpot?: number;
-  rtp?: number;
-  _pragmaticData?: Record<string, unknown>; // Store original Pragmatic game data
+  image: string; // Game image URL from Slotegrator
+  type: string; // Game type (e.g., 'Slots', 'Live Casino')
+  provider: string; // Provider name
+  provider_id: number; // Provider ID
+  technology: string; // 'Flash', 'HTML5', etc.
+  has_lobby: number; // 0 or 1 - indicates if game has lobby
+  is_mobile: number; // 0 or 1 - CRITICAL: 0 = desktop only, 1 = mobile only
+  has_freespins: number; // 0 or 1
+  has_tables: number; // 0 or 1
+  freespin_valid_until_full_day?: number; // 0 or 1
+  label?: string; // Sub provider's label
+  tags?: Array<{
+    code: string;
+    label: string;
+    category?: {
+      code: string;
+      label: string;
+    };
+  }>;
+  parameters?: {
+    rtp?: number;
+    volatility?: string;
+    reels_count?: string;
+    lines_count?: number;
+  };
+  images?: Array<{
+    name: string;
+    file: string;
+    url: string;
+    type: string;
+  }>;
+  related_games?: CasinoGame[];
+  // Legacy/compatibility fields
+  category?: string; // Mapped from type
+  isNew?: boolean; // Can be derived from tags or other logic
+  isLive?: boolean; // Mapped from type === 'Live Casino' or similar
+  jackpot?: number; // Can be fetched from jackpots endpoint
+  rtp?: number; // From parameters.rtp
 }
 
 export interface User {

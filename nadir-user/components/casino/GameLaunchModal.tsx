@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { casinoApi } from '@/lib/casinoApi';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface GameLaunchModalProps {
   isOpen: boolean;
@@ -16,24 +18,43 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
   const [gameUrl, setGameUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Detect device type for game launch
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const launchGame = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const { pragmaticApi } = await import('@/lib/api');
-      const response = await pragmaticApi.launchGame(gameId, {
-        currency: 'USD',
+      // Check if user is logged in
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) {
+        // Trigger login modal
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('openLoginModal'));
+        }
+        setError('You must be logged in to play games');
+        setIsLoading(false);
+        return;
+      }
+
+      // Launch game with device detection
+      const response = await casinoApi.launchGame(gameId, {
+        device: isMobile ? 'mobile' : 'desktop',
         language: 'en',
-        country: 'US',
-        platform: 'WEB'
+        returnUrl: typeof window !== 'undefined' ? window.location.origin + '/casino' : null,
       });
 
-      setGameUrl(response.gameUrl);
+      if (response.url) {
+        setGameUrl(response.url);
+      } else {
+        throw new Error('No game URL returned from server');
+      }
     } catch (err) {
       console.error('Error launching game:', err);
-      setError(err instanceof Error ? err.message : 'Failed to launch game. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to launch game. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +88,9 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
           </div>
         </DialogHeader>
 
-        <div className="flex-1 relative bg-black">
+        <div className="flex-1 relative bg-black min-h-[500px]">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
               <div className="text-center">
                 <LoadingSpinner size="lg" />
                 <p className="text-gray-400 mt-4">Loading game...</p>
@@ -78,12 +99,17 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
           )}
 
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
               <div className="text-center max-w-md px-6">
                 <p className="text-red-400 text-lg mb-4">{error}</p>
-                <Button onClick={launchGame} className="bg-green-500 hover:bg-green-600">
-                  Try Again
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={launchGame} className="bg-green-500 hover:bg-green-600">
+                    Try Again
+                  </Button>
+                  <Button onClick={onClose} variant="outline">
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -91,8 +117,8 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
           {gameUrl && !isLoading && !error && (
             <iframe
               src={gameUrl}
-              className="w-full h-full border-0"
-              allow="payment; fullscreen; autoplay; encrypted-media"
+              className="w-full h-full border-0 absolute inset-0"
+              allow="payment; fullscreen; autoplay; encrypted-media; microphone; camera"
               allowFullScreen
               title={gameName}
             />

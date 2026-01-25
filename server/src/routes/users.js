@@ -323,5 +323,145 @@ router.delete('/:id', requireManagePermission, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/users/profile
+ * Get current user's profile
+ * Requires authentication
+ */
+router.get('/profile', async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user profile
+    const profileResult = await pool.query(
+      'SELECT currency FROM user_profiles WHERE user_id = ?',
+      [userId]
+    );
+
+    const userResult = await pool.query(
+      'SELECT email, full_name, username FROM users WHERE user_id = ?',
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      profile: {
+        currency: profileResult.rows[0]?.currency || 'EUR',
+        full_name: userResult.rows[0]?.full_name,
+        email: userResult.rows[0]?.email,
+        username: userResult.rows[0]?.username,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+/**
+ * PUT /api/users/profile
+ * Update current user's profile (including currency)
+ * Requires authentication
+ */
+router.put('/profile', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currency, full_name, email } = req.body;
+
+    // Validate currency if provided
+    if (currency) {
+      const validCurrencies = ['EUR', 'USD', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY'];
+      if (!validCurrencies.includes(currency.toUpperCase())) {
+        return res.status(400).json({ error: 'Invalid currency code' });
+      }
+    }
+
+    // Update user profile
+    if (currency || full_name || email) {
+      // Update user_profiles table for currency
+      if (currency) {
+        // Check if profile exists
+        const profileCheck = await pool.query(
+          'SELECT user_id FROM user_profiles WHERE user_id = ?',
+          [userId]
+        );
+
+        if (profileCheck.rows.length === 0) {
+          // Create profile if doesn't exist
+          await pool.query(
+            'INSERT INTO user_profiles (user_id, currency) VALUES (?, ?)',
+            [userId, currency.toUpperCase()]
+          );
+        } else {
+          // Update existing profile
+          await pool.query(
+            'UPDATE user_profiles SET currency = ? WHERE user_id = ?',
+            [currency.toUpperCase(), userId]
+          );
+        }
+      }
+
+      // Update users table for full_name and email
+      const userUpdates = [];
+      const userParams = [];
+
+      if (full_name) {
+        userUpdates.push('full_name = ?');
+        userParams.push(full_name);
+      }
+
+      if (email) {
+        // Check if email already exists
+        const existingEmail = await pool.query(
+          'SELECT user_id FROM users WHERE email = ? AND user_id != ?',
+          [email, userId]
+        );
+
+        if (existingEmail.rows.length > 0) {
+          return res.status(400).json({ error: 'Email already in use' });
+        }
+
+        userUpdates.push('email = ?');
+        userParams.push(email);
+      }
+
+      if (userUpdates.length > 0) {
+        userParams.push(userId);
+        await pool.query(
+          `UPDATE users SET ${userUpdates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`,
+          userParams
+        );
+      }
+    }
+
+    // Get updated profile
+    const profileResult = await pool.query(
+      'SELECT currency FROM user_profiles WHERE user_id = ?',
+      [userId]
+    );
+
+    const userResult = await pool.query(
+      'SELECT email, full_name FROM users WHERE user_id = ?',
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      profile: {
+        currency: profileResult.rows[0]?.currency || 'EUR',
+        full_name: userResult.rows[0]?.full_name,
+        email: userResult.rows[0]?.email,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 export default router;
 

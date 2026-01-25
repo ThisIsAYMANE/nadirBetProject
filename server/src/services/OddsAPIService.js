@@ -166,6 +166,7 @@ class OddsAPIService {
    * @param {string} options.markets - Comma-separated markets (default: h2h)
    * @param {string} options.oddsFormat - decimal | american (default: decimal)
    * @param {string} options.dateFormat - iso | unix (default: iso)
+   * @returns {Promise<object|null>} Returns null if event not found (404), otherwise returns odds data
    */
   async getOddsForEvent(eventId, {
     regions = this.defaultRegion,
@@ -182,8 +183,19 @@ class OddsAPIService {
 
     const path = `/events/${encodeURIComponent(eventId)}/odds?${params.toString()}`;
     const cacheKey = `eventOdds:${eventId}:${regions}:${markets}:${oddsFormat}`;
-    // Cache for 30 seconds to keep odds reasonably fresh
-    return this._fetchJson(path, { useCacheKey: cacheKey, ttlMs: 30 * 1000 });
+    
+    try {
+      // Cache for 30 seconds to keep odds reasonably fresh
+      return await this._fetchJson(path, { useCacheKey: cacheKey, ttlMs: 30 * 1000 });
+    } catch (error) {
+      // Return null for 404 (event not found) instead of throwing
+      // This allows the route handler to return a proper 404 response
+      if (error.status === 404 || error.status === 400) {
+        return null;
+      }
+      // Re-throw other errors (rate limits, server errors, etc.)
+      throw error;
+    }
   }
 }
 

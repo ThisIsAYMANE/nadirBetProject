@@ -2,12 +2,28 @@ export interface MatchMarketOutcome {
   name: string;
   price: number;
   line?: number;
+  point?: number; // For spreads, totals, etc.
+  description?: string; // For player props
 }
 
 export interface MatchMarket {
   key: string;
   outcomes: MatchMarketOutcome[];
+  last_update?: string;
 }
+
+export type MarketType = 
+  | 'h2h' 
+  | 'spreads' 
+  | 'totals' 
+  | 'btts' 
+  | 'draw_no_bet' 
+  | 'double_chance'
+  | 'alternate_spreads'
+  | 'alternate_totals'
+  | 'team_totals'
+  | 'alternate_team_totals'
+  | string; // For player props and other markets
 
 export interface Match {
   id: string;

@@ -30,7 +30,7 @@ router.get('/sports', async (req, res) => {
  *
  * Query params:
  *  - regions (optional, default: eu)
- *  - markets (optional, default: h2h)
+ *  - markets (optional, default: h2h,spreads,totals,btts,draw_no_bet,alternate_spreads,alternate_totals)
  *  - oddsFormat (optional, default: decimal)
  */
 router.get('/event/:eventId/odds', async (req, res) => {
@@ -45,14 +45,15 @@ router.get('/event/:eventId/odds', async (req, res) => {
 
     const options = {};
     if (regions) options.regions = regions;
-    if (markets) options.markets = markets;
+    // Default to fetching all common markets if not specified
+    options.markets = markets || 'h2h,spreads,totals,btts,draw_no_bet,alternate_spreads,alternate_totals,double_chance';
     if (oddsFormat) options.oddsFormat = oddsFormat;
     if (dateFormat) options.dateFormat = dateFormat;
 
-    console.log(`[Event Odds] Fetching odds for event: ${eventId} with options:`, options);
     const odds = await oddsAPIService.getOddsForEvent(eventId, options);
     
     if (!odds) {
+      // Event not found - return 404 without excessive logging
       return res.status(404).json({ 
         error: 'Event not found',
         eventId 

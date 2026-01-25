@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { ArrowLeft, Heart, Share2, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
-import type { Match, MatchMarket, MatchMarketOutcome } from '@/types';
+import type { Match, MatchMarket, MatchMarketOutcome, MarketType } from '@/types';
+import { MarketTabs } from '@/components/betting/MarketTabs';
+import { MarketDisplay } from '@/components/betting/MarketDisplay';
 
 export default function MatchDetailsPage() {
   const params = useParams();
@@ -15,38 +17,95 @@ export default function MatchDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [match, setMatch] = useState<Match | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeMarket, setActiveMarket] = useState<MarketType | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const lastFetchKeyRef = useRef<string | null>(null);
+  const isCurrentlyFetchingRef = useRef(false);
+
+  // Memoize the match parameters to prevent unnecessary re-renders
+  const matchParams = useMemo(() => {
+    const rawId = (params as { matchId?: string }).matchId;
+    const matchId = Array.isArray(rawId) ? rawId[0] : rawId;
+    const category = searchParams.get('category');
+    const sportKey = searchParams.get('sportKey');
+    return { matchId, category, sportKey };
+  }, [params, searchParams]);
 
   useEffect(() => {
-    const fetchMatch = async () => {
-      try {
-        const rawId = (params as { matchId?: string }).matchId;
-        const matchId = Array.isArray(rawId) ? rawId[0] : rawId;
-        const category = searchParams.get('category');
-        const sportKey = searchParams.get('sportKey'); // underlying Odds API league key, e.g. soccer_epl
+    const { matchId, category, sportKey } = matchParams;
 
-        if (!matchId || !category || !sportKey) {
-          setError('Match details are not available.');
-          setIsLoading(false);
-          return;
-        }
+    if (!matchId || !category || !sportKey) {
+      setError('Match details are not available.');
+      setIsLoading(false);
+      isCurrentlyFetchingRef.current = false;
+      return;
+    }
+
+    // Create a unique key for this fetch
+    const fetchKey = `${matchId}-${category}-${sportKey}`;
+    
+    // If we already have data for this exact match, don't refetch
+    if (match && match.id === matchId && lastFetchKeyRef.current === fetchKey) {
+      setIsLoading(false);
+      isCurrentlyFetchingRef.current = false;
+      return;
+    }
+    
+    // If we're already fetching this exact match, don't start another fetch
+    if (lastFetchKeyRef.current === fetchKey && isCurrentlyFetchingRef.current) {
+      return;
+    }
+
+    // Cancel any in-flight request for a different match
+    if (abortControllerRef.current && lastFetchKeyRef.current !== fetchKey) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Reset fetching flag for new fetch
+    isCurrentlyFetchingRef.current = false;
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    const fetchMatch = async () => {
+      // Reset state for new match
+      setError(null);
+      setIsLoading(true);
+      lastFetchKeyRef.current = fetchKey;
+      isCurrentlyFetchingRef.current = true;
+      
+      try {
+        console.log('[MatchDetails] Fetching match:', { matchId, category, sportKey });
 
         const BACKEND_BASE_URL =
           process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
         let matchData: Match | null = null;
 
-        // First, try the event-specific endpoint which supports btts and totals
+        // First, try the event-specific endpoint which supports all markets
         try {
           const eventQuery = new URLSearchParams({
             regions: 'eu',
-            markets: 'h2h,totals,btts',
+            // Fetch all common markets - backend will default to all if not specified
+            markets: 'h2h,spreads,totals,btts,draw_no_bet,alternate_spreads,alternate_totals,double_chance',
             oddsFormat: 'decimal',
           }).toString();
 
           const eventRes = await fetch(
             `${BACKEND_BASE_URL}/api/betting/event/${encodeURIComponent(matchId)}/odds?${eventQuery}`,
-            { cache: 'no-store' },
+            { 
+              cache: 'no-store',
+              signal: abortController.signal,
+            },
           );
+
+          // Check if request was aborted before processing
+          if (abortController.signal.aborted) {
+            isCurrentlyFetchingRef.current = false;
+            setIsLoading(false);
+            return;
+          }
 
           if (eventRes.ok) {
             const eventData = await eventRes.json();
@@ -54,52 +113,127 @@ export default function MatchDetailsPage() {
               const { transformToMatch } = await import('@/lib/sportsbookApi');
               matchData = transformToMatch(eventData as any) as Match;
             }
+          } else if (eventRes.status === 404) {
+            // Event not found - silently fall back to sport endpoint
+            // Don't log this as an error since it's expected for some events
           }
-        } catch (eventErr) {
-          console.warn('Event endpoint failed, trying sport endpoint:', eventErr);
+        } catch (eventErr: any) {
+          // Ignore abort errors and 404s
+          if (eventErr.name === 'AbortError' || abortController.signal.aborted) {
+            clearTimeout(timeoutId);
+            isCurrentlyFetchingRef.current = false;
+            setIsLoading(false);
+            return;
+          }
+          // Only log non-404 errors
+          if (!(eventErr instanceof Error && (eventErr.message.includes('404') || eventErr.message.includes('Not Found')))) {
+            console.warn('Event endpoint failed, trying sport endpoint:', eventErr);
+          }
         }
 
         // Fallback to sport endpoint if event endpoint failed or returned no data
         if (!matchData) {
-          const sportQuery = new URLSearchParams({
-            league: sportKey,
-            eventId: matchId,
-            markets: 'h2h,totals',
-          }).toString();
-
-          const sportRes = await fetch(
-            `/api/sports/${encodeURIComponent(category)}?${sportQuery}`,
-            { cache: 'no-store' },
-          );
-
-          if (!sportRes.ok) {
-            throw new Error(`Failed to fetch match details: ${sportRes.statusText}`);
-          }
-
-          const sportData = await sportRes.json();
-          if (
-            !sportData.success ||
-            !Array.isArray(sportData.matches) ||
-            sportData.matches.length === 0
-          ) {
-            setError('Match not found or no odds available at the moment.');
+          // Check abort before attempting fallback
+          if (abortController.signal.aborted) {
+            isCurrentlyFetchingRef.current = false;
             setIsLoading(false);
             return;
           }
+          
+          try {
+            const sportQuery = new URLSearchParams({
+              league: sportKey,
+              eventId: matchId,
+              markets: 'h2h,totals',
+            }).toString();
 
-          matchData = sportData.matches[0] as Match;
+            const sportRes = await fetch(
+              `/api/sports/${encodeURIComponent(category)}?${sportQuery}`,
+              { 
+                cache: 'no-store',
+                signal: abortController.signal,
+              },
+            );
+
+            // Check if request was aborted before processing
+            if (abortController.signal.aborted) {
+              isCurrentlyFetchingRef.current = false;
+              setIsLoading(false);
+              return;
+            }
+
+            if (!sportRes.ok) {
+              throw new Error(`Failed to fetch match details: ${sportRes.statusText}`);
+            }
+
+            const sportData = await sportRes.json();
+            
+            // Check abort after JSON parsing
+            if (abortController.signal.aborted) {
+              isCurrentlyFetchingRef.current = false;
+              setIsLoading(false);
+              return;
+            }
+            
+            if (
+              !sportData.success ||
+              !Array.isArray(sportData.matches) ||
+              sportData.matches.length === 0
+            ) {
+              setError('Match not found or no odds available at the moment.');
+              setIsLoading(false);
+              isCurrentlyFetchingRef.current = false;
+              return;
+            }
+
+            matchData = sportData.matches[0] as Match;
+          } catch (sportErr: any) {
+            // Ignore abort errors
+            if (sportErr.name === 'AbortError' || abortController.signal.aborted) {
+              isCurrentlyFetchingRef.current = false;
+              setIsLoading(false);
+              return;
+            }
+            // Re-throw to be caught by outer catch
+            throw sportErr;
+          }
         }
 
+        // Final check: if we still don't have match data, show error
         if (!matchData) {
-          setError('Match not found or no odds available at the moment.');
+          // Always clear loading state, regardless of abort status
+          isCurrentlyFetchingRef.current = false;
+          setIsLoading(false);
+          
+          if (!abortController.signal.aborted) {
+            setError('Match not found or no odds available at the moment.');
+          }
+          return;
+        }
+
+        // Only update state if request wasn't aborted
+        if (abortController.signal.aborted) {
+          isCurrentlyFetchingRef.current = false;
           setIsLoading(false);
           return;
         }
 
+        console.log('[MatchDetails] Match data loaded successfully');
         setMatch(matchData);
         setIsLoading(false);
+        isCurrentlyFetchingRef.current = false;
       } catch (err: any) {
-        console.error('Error loading match details:', err);
+        // Always clear fetching state
+        isCurrentlyFetchingRef.current = false;
+        
+        // Ignore abort errors - don't update state if aborted
+        if (err.name === 'AbortError' || abortController.signal.aborted) {
+          console.log('[MatchDetails] Request was aborted');
+          setIsLoading(false);
+          return;
+        }
+        
+        console.error('[MatchDetails] Error loading match details:', err);
         setError(
           err instanceof Error ? err.message : 'Failed to load match details. Please try again.',
         );
@@ -108,7 +242,23 @@ export default function MatchDetailsPage() {
     };
 
     fetchMatch();
-  }, [params, searchParams]);
+
+    // Cleanup: abort request if component unmounts or params change
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        isCurrentlyFetchingRef.current = false;
+      }
+    };
+  }, [matchParams]);
+
+  // Set default active market when match data is loaded
+  useEffect(() => {
+    if (match && match.markets && match.markets.length > 0 && !activeMarket) {
+      const markets = match.markets.map((m) => m.key as MarketType);
+      setActiveMarket(markets.includes('h2h') ? 'h2h' : markets[0]);
+    }
+  }, [match, activeMarket]);
 
   if (isLoading) {
     return (
@@ -152,75 +302,51 @@ export default function MatchDetailsPage() {
     );
   }
 
-  // Derive markets for display (match result, totals, BTTS, etc.)
-  const normalizeName = (name?: string) => (name || '').toLowerCase();
-
   // Ensure markets array exists
   if (!match.markets) {
     match.markets = [];
   }
 
-  const h2hMarket: MatchMarket | undefined = match.markets.find(
-    (m) => m.key === 'h2h',
-  );
-  const homeH2H: MatchMarketOutcome | undefined = h2hMarket?.outcomes.find(
-    (o) => o.name === match.homeTeam,
-  );
-  const awayH2H: MatchMarketOutcome | undefined = h2hMarket?.outcomes.find(
-    (o) => o.name === match.awayTeam,
-  );
-  const drawH2H: MatchMarketOutcome | undefined = h2hMarket?.outcomes.find((o) =>
-    normalizeName(o.name).includes('draw'),
+  // Get available market types
+  const availableMarkets: MarketType[] = match.markets.map((m) => m.key as MarketType);
+
+  // Get the currently active market data
+  const currentMarket: MatchMarket | undefined = match.markets.find(
+    (m) => m.key === activeMarket,
   );
 
-  const homePrice = homeH2H?.price ?? match.odds.home;
-  const awayPrice = awayH2H?.price ?? match.odds.away;
-  const drawPrice = drawH2H?.price ?? match.odds.draw;
-
-  const totalsMarket: MatchMarket | undefined =
-    match.markets.find((m) => m.key === 'totals') || undefined;
-  const overOutcome: MatchMarketOutcome | undefined = totalsMarket?.outcomes.find((o) =>
-    normalizeName(o.name).startsWith('over'),
-  );
-  const underOutcome: MatchMarketOutcome | undefined = totalsMarket?.outcomes.find((o) =>
-    normalizeName(o.name).startsWith('under'),
-  );
-  const totalsLine =
-    overOutcome?.line !== undefined
-      ? overOutcome.line
-      : underOutcome?.line !== undefined
-      ? underOutcome.line
-      : undefined;
-  const hasTotals =
-    totalsMarket && overOutcome && underOutcome && typeof totalsLine === 'number';
-
-  const bttsMarket: MatchMarket | undefined =
-    match.markets.find(
-      (m) => m.key === 'btts' || m.key === 'both_teams_to_score',
-    ) || undefined;
-  const bttsYes: MatchMarketOutcome | undefined = bttsMarket?.outcomes.find((o) =>
-    normalizeName(o.name).includes('yes'),
-  );
-  const bttsNo: MatchMarketOutcome | undefined = bttsMarket?.outcomes.find((o) =>
-    normalizeName(o.name).includes('no'),
-  );
-  const hasBtts = bttsMarket && bttsYes && bttsNo;
+  // Derive popular bets for sidebar
+  const h2hMarket = match.markets.find((m) => m.key === 'h2h');
+  const totalsMarket = match.markets.find((m) => m.key === 'totals');
+  const bttsMarket = match.markets.find((m) => m.key === 'btts');
 
   const popularBets: { selection: string; odds: number }[] = [];
-  if (homePrice) {
-    popularBets.push({ selection: `${match.homeTeam} to Win`, odds: homePrice });
+  
+  if (h2hMarket) {
+    const homeOutcome = h2hMarket.outcomes.find((o) => o.name === match.homeTeam);
+    if (homeOutcome) {
+      popularBets.push({ selection: `${match.homeTeam} to Win`, odds: homeOutcome.price });
+    }
   }
-  if (typeof totalsLine === 'number' && overOutcome) {
-    popularBets.push({
-      selection: `Over ${totalsLine} Goals`,
-      odds: overOutcome.price,
-    });
+  
+  if (totalsMarket) {
+    const overOutcome = totalsMarket.outcomes.find((o) => o.name.toLowerCase().startsWith('over'));
+    if (overOutcome && overOutcome.line !== undefined) {
+      popularBets.push({
+        selection: `Over ${overOutcome.line} Goals`,
+        odds: overOutcome.price,
+      });
+    }
   }
-  if (bttsYes) {
-    popularBets.push({
-      selection: 'Both Teams to Score - Yes',
-      odds: bttsYes.price,
-    });
+  
+  if (bttsMarket) {
+    const bttsYes = bttsMarket.outcomes.find((o) => o.name.toLowerCase().includes('yes'));
+    if (bttsYes) {
+      popularBets.push({
+        selection: 'Both Teams to Score - Yes',
+        odds: bttsYes.price,
+      });
+    }
   }
 
   return (
@@ -332,79 +458,36 @@ export default function MatchDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Betting Markets */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Main Markets */}
-              <div className="bg-gray-800 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-white mb-4">Main Markets</h3>
-                
-                <div className="space-y-4">
-                  {/* Match Result */}
-                  <div className="border border-gray-700 rounded-lg p-4">
-                    <h4 className="text-white font-semibold mb-3">Match Result</h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                        <div className="text-sm text-gray-300 mb-1">{match.homeTeam}</div>
-                        <div className="font-bold">{homePrice}</div>
-                      </button>
-                      {drawPrice && (
-                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                          <div className="text-sm text-gray-300 mb-1">Draw</div>
-                          <div className="font-bold">{drawPrice}</div>
-                        </button>
-                      )}
-                      <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                        <div className="text-sm text-gray-300 mb-1">{match.awayTeam}</div>
-                        <div className="font-bold">{awayPrice}</div>
-                      </button>
-                    </div>
-                  </div>
+              {/* Market Tabs */}
+              {availableMarkets.length > 0 && (
+                <MarketTabs
+                  markets={availableMarkets}
+                  activeMarket={activeMarket}
+                  onMarketChange={setActiveMarket}
+                />
+              )}
 
-                  {/* Over/Under */}
-                  <div className="border border-gray-700 rounded-lg p-4">
-                    <h4 className="text-white font-semibold mb-3">Total Goals</h4>
-                    {hasTotals ? (
-                      <div className="grid grid-cols-2 gap-3">
-                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                          <div className="text-sm text-gray-300 mb-1">
-                            Over {totalsLine}
-                          </div>
-                          <div className="font-bold">{overOutcome?.price}</div>
-                        </button>
-                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                          <div className="text-sm text-gray-300 mb-1">
-                            Under {totalsLine}
-                          </div>
-                          <div className="font-bold">{underOutcome?.price}</div>
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-400">
-                        Total goals market is not available for this match.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Both Teams to Score */}
-                  <div className="border border-gray-700 rounded-lg p-4">
-                    <h4 className="text-white font-semibold mb-3">Both Teams to Score</h4>
-                    {hasBtts ? (
-                      <div className="grid grid-cols-2 gap-3">
-                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                          <div className="text-sm text-gray-300 mb-1">Yes</div>
-                          <div className="font-bold">{bttsYes?.price}</div>
-                        </button>
-                        <button className="bg-gray-700 hover:bg-green-500 text-white p-3 rounded-lg transition-colors">
-                          <div className="text-sm text-gray-300 mb-1">No</div>
-                          <div className="font-bold">{bttsNo?.price}</div>
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-400">
-                        Both Teams to Score market is not available for this match.
-                      </p>
-                    )}
-                  </div>
+              {/* Active Market Display */}
+              {currentMarket && activeMarket ? (
+                <MarketDisplay
+                  market={currentMarket}
+                  marketType={activeMarket}
+                  homeTeam={match.homeTeam}
+                  awayTeam={match.awayTeam}
+                  eventId={match.id}
+                  sportKey={match.sport}
+                  league={match.league}
+                  commenceTime={match.startTime}
+                />
+              ) : (
+                <div className="bg-gray-800 rounded-xl p-6">
+                  <p className="text-gray-400 text-center">
+                    {availableMarkets.length === 0
+                      ? 'No betting markets available for this match.'
+                      : 'Select a market to view odds.'}
+                  </p>
                 </div>
-              </div>
+              )}
 
               {/* Statistics */}
               <div className="bg-gray-800 rounded-xl p-6">

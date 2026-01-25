@@ -107,6 +107,9 @@ class BettingService {
 
       for (const sel of betData.selections) {
         const legId = db.generateUuid();
+        // Normalize market type (match_winner -> h2h for database)
+        const marketType = sel.marketType === 'match_winner' ? 'h2h' : sel.marketType;
+        
         await pool.query(
           `INSERT INTO bet_legs (
             leg_id, bet_id, sport_key, league, event_id, home_team, away_team,
@@ -120,7 +123,7 @@ class BettingService {
             sel.eventId,
             sel.homeTeam,
             sel.awayTeam,
-            sel.marketType,
+            marketType,
             sel.selection,
             sel.line || null,
             Number(sel.odds),

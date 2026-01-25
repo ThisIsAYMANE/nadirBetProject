@@ -9,12 +9,13 @@ export type BetSelection = {
   eventId: string;
   homeTeam: string;
   awayTeam: string;
-  marketType: 'match_winner';
-  selection: 'home' | 'away' | 'draw';
+  marketType: 'match_winner' | 'totals' | 'spreads' | 'btts' | 'draw_no_bet' | 'double_chance' | string;
+  selection: 'home' | 'away' | 'draw' | 'over' | 'under' | 'yes' | 'no' | string;
   line?: string;
   odds: number;
   commenceTime?: string;
   bookmakerKey?: string;
+  stake?: number; // Individual stake for this selection (used in single bets)
 };
 
 type BetType = 'single' | 'accumulator';
@@ -22,12 +23,16 @@ type BetType = 'single' | 'accumulator';
 interface BettingContextValue {
   betType: BetType;
   selections: BetSelection[];
-  stake: number;
+  stake: number; // Total stake for accumulator bets
   isPlacing: boolean;
+  isBetslipOpen: boolean;
+  openBetslip: () => void;
+  closeBetslip: () => void;
   addSelection: (selection: BetSelection) => void;
   removeSelection: (id: string) => void;
   clearSelections: () => void;
   setStake: (value: number) => void;
+  setSelectionStake: (id: string, stake: number) => void;
   setBetType: (type: BetType) => void;
   placeBet: () => Promise<{ success: boolean; message: string }>;
 }
@@ -39,6 +44,15 @@ export const BettingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [selections, setSelections] = useState<BetSelection[]>([]);
   const [stake, setStake] = useState<number>(0);
   const [isPlacing, setIsPlacing] = useState(false);
+  const [isBetslipOpen, setIsBetslipOpen] = useState(false);
+
+  const openBetslip = useCallback(() => {
+    setIsBetslipOpen(true);
+  }, []);
+
+  const closeBetslip = useCallback(() => {
+    setIsBetslipOpen(false);
+  }, []);
 
   const addSelection = useCallback((selection: BetSelection) => {
     setSelections((prev) => {
@@ -52,14 +66,22 @@ export const BettingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (exists) {
         return prev;
       }
-      const withId = { ...selection, id: `${selection.eventId}-${selection.selection}` };
+      const withId = { ...selection, id: `${selection.eventId}-${selection.selection}`, stake: 0 };
       const next = [...prev, withId];
       if (next.length > 1 && betType === 'single') {
         setBetType('accumulator');
       }
+      // Auto-open betslip when selection is added
+      setIsBetslipOpen(true);
       return next;
     });
   }, [betType]);
+
+  const setSelectionStake = useCallback((id: string, stakeValue: number) => {
+    setSelections((prev) =>
+      prev.map((sel) => (sel.id === id ? { ...sel, stake: stakeValue } : sel))
+    );
+  }, []);
 
   const removeSelection = useCallback((id: string) => {
     setSelections((prev) => {
@@ -77,12 +99,35 @@ export const BettingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setStake(0);
   }, []);
 
+  const setBetTypeWithReset = useCallback((type: BetType) => {
+    setBetType(type);
+    // Reset stakes when switching bet types
+    if (type === 'single') {
+      setStake(0);
+      setSelections((prev) => prev.map((sel) => ({ ...sel, stake: 0 })));
+    } else {
+      setStake(0);
+      setSelections((prev) => prev.map((sel) => ({ ...sel, stake: undefined })));
+    }
+  }, []);
+
   const placeBet = useCallback(async () => {
     if (!selections.length) {
       return { success: false, message: 'Please select at least one bet.' };
     }
-    if (!stake || stake <= 0) {
-      return { success: false, message: 'Please enter a valid stake.' };
+
+    // Validate stakes based on bet type
+    if (betType === 'single') {
+      // For single bets, each selection must have its own stake
+      const invalidStakes = selections.some((sel) => !sel.stake || sel.stake <= 0);
+      if (invalidStakes) {
+        return { success: false, message: 'Please enter a stake for each selection.' };
+      }
+    } else {
+      // For accumulator bets, total stake must be set
+      if (!stake || stake <= 0) {
+        return { success: false, message: 'Please enter a valid stake.' };
+      }
     }
 
     try {
@@ -94,47 +139,100 @@ export const BettingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('openLoginModal'));
         }
-        return { success: false, message: 'You must be logged in to place a bet.' };
+        // Return without showing alert - login modal will open
+        return { success: false, message: 'LOGIN_REQUIRED' };
       }
 
-      const body = {
-        betType,
-        stake,
-        selections: selections.map((s) => ({
-          sportKey: s.sportKey,
-          league: s.league,
-          eventId: s.eventId,
-          homeTeam: s.homeTeam,
-          awayTeam: s.awayTeam,
-          marketType: s.marketType,
-          selection: s.selection,
-          line: s.line,
-          odds: s.odds,
-          commenceTime: s.commenceTime,
-          bookmakerKey: s.bookmakerKey,
-        })),
-      };
+      // For single bets, create separate bet requests for each selection
+      // For accumulator, send one bet with total stake
+      if (betType === 'single') {
+        // Place multiple single bets
+        const betPromises = selections.map(async (sel) => {
+          const body = {
+            betType: 'single',
+            stake: sel.stake,
+            selections: [{
+              sportKey: sel.sportKey,
+              league: sel.league,
+              eventId: sel.eventId,
+              homeTeam: sel.homeTeam,
+              awayTeam: sel.awayTeam,
+              marketType: sel.marketType,
+              selection: sel.selection,
+              line: sel.line,
+              odds: sel.odds,
+              commenceTime: sel.commenceTime,
+              bookmakerKey: sel.bookmakerKey,
+            }],
+          };
 
-      const res = await fetch('http://localhost:3001/api/betting/place', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
+          const res = await fetch('http://localhost:3001/api/betting/place', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+          });
 
-      const data = await res.json();
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || `Failed to place bet for ${sel.homeTeam} vs ${sel.awayTeam}`);
+          }
+          return data;
+        });
 
-      if (!res.ok || !data.success) {
-        return { success: false, message: data.error || 'Failed to place bet.' };
+        const results = await Promise.all(betPromises);
+        const totalPayout = results.reduce((sum, r) => sum + (r.potentialPayout || 0), 0);
+
+        clearSelections();
+        setIsBetslipOpen(false);
+        return {
+          success: true,
+          message: `${results.length} bet(s) placed successfully. Total potential payout: ${totalPayout.toLocaleString()} pts`,
+        };
+      } else {
+        // Accumulator bet - one bet with total stake
+        const body = {
+          betType: 'accumulator',
+          stake: stake,
+          selections: selections.map((s) => ({
+            sportKey: s.sportKey,
+            league: s.league,
+            eventId: s.eventId,
+            homeTeam: s.homeTeam,
+            awayTeam: s.awayTeam,
+            marketType: s.marketType,
+            selection: s.selection,
+            line: s.line,
+            odds: s.odds,
+            commenceTime: s.commenceTime,
+            bookmakerKey: s.bookmakerKey,
+          })),
+        };
+
+        const res = await fetch('http://localhost:3001/api/betting/place', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          return { success: false, message: data.error || 'Failed to place bet.' };
+        }
+
+        clearSelections();
+        setIsBetslipOpen(false);
+        return {
+          success: true,
+          message: `Bet placed successfully. Potential payout: ${data.potentialPayout} pts`,
+        };
       }
-
-      clearSelections();
-      return {
-        success: true,
-        message: `Bet placed successfully. Potential payout: ${data.potentialPayout} pts`,
-      };
     } catch (err: any) {
       console.error('Error placing bet:', err);
       return { success: false, message: 'Unexpected error placing bet.' };
@@ -148,11 +246,15 @@ export const BettingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     selections,
     stake,
     isPlacing,
+    isBetslipOpen,
+    openBetslip,
+    closeBetslip,
     addSelection,
     removeSelection,
     clearSelections,
     setStake,
-    setBetType,
+    setSelectionStake,
+    setBetType: setBetTypeWithReset,
     placeBet,
   };
 

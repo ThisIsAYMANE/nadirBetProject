@@ -391,7 +391,7 @@ export function transformToMatch(event: SportsbookOdds): Match {
   if (h2hMarket) {
     const homeOutcome = h2hMarket.outcomes.find((o) => o.name === event.home_team);
     const awayOutcome = h2hMarket.outcomes.find((o) => o.name === event.away_team);
-    const drawOutcome = h2hMarket.outcomes.find((o) => o.name === 'Draw');
+    const drawOutcome = h2hMarket.outcomes.find((o) => o.name === 'Draw' || o.name.toLowerCase().includes('draw'));
 
     homeOdds = homeOutcome?.price || 2.00;
     awayOdds = awayOutcome?.price || 2.00;
@@ -403,18 +403,36 @@ export function transformToMatch(event: SportsbookOdds): Match {
   const startTime = new Date(event.commence_time);
   const isLive = startTime <= now && startTime.getTime() > now.getTime() - (3 * 60 * 60 * 1000); // within 3 hours
 
-  const markets: MatchMarket[] =
-    primaryBookmaker?.markets?.map((market) => ({
-      key: market.key,
-      outcomes: market.outcomes.map((outcome) => {
-        const anyOutcome = outcome as MatchMarketOutcome & { point?: number; points?: number };
-        return {
-          name: outcome.name,
-          price: outcome.price,
-          line: anyOutcome.point ?? anyOutcome.points,
-        };
-      }),
-    })) || [];
+  // Collect all markets from all bookmakers, prioritizing the first bookmaker
+  // but also including unique markets from other bookmakers
+  const marketMap = new Map<string, MatchMarket>();
+  
+  event.bookmakers?.forEach((bookmaker) => {
+    bookmaker.markets?.forEach((market) => {
+      if (!marketMap.has(market.key)) {
+        marketMap.set(market.key, {
+          key: market.key,
+          outcomes: market.outcomes.map((outcome) => {
+            const anyOutcome = outcome as MatchMarketOutcome & { 
+              point?: number; 
+              points?: number;
+              description?: string;
+            };
+            return {
+              name: outcome.name,
+              price: outcome.price,
+              line: anyOutcome.point ?? anyOutcome.points,
+              point: anyOutcome.point ?? anyOutcome.points,
+              description: anyOutcome.description,
+            };
+          }),
+          last_update: market.last_update,
+        });
+      }
+    });
+  });
+
+  const markets: MatchMarket[] = Array.from(marketMap.values());
 
   return {
     id: event.id,

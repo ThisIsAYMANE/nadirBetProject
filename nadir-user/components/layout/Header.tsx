@@ -3,12 +3,36 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Search, User, Menu, Bell, Home, PlayCircle, Gamepad2, Star, ChevronRight, Coins, LogIn, LogOut } from 'lucide-react';
+import { Search, User, Menu, Bell, Home, PlayCircle, Gamepad2, Star, ChevronRight, Coins, LogIn, LogOut, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { sports } from '@/lib/mockData';
 import LoginModal from '@/components/auth/LoginModal';
 import ProfileDropdown from '@/components/layout/ProfileDropdown';
+import { useBetting } from '@/contexts/BettingContext';
+
+// Betslip Button Component
+function BetslipButton() {
+  const { selections, openBetslip } = useBetting();
+  const selectionCount = selections.length;
+
+  return (
+    <Button
+      onClick={openBetslip}
+      variant="outline"
+      size="sm"
+      className="relative border-green-500/60 text-green-400 hover:bg-green-500/10 hover:border-green-500 transition-all"
+    >
+      <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+      <span className="hidden sm:inline">Bet Slip</span>
+      {selectionCount > 0 && (
+        <span className="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          {selectionCount}
+        </span>
+      )}
+    </Button>
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -386,6 +410,9 @@ export default function Header() {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3 sm:space-x-4 lg:space-x-5">
+            {/* Bet Slip Button - Always visible */}
+            <BetslipButton />
+            
             {isLoggedIn ? (
               <>
                 <Button variant="ghost" size="sm" className="hidden md:flex text-gray-300 hover:text-white hover:bg-gray-800 p-2.5 rounded-lg transition-colors">

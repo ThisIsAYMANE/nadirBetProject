@@ -5,6 +5,7 @@ import GameCard from '@/components/casino/GameCard';
 import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
+import Pagination from '@/components/ui/Pagination';
 import { casinoApi } from '@/lib/casinoApi';
 import { CasinoGame } from '@/types';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -24,27 +25,53 @@ import {
 export default function CasinoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('home');
-  const [games, setGames] = useState<CasinoGame[]>([]);
   const [selectedGame, setSelectedGame] = useState<CasinoGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [games, setGames] = useState<CasinoGame[]>([]); // Store current page games
+  const GAMES_PER_PAGE = 50; // 10 rows × 5 games per row (on desktop) = 50 games per page
 
   // Device detection - filter games by is_mobile
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  useEffect(() => {
-    fetchGames();
-  }, []);
-
-  const fetchGames = async () => {
+  // Fetch games for a specific page from API
+  const fetchGames = async (page: number) => {
     try {
       setIsLoading(true);
-      const response = await casinoApi.getGames({
-        perPage: 200, // Fetch more games
+
+      // Build filters for API
+      const filters: any = {
+        page,
+        perPage: GAMES_PER_PAGE,
         expand: 'tags,parameters,images',
-      });
-      
+      };
+
+      // Add provider filter if selected
+      if (selectedProvider) {
+        filters.provider = selectedProvider;
+      }
+
+      // Add type filter if category is selected (map category to type)
+      if (selectedCategory !== 'home' && selectedCategory !== 'all') {
+        // Map category to game type for API
+        const categoryTypeMap: Record<string, string> = {
+          'slots': 'Slots',
+          'live': 'Live Casino',
+          'table': 'Table Games',
+          'jackpots': 'Jackpots',
+        };
+        if (categoryTypeMap[selectedCategory]) {
+          filters.type = categoryTypeMap[selectedCategory];
+        }
+      }
+
+      const response = await casinoApi.getGames(filters);
+
       // Transform Slotegrator games to our format
       const transformedGames: CasinoGame[] = (response.items || []).map((game) => ({
         uuid: game.uuid,
@@ -70,18 +97,28 @@ export default function CasinoPage() {
         isLive: game.type?.toLowerCase().includes('live') || false,
         rtp: game.parameters?.rtp,
       }));
-      
+
       setGames(transformedGames);
+
+      // Update pagination info
+      const meta = response._meta || {};
+      setTotalPages(meta.pageCount || 1);
     } catch (error) {
       console.error('Error fetching games:', error);
-      // Fallback to empty array on error
       setGames([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Filter games by device (is_mobile)
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of games section
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Filter games by device (is_mobile) - filter current page games
   const deviceFilteredGames = useMemo(() => {
     return games.filter(game => {
       // Desktop: show only games where is_mobile === 0
@@ -90,42 +127,12 @@ export default function CasinoPage() {
     });
   }, [games, isMobile]);
 
-  // Filter by category, provider, and search
+  // Filter by search (client-side only, since API doesn't support search)
+  // Provider and category filters are handled server-side via API
   const filteredGames = useMemo(() => {
     let filtered = deviceFilteredGames;
 
-    // Category filter
-    if (selectedCategory !== 'home' && selectedCategory !== 'all') {
-      filtered = filtered.filter(game => {
-        const gameType = game.type?.toLowerCase() || '';
-        const categoryLower = selectedCategory.toLowerCase();
-        
-        if (categoryLower === 'slots') {
-          return gameType.includes('slot') || gameType === 'slots';
-        }
-        if (categoryLower === 'live') {
-          return gameType.includes('live') || game.isLive;
-        }
-        if (categoryLower === 'table') {
-          return gameType.includes('table') || gameType.includes('card') || game.has_tables === 1;
-        }
-        if (categoryLower === 'jackpots') {
-          return game.tags?.some(tag => tag.code === 'jackpots') || game.jackpot !== undefined;
-        }
-        if (categoryLower === 'new') {
-          return game.isNew || game.tags?.some(tag => tag.code === 'new');
-        }
-        
-        return true;
-      });
-    }
-
-    // Provider filter
-    if (selectedProvider) {
-      filtered = filtered.filter(game => game.provider === selectedProvider);
-    }
-
-    // Search filter
+    // Search filter (client-side only)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(game =>
@@ -135,8 +142,23 @@ export default function CasinoPage() {
       );
     }
 
+    // Additional client-side category filters for special categories
+    if (selectedCategory !== 'home' && selectedCategory !== 'all') {
+      // These categories need client-side filtering (not supported by API)
+      if (selectedCategory === 'jackpots') {
+        filtered = filtered.filter(game => 
+          game.tags?.some(tag => tag.code === 'jackpots') || game.jackpot !== undefined
+        );
+      }
+      if (selectedCategory === 'new') {
+        filtered = filtered.filter(game => 
+          game.isNew || game.tags?.some(tag => tag.code === 'new')
+        );
+      }
+    }
+
     return filtered;
-  }, [deviceFilteredGames, selectedCategory, selectedProvider, searchQuery]);
+  }, [deviceFilteredGames, selectedCategory, searchQuery]);
 
   const handlePlayGame = (game: CasinoGame) => {
     setSelectedGame(game);
@@ -153,6 +175,21 @@ export default function CasinoPage() {
     const uniqueProviders = new Set(deviceFilteredGames.map(g => g.provider));
     return Array.from(uniqueProviders).sort();
   }, [deviceFilteredGames]);
+
+  // Note: With server-side pagination, we can't filter on the server
+  // So filters work on the current page only
+  // For full filtering, we'd need to implement server-side filtering in the backend
+  
+  // Reset to page 1 when filters change, then fetch games
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedProvider, selectedCategory]);
+
+  // Fetch games when page or filters change
+  useEffect(() => {
+    fetchGames(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, selectedProvider, selectedCategory]);
 
   if (isLoading) {
     return (
@@ -230,6 +267,7 @@ export default function CasinoPage() {
               value={selectedProvider || ''}
               onChange={(e) => setSelectedProvider(e.target.value || null)}
               className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
+              aria-label="Filter by provider"
             >
               <option value="">All Providers</option>
               {providers.map(provider => (
@@ -274,7 +312,7 @@ export default function CasinoPage() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {filteredGames.slice(0, 5).map((game) => (
+            {deviceFilteredGames.slice(0, 5).map((game) => (
               <div key={game.uuid || game.id} className="relative">
                 <GameCard game={game} onPlay={handlePlayGame} />
                 <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">
@@ -285,36 +323,45 @@ export default function CasinoPage() {
           </div>
         </section>
 
-        {/* Live Casino Section */}
-        <section className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">YOUR LIVE CASINO</h2>
-            <button className="text-green-500 hover:text-green-400 flex items-center space-x-1 text-sm sm:text-base self-start sm:self-auto">
-              <span>View All</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {filteredGames.filter(g => g.isLive).slice(0, 5).map((game) => (
-              <div key={`live-${game.uuid || game.id}`} className="relative">
-                <GameCard game={game} onPlay={handlePlayGame} />
-                <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">
-                  LIVE
+        {/* Live Casino Section - Only show if we have live games on current page */}
+        {deviceFilteredGames.filter(g => g.isLive).length > 0 && (
+          <section className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">YOUR LIVE CASINO</h2>
+              <button className="text-green-500 hover:text-green-400 flex items-center space-x-1 text-sm sm:text-base self-start sm:self-auto">
+                <span>View All</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {deviceFilteredGames.filter(g => g.isLive).slice(0, 5).map((game) => (
+                <div key={`live-${game.uuid || game.id}`} className="relative">
+                  <GameCard game={game} onPlay={handlePlayGame} />
+                  <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">
+                    LIVE
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Discover What's New Section */}
         <section>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">DISCOVER WHAT'S NEW</h2>
-            <button className="text-green-500 hover:text-green-400 flex items-center space-x-1 text-sm sm:text-base self-start sm:self-auto">
-              <span>View All</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+              {selectedCategory === 'all' ? 'ALL GAMES' : "DISCOVER WHAT'S NEW"}
+            </h2>
+            {selectedCategory !== 'all' && (
+              <button 
+                onClick={() => setSelectedCategory('all')}
+                className="text-green-500 hover:text-green-400 flex items-center space-x-1 text-sm sm:text-base self-start sm:self-auto"
+              >
+                <span>View All</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
           
           {filteredGames.length === 0 && !isLoading ? (
@@ -331,6 +378,7 @@ export default function CasinoPage() {
               </p>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {filteredGames.length > 0 ? (
                 filteredGames.map((game) => (
@@ -349,6 +397,25 @@ export default function CasinoPage() {
                 ))
               )}
             </div>
+
+            {/* Pagination Component */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                isLoading={isLoading}
+              />
+            )}
+
+            {/* Pagination Info */}
+            {filteredGames.length > 0 && (
+              <div className="mt-4 text-center text-gray-400 text-sm">
+                Showing {filteredGames.length} games on page {currentPage} of {totalPages}
+                {totalPages > 1 && ` (${(currentPage - 1) * GAMES_PER_PAGE + 1}-${Math.min(currentPage * GAMES_PER_PAGE, filteredGames.length)} of many)`}
+              </div>
+            )}
+            </>
           )}
         </section>
 

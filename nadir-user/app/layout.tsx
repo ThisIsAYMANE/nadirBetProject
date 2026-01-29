@@ -10,6 +10,14 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Freebet - Sports Betting & Casino',
   description: 'Professional sports betting platform with integrated casino',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/freebet.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/freebet.png',
+  },
 };
 
 export default function RootLayout({

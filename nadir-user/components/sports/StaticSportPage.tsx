@@ -119,7 +119,7 @@ export default function StaticSportPage({ config }: StaticSportPageProps) {
                 </div>
                 {/* Match Rows */}
                 {sportMatches.map((match) => (
-                  <MatchListRow key={match.id} match={match} />
+                  <MatchListRow key={match.id} match={match} category={config.key} />
                 ))}
               </div>
             )

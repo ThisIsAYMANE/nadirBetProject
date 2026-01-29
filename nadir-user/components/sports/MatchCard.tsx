@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Clock, Play } from 'lucide-react';
 import { Match } from '@/types';
 import { useBetting } from '@/contexts/BettingContext';
+import { formatOddsDisplay } from '@/lib/oddsUtils';
 
 interface MatchCardProps {
   match: Match;
@@ -113,7 +114,7 @@ export default function MatchCard({ match, showLeague = true, category }: MatchC
             className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]"
           >
             <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">1</div>
-            <div className="font-bold text-sm sm:text-base">{match.odds.home}</div>
+            <div className="font-bold text-sm sm:text-base">{formatOddsDisplay(match.odds.home)}</div>
           </button>
           
           {match.odds.draw && (
@@ -126,7 +127,7 @@ export default function MatchCard({ match, showLeague = true, category }: MatchC
               className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]"
             >
               <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">X</div>
-              <div className="font-bold text-sm sm:text-base">{match.odds.draw}</div>
+              <div className="font-bold text-sm sm:text-base">{formatOddsDisplay(match.odds.draw)}</div>
             </button>
           )}
           
@@ -139,7 +140,7 @@ export default function MatchCard({ match, showLeague = true, category }: MatchC
             className="odds-btn flex-1 group-hover:bg-green-500 min-h-[44px] sm:min-h-[50px]"
           >
             <div className="text-xs text-gray-300 mb-0.5 sm:mb-1">2</div>
-            <div className="font-bold text-sm sm:text-base">{match.odds.away}</div>
+            <div className="font-bold text-sm sm:text-base">{formatOddsDisplay(match.odds.away)}</div>
           </button>
         </div>
       </div>

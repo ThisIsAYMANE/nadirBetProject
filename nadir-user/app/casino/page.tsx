@@ -34,7 +34,7 @@ export default function CasinoPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [games, setGames] = useState<CasinoGame[]>([]); // Store current page games
-  const GAMES_PER_PAGE = 50; // 10 rows × 5 games per row (on desktop) = 50 games per page
+  const GAMES_PER_PAGE = 50; // Slotegrator max per page; 10 rows × 5 games per row (desktop)
 
   // Device detection - filter games by is_mobile
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -44,11 +44,12 @@ export default function CasinoPage() {
     try {
       setIsLoading(true);
 
-      // Build filters for API
+      // Build filters for API (device = backend fetches until 50 matching so rows stay full)
       const filters: any = {
         page,
         perPage: GAMES_PER_PAGE,
         expand: 'tags,parameters,images',
+        device: isMobile ? 'mobile' : 'desktop',
       };
 
       // Add provider filter if selected
@@ -379,14 +380,14 @@ export default function CasinoPage() {
             </div>
           ) : (
             <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {filteredGames.length > 0 ? (
                 filteredGames.map((game) => (
                   <GameCard key={game.uuid || game.id} game={game} onPlay={handlePlayGame} />
                 ))
               ) : (
-                // Loading cards
-                Array.from({ length: 12 }).map((_, i) => (
+                // Loading cards (10 rows × 5 = 50, matches Slotegrator max per page)
+                Array.from({ length: 50 }).map((_, i) => (
                 <div key={`skeleton-${i}`} className="casino-game-card">
                   <div className="aspect-[4/3] loading-skeleton mb-3" />
                   <div className="p-2 sm:p-3">

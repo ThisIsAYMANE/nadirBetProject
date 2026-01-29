@@ -10,6 +10,7 @@ import Link from 'next/link';
 import type { Match, MatchMarket, MatchMarketOutcome, MarketType } from '@/types';
 import { MarketTabs } from '@/components/betting/MarketTabs';
 import { MarketDisplay } from '@/components/betting/MarketDisplay';
+import { formatOddsDisplay } from '@/lib/oddsUtils';
 
 export default function MatchDetailsPage() {
   const params = useParams();
@@ -569,7 +570,7 @@ export default function MatchDetailsPage() {
                       <div key={index} className="border border-gray-700 rounded-lg p-3">
                         <div className="flex justify-between items-center">
                           <span className="text-white text-sm">{bet.selection}</span>
-                          <span className="text-green-500 font-bold">{bet.odds}</span>
+                          <span className="text-green-500 font-bold">{formatOddsDisplay(bet.odds)}</span>
                         </div>
                       </div>
                     ))}

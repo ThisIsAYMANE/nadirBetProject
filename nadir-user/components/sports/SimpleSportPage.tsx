@@ -141,7 +141,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
                   </div>
                   {/* Match Rows */}
                   {matches.map((match) => (
-                    <MatchListRow key={match.id} match={match} />
+                    <MatchListRow key={match.id} match={match} category={config.key} />
                   ))}
                 </div>
               )}

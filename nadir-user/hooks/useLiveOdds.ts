@@ -123,13 +123,15 @@ export function useLiveOdds(sportKey: string, intervalMs = 30000): UseLiveOddsRe
             event?.competitionInstance?.name ||
             'Live Betting';
 
+          const startTime = event?.startTime || new Date().toISOString();
+
           return {
             id: advantage.key || `match-${index}`,
             homeTeam,
             awayTeam,
             sport: rawSport,
             league: leagueName,
-            startTime: event?.startTime || new Date().toISOString(),
+            startTime,
             status: (outcomes[0]?.live ? 'live' : 'upcoming') as Match['status'],
             odds: {
               home: homeOdds,
@@ -139,7 +141,17 @@ export function useLiveOdds(sportKey: string, intervalMs = 30000): UseLiveOddsRe
           };
         });
 
-      setMatches(mapped);
+      // Deduplicate by same event (same teams + start time) so the same match doesn't appear multiple times
+      const seen = new Set<string>();
+      const deduped: Match[] = [];
+      for (const m of mapped) {
+        const key = `${m.homeTeam}|${m.awayTeam}|${m.startTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(m);
+      }
+
+      setMatches(deduped);
     } catch (err) {
       console.error('Error fetching live odds:', err);
       setMatches([]);

@@ -70,3 +70,13 @@ export function formatOdds(odds: number, format: 'decimal' | 'american' | 'auto'
   const decimal = normalizeToDecimal(odds);
   return decimal.toFixed(2);
 }
+
+/**
+ * Format odds for display (always 2 decimals after the comma)
+ * Use this wherever cotes/odds are shown in the UI.
+ */
+export function formatOddsDisplay(odds: number | string | undefined | null): string {
+  const n = Number(odds);
+  if (Number.isNaN(n)) return '0.00';
+  return n.toFixed(2);
+}

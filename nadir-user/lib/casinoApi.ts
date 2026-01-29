@@ -7,6 +7,8 @@ export interface GameFilters {
   provider?: string;
   type?: string;
   expand?: string;
+  /** 'desktop' | 'mobile' – backend fetches until 50 matching so grid rows stay full */
+  device?: 'desktop' | 'mobile';
 }
 
 export interface GameListResponse {
@@ -116,6 +118,7 @@ export const casinoApi = {
     if (filters.provider) params.append('provider', filters.provider);
     if (filters.type) params.append('type', filters.type);
     if (filters.expand) params.append('expand', filters.expand);
+    if (filters.device) params.append('device', filters.device);
 
     const response = await fetch(
       `${BACKEND_BASE_URL}/api/casino/games?${params.toString()}`,

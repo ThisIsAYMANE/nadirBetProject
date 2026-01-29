@@ -12,6 +12,8 @@ const router = express.Router();
  * List games with filtering and pagination
  * Public: no auth required (for browsing)
  */
+const SLOTEGRATOR_MAX_PER_PAGE = 50;
+
 router.get('/games', async (req, res) => {
   try {
     const {
@@ -20,37 +22,75 @@ router.get('/games', async (req, res) => {
       expand = null,
       provider = null,
       type = null,
+      device = null, // 'desktop' | 'mobile' – when set, fetch multiple Slotegrator pages until we have 50 matching (fills grid rows)
     } = req.query;
 
-    const options = {
-      page: parseInt(page, 10),
-      perPage: parseInt(perPage, 10),
+    const ourPage = Math.max(1, parseInt(page, 10));
+    const targetPerPage = Math.min(parseInt(perPage, 10) || 50, 50);
+    const options = { perPage: SLOTEGRATOR_MAX_PER_PAGE, expand: expand || undefined };
+
+    const filterByDevice = (items, deviceType) => {
+      if (!deviceType || !Array.isArray(items)) return items;
+      const isMobile = String(deviceType).toLowerCase() === 'mobile';
+      return items.filter((g) => (g.is_mobile === 1) === isMobile);
     };
 
-    if (expand) {
-      options.expand = expand;
+    // When device is set, fetch multiple Slotegrator pages until we have enough matching games (so grid rows are full)
+    if (device) {
+      const skip = (ourPage - 1) * targetPerPage;
+      let slotegratorPage = 1;
+      const allMatching = [];
+      const maxPages = 50; // safety limit
+
+      while (allMatching.length < skip + targetPerPage && slotegratorPage <= maxPages) {
+        const response = await casinoApiService.getGames({
+          ...options,
+          page: slotegratorPage,
+        });
+        let items = response.items || [];
+        if (provider) items = items.filter((g) => g.provider === provider);
+        if (type) items = items.filter((g) => g.type === type);
+        items = filterByDevice(items, device);
+        allMatching.push(...items);
+        if (items.length === 0 && (response.items || []).length < SLOTEGRATOR_MAX_PER_PAGE) break;
+        if ((response.items || []).length < SLOTEGRATOR_MAX_PER_PAGE) break;
+        slotegratorPage++;
+      }
+
+      const games = allMatching.slice(skip, skip + targetPerPage);
+      const hasMore = allMatching.length >= skip + targetPerPage;
+      const pageCount = hasMore ? ourPage + 1 : ourPage;
+
+      return res.json({
+        items: games,
+        _meta: {
+          totalCount: allMatching.length,
+          pageCount,
+          currentPage: ourPage,
+          perPage: targetPerPage,
+        },
+        _links: {},
+      });
     }
 
-    const response = await casinoApiService.getGames(options);
+    // Original single-request path (no device filter on backend)
+    if (expand) options.expand = expand;
+    const response = await casinoApiService.getGames({
+      ...options,
+      page: ourPage,
+    });
 
-    // Filter by provider if specified
     let games = response.items || [];
-    if (provider) {
-      games = games.filter((g) => g.provider === provider);
-    }
-
-    // Filter by type if specified
-    if (type) {
-      games = games.filter((g) => g.type === type);
-    }
+    if (provider) games = games.filter((g) => g.provider === provider);
+    if (type) games = games.filter((g) => g.type === type);
 
     res.json({
       items: games,
       _meta: response._meta || {
         totalCount: games.length,
-        pageCount: Math.ceil(games.length / options.perPage),
-        currentPage: options.page,
-        perPage: options.perPage,
+        pageCount: Math.ceil(games.length / targetPerPage) || 1,
+        currentPage: ourPage,
+        perPage: targetPerPage,
       },
       _links: response._links || {},
     });

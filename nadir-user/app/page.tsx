@@ -6,29 +6,102 @@ import MatchCard from '@/components/sports/MatchCard';
 import MatchListRow from '@/components/sports/MatchListRow';
 import ViewToggle from '@/components/sports/ViewToggle';
 import GameCard from '@/components/casino/GameCard';
+import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import { matches, liveMatches, casinoGames } from '@/lib/mockData';
+import { casinoApi } from '@/lib/casinoApi';
+import type { CasinoGame } from '@/types';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { TrendingUp, Flame, Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useLiveOdds } from '@/hooks/useLiveOdds';
+import { useSportsData } from '@/hooks/useSportsData';
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [featuredCasinoGames, setFeaturedCasinoGames] = useState<CasinoGame[]>([]);
+  const [casinoGamesLoading, setCasinoGamesLoading] = useState(true);
+  const [selectedGame, setSelectedGame] = useState<CasinoGame | null>(null);
+  const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
-  // Live odds for the "Live Now" section. We fall back to mockData
-  // if the API returns no matches to keep the UI populated.
-  const {
-    matches: liveApiMatches,
-  } = useLiveOdds('all', 0);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
+  // Live odds for the "Live Now" section. We fall back to mockData if the API returns no matches.
+  const { matches: liveApiMatches } = useLiveOdds('all', 0);
   const liveNowMatches = liveApiMatches.length ? liveApiMatches : liveMatches;
+
+  // Trending matches from API (football/upcoming). Fall back to mockData if empty.
+  const { matches: trendingApiMatches } = useSportsData('football', 'all');
+  const trendingMatches = trendingApiMatches.length ? trendingApiMatches.slice(0, 8) : matches.slice(0, 8);
+
+  // Featured casino games from API (dynamic). Fall back to mockData if empty.
+  useEffect(() => {
+    let cancelled = false;
+    setCasinoGamesLoading(true);
+    casinoApi
+      .getGames({
+        page: 1,
+        perPage: 6,
+        expand: 'tags,parameters,images',
+        device: isMobile ? 'mobile' : 'desktop',
+      })
+      .then((response) => {
+        if (cancelled) return;
+        const items = response.items || [];
+        const transformed: CasinoGame[] = items.map((game) => ({
+          uuid: game.uuid,
+          id: game.uuid,
+          name: game.name,
+          image: game.image,
+          type: game.type,
+          provider: game.provider,
+          provider_id: game.provider_id,
+          technology: game.technology,
+          has_lobby: game.has_lobby,
+          is_mobile: game.is_mobile,
+          has_freespins: game.has_freespins,
+          has_tables: game.has_tables,
+          label: game.label,
+          tags: game.tags,
+          parameters: game.parameters,
+          images: game.images,
+          related_games: game.related_games,
+          category: game.type?.toLowerCase() || 'slots',
+          isNew: game.tags?.some((tag) => tag.code === 'new') || false,
+          isLive: game.type?.toLowerCase().includes('live') || false,
+          rtp: game.parameters?.rtp,
+        }));
+        setFeaturedCasinoGames(transformed);
+      })
+      .catch(() => {
+        if (!cancelled) setFeaturedCasinoGames([]);
+      })
+      .finally(() => {
+        if (!cancelled) setCasinoGamesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isMobile]);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  const handlePlayFeaturedGame = (game: CasinoGame) => {
+    setSelectedGame(game);
+    setIsGameModalOpen(true);
+  };
+
+  const handleCloseGameModal = () => {
+    setIsGameModalOpen(false);
+    setSelectedGame(null);
+  };
+
+  const displayCasinoGames = featuredCasinoGames.length ? featuredCasinoGames : casinoGames.slice(0, 6);
 
   if (isLoading) {
     return (
@@ -111,17 +184,47 @@ export default function HomePage() {
                   {liveNowMatches.length} LIVE
                 </span>
               </div>
-              <Link href="/live" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
-                <span>View All Live</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              <div className="flex items-center space-x-3">
+                <ViewToggle view={viewMode} onViewChange={setViewMode} />
+                <Link href="/live" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
+                  <span>View All Live</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {liveNowMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-            </div>
+            {viewMode === 'cards' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {liveNowMatches.map((match) => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+                <div className="flex items-center px-3 sm:px-4 py-2.5 bg-gray-800/60 border-b border-gray-700/50 text-xs text-gray-400 font-semibold uppercase tracking-wide">
+                  <div className="w-20 sm:w-24 flex-shrink-0">
+                    <span className="hidden sm:inline">HEURE</span>
+                    <span className="sm:hidden">H</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="hidden sm:inline">ÉQUIPES</span>
+                    <span className="sm:hidden">Match</span>
+                  </div>
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                    <div className="min-w-[55px] sm:min-w-[65px] text-center">1</div>
+                    {liveNowMatches[0]?.odds.draw && (
+                      <div className="min-w-[55px] sm:min-w-[65px] text-center">X</div>
+                    )}
+                    <div className="min-w-[55px] sm:min-w-[65px] text-center">2</div>
+                  </div>
+                </div>
+                <div>
+                  {liveNowMatches.map((match) => (
+                    <MatchListRow key={match.id} match={match} />
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Featured Matches */}
@@ -144,7 +247,7 @@ export default function HomePage() {
             
             {viewMode === 'cards' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {matches.slice(0, 8).map((match) => (
+                {trendingMatches.map((match) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
               </div>
@@ -162,14 +265,14 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                     <div className="min-w-[55px] sm:min-w-[65px] text-center">1</div>
-                    {matches[0]?.odds.draw && (
+                    {trendingMatches[0]?.odds.draw && (
                       <div className="min-w-[55px] sm:min-w-[65px] text-center">X</div>
                     )}
                     <div className="min-w-[55px] sm:min-w-[65px] text-center">2</div>
                   </div>
                 </div>
                 <div>
-                  {matches.slice(0, 8).map((match) => (
+                  {trendingMatches.map((match) => (
                     <MatchListRow key={match.id} match={match} />
                   ))}
                 </div>
@@ -192,12 +295,40 @@ export default function HomePage() {
               </Link>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-              {casinoGames.slice(0, 6).map((game) => (
-                <GameCard key={game.id} game={game} />
-              ))}
-            </div>
+            {casinoGamesLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="casino-game-card">
+                    <div className="aspect-[4/3] loading-skeleton mb-3" />
+                    <div className="p-2 sm:p-3">
+                      <div className="loading-skeleton h-4 w-full mb-2" />
+                      <div className="loading-skeleton h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                {displayCasinoGames.map((game) => (
+                  <GameCard
+                    key={game.uuid || game.id}
+                    game={game}
+                    onPlay={handlePlayFeaturedGame}
+                  />
+                ))}
+              </div>
+            )}
           </section>
+
+          {/* Game Launch Modal (for featured casino games) */}
+          {selectedGame && (
+            <GameLaunchModal
+              isOpen={isGameModalOpen}
+              onClose={handleCloseGameModal}
+              gameId={selectedGame.uuid || selectedGame.id || ''}
+              gameName={selectedGame.name}
+            />
+          )}
         </main>
       </div>
     </div>

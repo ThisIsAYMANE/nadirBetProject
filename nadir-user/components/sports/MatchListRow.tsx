@@ -3,12 +3,36 @@ import Link from 'next/link';
 import { Clock, Play, BarChart3 } from 'lucide-react';
 import { Match } from '@/types';
 import { useBetting } from '@/contexts/BettingContext';
+import { formatOddsDisplay } from '@/lib/oddsUtils';
+
+// Map sport key prefix to category (same logic as sportsbookApi.ts)
+const PREFIX_CATEGORY_MAP: Record<string, string> = {
+  soccer: 'football',
+  americanfootball: 'american-football',
+  basketball: 'basketball',
+  tennis: 'tennis',
+  icehockey: 'ice-hockey',
+  cricket: 'cricket',
+  rugbyunion: 'rugby',
+  rugbyleague: 'rugby',
+  baseball: 'baseball',
+  mma: 'mma',
+  boxing: 'boxing',
+  handball: 'handball',
+  table_tennis: 'table-tennis',
+};
+
+function getCategoryFromSport(sportKey: string): string {
+  const prefix = sportKey.split('_')[0];
+  return PREFIX_CATEGORY_MAP[prefix] || 'sports';
+}
 
 interface MatchListRowProps {
   match: Match;
+  category?: string; // high-level sport category slug, e.g. "football"
 }
 
-export default function MatchListRow({ match }: MatchListRowProps) {
+export default function MatchListRow({ match, category }: MatchListRowProps) {
   const { addSelection } = useBetting();
   const formatTime = (timeString: string) => {
     const date = new Date(timeString);
@@ -55,8 +79,16 @@ export default function MatchListRow({ match }: MatchListRowProps) {
     });
   };
 
+  // Build the details URL with required query parameters
+  const detailsHref =
+    match.sport
+      ? `/details/${match.id}?category=${encodeURIComponent(
+          category || getCategoryFromSport(match.sport)
+        )}&sportKey=${encodeURIComponent(match.sport)}`
+      : `/details/${match.id}`;
+
   return (
-    <Link href={`/details/${match.id}`}>
+    <Link href={detailsHref}>
       <div className="border-b border-gray-700/50 hover:bg-gray-800/30 transition-colors group last:border-b-0">
         <div className="flex items-center px-3 sm:px-4 py-2.5 sm:py-3 gap-3 sm:gap-4">
           {/* Time Column - Fixed Width */}
@@ -152,7 +184,7 @@ export default function MatchListRow({ match }: MatchListRowProps) {
               className="bg-gray-700 hover:bg-green-500 text-white px-3 sm:px-4 py-2.5 rounded font-semibold text-sm sm:text-base min-w-[55px] sm:min-w-[65px] text-center transition-colors"
             >
               <div className="text-xs text-gray-300 mb-0.5">1</div>
-              <div className="font-bold text-yellow-400">{match.odds.home}</div>
+              <div className="font-bold text-yellow-400">{formatOddsDisplay(match.odds.home)}</div>
             </button>
             
             {match.odds.draw && (
@@ -169,7 +201,7 @@ export default function MatchListRow({ match }: MatchListRowProps) {
               <div className="text-xs text-gray-300 mb-0.5" aria-hidden="true">
                 X
               </div>
-                <div className="font-bold text-yellow-400">{match.odds.draw}</div>
+                <div className="font-bold text-yellow-400">{formatOddsDisplay(match.odds.draw)}</div>
               </button>
             )}
             
@@ -182,7 +214,7 @@ export default function MatchListRow({ match }: MatchListRowProps) {
               className="bg-gray-700 hover:bg-green-500 text-white px-3 sm:px-4 py-2.5 rounded font-semibold text-sm sm:text-base min-w-[55px] sm:min-w-[65px] text-center transition-colors"
             >
               <div className="text-xs text-gray-300 mb-0.5">2</div>
-              <div className="font-bold text-yellow-400">{match.odds.away}</div>
+              <div className="font-bold text-yellow-400">{formatOddsDisplay(match.odds.away)}</div>
             </button>
           </div>
         </div>

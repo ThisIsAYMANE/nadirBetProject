@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import MobileNav from '@/components/layout/MobileNav';
+import Footer from '@/components/layout/Footer';
 import { BettingProvider } from '@/contexts/BettingContext';
 import { BettingSlip } from '@/components/betting/BettingSlip';
 
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-900 text-white pb-14 lg:pb-0 overflow-x-hidden pt-40 sm:pt-44 lg:pt-24`}>
         <BettingProvider>
           {children}
+          <Footer />
           <BettingSlip />
         </BettingProvider>
         <MobileNav />

@@ -11,6 +11,9 @@ export interface GameFilters {
   device?: 'desktop' | 'mobile';
 }
 
+/** Optional AbortSignal to cancel the request or enforce timeout */
+export const GAMES_FETCH_TIMEOUT_MS = 25000;
+
 export interface GameListResponse {
   items: CasinoGame[];
   _meta: {
@@ -108,9 +111,10 @@ export interface ProvidersResponse {
 
 export const casinoApi = {
   /**
-   * Get games list with optional filters
+   * Get games list with optional filters.
+   * Pass signal to cancel the request or enforce a timeout (e.g. AbortController.timeout).
    */
-  async getGames(filters: GameFilters = {}): Promise<GameListResponse> {
+  async getGames(filters: GameFilters = {}, signal?: AbortSignal): Promise<GameListResponse> {
     const params = new URLSearchParams();
     
     if (filters.page) params.append('page', String(filters.page));
@@ -124,6 +128,7 @@ export const casinoApi = {
       `${BACKEND_BASE_URL}/api/casino/games?${params.toString()}`,
       {
         cache: 'no-store',
+        signal,
       }
     );
 

@@ -35,7 +35,42 @@ router.get('/games', async (req, res) => {
       return items.filter((g) => (g.is_mobile === 1) === isMobile);
     };
 
-    // When device is set, fetch multiple Slotegrator pages until we have enough matching games (so grid rows are full)
+    const normalizeProvider = (p) => (p == null ? '' : String(p).toLowerCase().trim());
+    const filterByProvider = (items, providerValue) => {
+      if (!providerValue || !Array.isArray(items)) return items;
+      const want = normalizeProvider(providerValue);
+      if (!want) return items;
+      return items.filter((g) => g.provider && normalizeProvider(g.provider) === want);
+    };
+
+    // When provider or type is set: fetch ONE Slotegrator page per request (one API call). Avoids long loops.
+    const hasProviderOrTypeFilter = provider || type;
+    if (hasProviderOrTypeFilter) {
+      if (expand) options.expand = expand;
+      const response = await casinoApiService.getGames({
+        ...options,
+        page: ourPage,
+      });
+      let games = response.items || [];
+      if (provider) games = filterByProvider(games, provider);
+      if (type) games = games.filter((g) => g.type === type);
+      if (device) games = filterByDevice(games, device);
+
+      const pageCount = response._meta?.pageCount ?? Math.max(1, Math.ceil((response._meta?.totalCount ?? games.length) / targetPerPage));
+
+      return res.json({
+        items: games,
+        _meta: {
+          totalCount: response._meta?.totalCount ?? games.length,
+          pageCount,
+          currentPage: ourPage,
+          perPage: targetPerPage,
+        },
+        _links: response._links || {},
+      });
+    }
+
+    // When only device is set: fetch multiple Slotegrator pages until we have enough matching games (so grid rows are full)
     if (device) {
       const skip = (ourPage - 1) * targetPerPage;
       let slotegratorPage = 1;
@@ -48,8 +83,6 @@ router.get('/games', async (req, res) => {
           page: slotegratorPage,
         });
         let items = response.items || [];
-        if (provider) items = items.filter((g) => g.provider === provider);
-        if (type) items = items.filter((g) => g.type === type);
         items = filterByDevice(items, device);
         allMatching.push(...items);
         if (items.length === 0 && (response.items || []).length < SLOTEGRATOR_MAX_PER_PAGE) break;
@@ -73,7 +106,7 @@ router.get('/games', async (req, res) => {
       });
     }
 
-    // Original single-request path (no device filter on backend)
+    // No device filter: single-request path
     if (expand) options.expand = expand;
     const response = await casinoApiService.getGames({
       ...options,

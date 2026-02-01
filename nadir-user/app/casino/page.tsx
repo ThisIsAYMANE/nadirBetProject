@@ -1,12 +1,12 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Header from '@/components/layout/Header';
 import GameCard from '@/components/casino/GameCard';
 import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
 import Pagination from '@/components/ui/Pagination';
-import { casinoApi } from '@/lib/casinoApi';
+import { casinoApi, GAMES_FETCH_TIMEOUT_MS } from '@/lib/casinoApi';
 import { CasinoGame } from '@/types';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { 
@@ -19,7 +19,11 @@ import {
   Circle, 
   Trophy, 
   Grid3X3,
-  ChevronRight
+  ChevronRight,
+  X,
+  Search,
+  ChevronDown,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export default function CasinoPage() {
@@ -29,7 +33,8 @@ export default function CasinoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  
+  const [providerList, setProviderList] = useState<string[]>([]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -39,44 +44,63 @@ export default function CasinoPage() {
   // Device detection - filter games by is_mobile
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Fetch games for a specific page from API
-  const fetchGames = async (page: number) => {
+  // Fetch provider list from API for filter dropdown
+  useEffect(() => {
+    let cancelled = false;
+    const loadProviders = async () => {
+      try {
+        const res = await casinoApi.getProviders('EUR');
+        if (cancelled) return;
+        const list: string[] = [];
+        if (Array.isArray(res)) {
+          res.forEach((item: { providers?: string[] }) => {
+            if (item?.providers?.length) list.push(...item.providers);
+          });
+        } else if (res && typeof res === 'object' && Array.isArray((res as { providers?: string[] }).providers)) {
+          list.push(...(res as { providers: string[] }).providers);
+        }
+        const unique = Array.from(new Set(list)).filter(Boolean).sort();
+        setProviderList(unique);
+      } catch {
+        if (!cancelled) setProviderList([]);
+      }
+    };
+    loadProviders();
+    return () => { cancelled = true; };
+  }, []);
+
+  // AbortController ref so we can cancel the previous request when filters change
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Fetch games for a specific page from API (one request; backend does one Slotegrator call when provider/type set)
+  const fetchGames = async (page: number, signal: AbortSignal) => {
     try {
       setIsLoading(true);
 
-      // Build filters for API (device = backend fetches until 50 matching so rows stay full)
       const filters: any = {
         page,
         perPage: GAMES_PER_PAGE,
         expand: 'tags,parameters,images',
         device: isMobile ? 'mobile' : 'desktop',
       };
-
-      // Add provider filter if selected
-      if (selectedProvider) {
-        filters.provider = selectedProvider;
-      }
-
-      // Add type filter if category is selected (map category to type)
+      if (selectedProvider) filters.provider = selectedProvider;
       if (selectedCategory !== 'home' && selectedCategory !== 'all') {
-        // Map category to game type for API
         const categoryTypeMap: Record<string, string> = {
           'slots': 'Slots',
           'live': 'Live Casino',
           'table': 'Table Games',
           'jackpots': 'Jackpots',
         };
-        if (categoryTypeMap[selectedCategory]) {
-          filters.type = categoryTypeMap[selectedCategory];
-        }
+        if (categoryTypeMap[selectedCategory]) filters.type = categoryTypeMap[selectedCategory];
       }
 
-      const response = await casinoApi.getGames(filters);
+      const response = await casinoApi.getGames(filters, signal);
 
-      // Transform Slotegrator games to our format
+      if (signal.aborted) return;
+
       const transformedGames: CasinoGame[] = (response.items || []).map((game) => ({
         uuid: game.uuid,
-        id: game.uuid, // For compatibility
+        id: game.uuid,
         name: game.name,
         image: game.image,
         type: game.type,
@@ -92,7 +116,6 @@ export default function CasinoPage() {
         parameters: game.parameters,
         images: game.images,
         related_games: game.related_games,
-        // Legacy/compatibility fields
         category: game.type?.toLowerCase() || 'slots',
         isNew: game.tags?.some(tag => tag.code === 'new') || false,
         isLive: game.type?.toLowerCase().includes('live') || false,
@@ -100,11 +123,10 @@ export default function CasinoPage() {
       }));
 
       setGames(transformedGames);
-
-      // Update pagination info
       const meta = response._meta || {};
       setTotalPages(meta.pageCount || 1);
     } catch (error) {
+      if (signal.aborted) return;
       console.error('Error fetching games:', error);
       setGames([]);
     } finally {
@@ -128,10 +150,17 @@ export default function CasinoPage() {
     });
   }, [games, isMobile]);
 
-  // Filter by search (client-side only, since API doesn't support search)
-  // Provider and category filters are handled server-side via API
+  // Filter by search (client-side only) and by provider (safety net: only show selected provider)
   const filteredGames = useMemo(() => {
     let filtered = deviceFilteredGames;
+
+    // Provider filter: only show games from selected provider (case-insensitive, in case backend returned mixed)
+    if (selectedProvider) {
+      const want = selectedProvider.toLowerCase().trim();
+      filtered = filtered.filter(
+        (game) => game.provider && game.provider.toLowerCase().trim() === want
+      );
+    }
 
     // Search filter (client-side only)
     if (searchQuery) {
@@ -159,7 +188,7 @@ export default function CasinoPage() {
     }
 
     return filtered;
-  }, [deviceFilteredGames, selectedCategory, searchQuery]);
+  }, [deviceFilteredGames, selectedCategory, searchQuery, selectedProvider]);
 
   const handlePlayGame = (game: CasinoGame) => {
     setSelectedGame(game);
@@ -171,24 +200,36 @@ export default function CasinoPage() {
     setSelectedGame(null);
   };
 
-  // Get unique providers for filter
-  const providers = useMemo(() => {
-    const uniqueProviders = new Set(deviceFilteredGames.map(g => g.provider));
-    return Array.from(uniqueProviders).sort();
-  }, [deviceFilteredGames]);
+  // Provider options: API list first, then any from current page not in list
+  const providerOptions = useMemo(() => {
+    const fromGames = new Set(deviceFilteredGames.map(g => g.provider).filter(Boolean));
+    const combined = new Set(providerList);
+    fromGames.forEach(p => combined.add(p));
+    return Array.from(combined).sort();
+  }, [providerList, deviceFilteredGames]);
 
   // Note: With server-side pagination, we can't filter on the server
   // So filters work on the current page only
   // For full filtering, we'd need to implement server-side filtering in the backend
   
-  // Reset to page 1 when filters change, then fetch games
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedProvider, selectedCategory]);
 
-  // Fetch games when page or filters change
+  // Fetch games when page or filters change (one request at a time, with timeout so it never loads forever)
   useEffect(() => {
-    fetchGames(currentPage);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), GAMES_FETCH_TIMEOUT_MS);
+    abortRef.current = controller;
+
+    fetchGames(currentPage, controller.signal);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+      abortRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, selectedProvider, selectedCategory]);
 
@@ -253,28 +294,54 @@ export default function CasinoPage() {
         />
 
         {/* Search and Filters */}
-        <div className="mb-4 sm:mb-6 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-gradient-to-b from-gray-800/90 to-gray-800/50 border border-gray-600/60 shadow-lg shadow-black/20">
             {/* Search */}
-            <input
-              type="text"
-              placeholder="Search games..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-green-500"
-            />
-            {/* Provider Filter */}
-            <select
-              value={selectedProvider || ''}
-              onChange={(e) => setSelectedProvider(e.target.value || null)}
-              className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
-              aria-label="Filter by provider"
-            >
-              <option value="">All Providers</option>
-              {providers.map(provider => (
-                <option key={provider} value={provider}>{provider}</option>
-              ))}
-            </select>
+            <div className="relative flex-1 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-green-400 transition-colors pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search games..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-900/70 border border-gray-600/80 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500/80 focus:ring-2 focus:ring-green-500/25 transition-all text-sm sm:text-base"
+              />
+            </div>
+            {/* Provider Filter — single chip when selected */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-2 text-gray-400 text-sm font-medium shrink-0">
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>Provider</span>
+              </div>
+              <div className="relative flex items-stretch flex-1 sm:flex-initial min-w-0 rounded-xl overflow-hidden border border-gray-600/80 bg-gray-900/70 focus-within:border-green-500/80 focus-within:ring-2 focus-within:ring-green-500/25 transition-all">
+                <label htmlFor="provider-filter" className="sr-only">
+                  Filter by provider
+                </label>
+                <select
+                  id="provider-filter"
+                  value={selectedProvider || ''}
+                  onChange={(e) => setSelectedProvider(e.target.value || null)}
+                  className={`flex-1 min-w-0 appearance-none bg-transparent pl-4 py-3 text-white text-sm sm:text-base focus:outline-none cursor-pointer w-full sm:min-w-[200px] ${selectedProvider ? 'pr-14' : 'pr-10'}`}
+                  aria-label="Filter by provider"
+                >
+                  <option value="">All providers</option>
+                  {providerOptions.map(provider => (
+                    <option key={provider} value={provider}>{provider}</option>
+                  ))}
+                </select>
+                <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${selectedProvider ? 'right-11' : 'right-3'}`} />
+                {selectedProvider && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProvider(null)}
+                    className="flex items-center justify-center w-11 h-full shrink-0 bg-gray-700/60 hover:bg-gray-600/80 text-gray-400 hover:text-white transition-colors border-l border-gray-600/80"
+                    aria-label="Clear provider filter"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -313,7 +380,7 @@ export default function CasinoPage() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {deviceFilteredGames.slice(0, 5).map((game) => (
+            {(selectedProvider ? filteredGames : deviceFilteredGames).slice(0, 5).map((game) => (
               <div key={game.uuid || game.id} className="relative">
                 <GameCard game={game} onPlay={handlePlayGame} />
                 <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">
@@ -325,7 +392,7 @@ export default function CasinoPage() {
         </section>
 
         {/* Live Casino Section - Only show if we have live games on current page */}
-        {deviceFilteredGames.filter(g => g.isLive).length > 0 && (
+        {(selectedProvider ? filteredGames : deviceFilteredGames).filter(g => g.isLive).length > 0 && (
           <section className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">YOUR LIVE CASINO</h2>
@@ -336,7 +403,7 @@ export default function CasinoPage() {
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-              {deviceFilteredGames.filter(g => g.isLive).slice(0, 5).map((game) => (
+              {(selectedProvider ? filteredGames : deviceFilteredGames).filter(g => g.isLive).slice(0, 5).map((game) => (
                 <div key={`live-${game.uuid || game.id}`} className="relative">
                   <GameCard game={game} onPlay={handlePlayGame} />
                   <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-bold">

@@ -11,7 +11,7 @@ import LoginModal from '@/components/auth/LoginModal';
 import ProfileDropdown from '@/components/layout/ProfileDropdown';
 import { useBetting } from '@/contexts/BettingContext';
 
-// Betslip Button Component
+// Betslip Button Component - compact on mobile so it doesn't overlap logo
 function BetslipButton() {
   const { selections, openBetslip } = useBetting();
   const selectionCount = selections.length;
@@ -21,12 +21,13 @@ function BetslipButton() {
       onClick={openBetslip}
       variant="outline"
       size="sm"
-      className="relative border-green-500/60 text-green-400 hover:bg-green-500/10 hover:border-green-500 transition-all"
+      className="relative border-green-500/60 text-green-400 hover:bg-green-500/10 hover:border-green-500 transition-all p-2 sm:px-3 sm:py-2 min-w-0"
+      aria-label="Bet slip"
     >
-      <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+      <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 sm:mr-2 shrink-0" />
       <span className="hidden sm:inline">Bet Slip</span>
       {selectionCount > 0 && (
-        <span className="absolute -top-2 -right-2 bg-green-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-green-500 text-black text-xs font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
           {selectionCount}
         </span>
       )}
@@ -153,9 +154,9 @@ export default function Header() {
         </div>
 
         {/* Main Header */}
-        <div className="flex items-center justify-between h-16 sm:h-20 py-2">
+        <div className="flex items-center justify-between h-16 sm:h-20 py-2 gap-2">
           {/* Mobile Menu Button - Left Side (Mobile Only) */}
-          <div className="md:hidden">
+          <div className="flex-shrink-0 md:hidden">
             <Sheet>
               <SheetTrigger asChild>
                 <Button 
@@ -320,17 +321,19 @@ export default function Header() {
             </Sheet>
           </div>
 
-          {/* Logo - Centered on Mobile, Left on Desktop */}
-          <Link href="/" className="flex items-center hover:opacity-90 transition-opacity h-full py-1 md:mr-8 lg:mr-12 absolute left-1/2 transform -translate-x-1/2 md:relative md:left-auto md:transform-none">
-            <Image
-              src="/freebet.png"
-              alt="Freebet"
-              width={180}
-              height={45}
-              className="h-10 sm:h-12 w-auto object-contain"
-              priority
-            />
-          </Link>
+          {/* Logo - Center area on Mobile (reserved so bet slip/Login don't overlap), Left on Desktop */}
+          <div className="flex-1 min-w-0 flex items-center justify-center md:flex-initial md:min-w-0 md:justify-start">
+            <Link href="/" className="flex items-center hover:opacity-90 transition-opacity h-full py-1 md:mr-8 lg:mr-12">
+              <Image
+                src="/freebet.png"
+                alt="Freebet"
+                width={180}
+                height={45}
+                className="h-10 sm:h-12 w-auto object-contain max-w-[140px] sm:max-w-[180px]"
+                priority
+              />
+            </Link>
+          </div>
 
           {/* Main Navigation - Desktop */}
           <nav className="hidden md:flex items-center space-x-6 lg:space-x-8 xl:space-x-10">
@@ -408,8 +411,8 @@ export default function Header() {
             </div>
           </div>
 
-          {/* User Actions */}
-          <div className="flex items-center space-x-3 sm:space-x-4 lg:space-x-5">
+          {/* User Actions - shrink-0 so they don't overlap logo on mobile */}
+          <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-5 flex-shrink-0">
             {/* Bet Slip Button - Always visible */}
             <BetslipButton />
             
@@ -435,13 +438,13 @@ export default function Header() {
                 <ProfileDropdown userName={userName} userEmail={userEmail} />
               </>
             ) : (
-              /* Login Button - When NOT Logged In */
+              /* Login Button - When NOT Logged In (compact on mobile to avoid overlapping logo) */
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all shadow-lg shadow-green-500/30"
+                className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg transition-all shadow-lg shadow-green-500/30 shrink-0"
               >
-                <LogIn className="w-5 h-5" />
-                <span className="text-sm sm:text-base">Login</span>
+                <LogIn className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                <span className="text-sm sm:text-base whitespace-nowrap">Login</span>
               </button>
             )}
           </div>

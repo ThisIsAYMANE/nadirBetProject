@@ -157,12 +157,12 @@ export default function PromotionalCarousel({
 
       {/* Dots Indicator */}
       {promotions.length > 1 && (
-        <div className="flex justify-center gap-2 mt-3">
+        <div className="flex items-center justify-center gap-2 mt-3">
           {promotions.map((_, index) => (
             <button
               key={index}
               onClick={() => scrollTo(index)}
-              className={`transition-all rounded-full w-2.5 h-2.5 ${
+              className={`shrink-0 w-2.5 h-2.5 min-w-[10px] min-h-[10px] transition-all rounded-full ${
                 index === selectedIndex
                   ? 'bg-white opacity-100'
                   : 'bg-gray-400 opacity-50 hover:opacity-75'

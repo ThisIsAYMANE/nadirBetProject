@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Star, BarChart2 } from 'lucide-react';
 import { useBetting } from '@/contexts/BettingContext';
 import type { MatchMarket, MatchMarketOutcome, MarketType } from '@/types';
 import { normalizeToDecimal } from '@/lib/oddsUtils';
@@ -14,7 +15,22 @@ interface MarketDisplayProps {
   sportKey: string;
   league?: string;
   commenceTime?: string;
+  /** Total number of markets (for dots and "+N" bar). */
+  marketCount?: number;
+  /** Index of the active market (0-based) for pagination dots. */
+  activeMarketIndex?: number;
+  /** Called when user taps a pagination dot. */
+  onMarketIndexChange?: (index: number) => void;
 }
+
+const MARKET_TITLE: Record<string, string> = {
+  h2h: 'Match Result',
+  totals: 'Total Goals',
+  spreads: 'Handicap',
+  btts: 'Both Teams to Score',
+  draw_no_bet: 'Draw No Bet',
+  double_chance: 'Double Chance',
+};
 
 export function MarketDisplay({
   market,
@@ -25,6 +41,9 @@ export function MarketDisplay({
   sportKey,
   league,
   commenceTime,
+  marketCount = 0,
+  activeMarketIndex = 0,
+  onMarketIndexChange,
 }: MarketDisplayProps) {
   const { addSelection } = useBetting();
 
@@ -140,48 +159,157 @@ export function MarketDisplay({
     return outcome.name;
   };
 
+  const isMatchResult = marketType === 'h2h' || marketType === 'draw_no_bet' || marketType === 'double_chance';
+  const gridCols = isMatchResult ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3';
+
+  const marketTitle = MARKET_TITLE[marketType] ?? marketType.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  const formattedTime = commenceTime
+    ? new Date(commenceTime).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' ' +
+      new Date(commenceTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
+    : '';
+
+  const showDots = marketCount > 1 && onMarketIndexChange;
+  const otherMarketsCount = Math.max(0, marketCount - 1);
+
   return (
-    <div className="bg-gray-800 rounded-xl p-4 sm:p-6">
-      <h3 className="text-lg font-bold text-white mb-4">
-        {marketType === 'h2h' ? 'Match Result' :
-         marketType === 'totals' ? 'Total Goals' :
-         marketType === 'spreads' ? 'Handicap' :
-         marketType === 'btts' ? 'Both Teams to Score' :
-         marketType === 'draw_no_bet' ? 'Draw No Bet' :
-         marketType === 'double_chance' ? 'Double Chance' :
-         marketType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-      </h3>
+    <div className="bg-gray-800 rounded-xl p-4 sm:p-6 overflow-visible min-w-0">
+      {!isMatchResult && (
+        <h3 className="text-lg font-bold text-white mb-4">{marketTitle}</h3>
+      )}
 
       {market.outcomes.length === 0 ? (
         <p className="text-sm text-gray-400">No outcomes available for this market.</p>
-      ) : (
-        <div className={`grid gap-3 ${
-          marketType === 'h2h' || marketType === 'draw_no_bet' || marketType === 'double_chance'
-            ? 'grid-cols-3'
-            : 'grid-cols-2 sm:grid-cols-3'
-        }`}>
-          {market.outcomes.map((outcome, index) => {
-            const odds = normalizeToDecimal(outcome.price);
-            const line = outcome.line ?? outcome.point;
-            return (
-              <button
-                key={index}
-                onClick={() => handleOutcomeClick(outcome)}
-                className="bg-gray-700 hover:bg-green-500 text-white p-3 sm:p-4 rounded-lg transition-colors text-left"
-              >
-                <div className="text-xs sm:text-sm text-gray-300 mb-1">
-                  {formatOutcomeLabel(outcome)}
-                </div>
-                {line !== undefined && (marketType === 'totals' || marketType === 'spreads' || marketType === 'alternate_totals' || marketType === 'alternate_spreads') && (
-                  <div className="text-[10px] text-gray-400 mb-1">
-                    Line: {line > 0 ? `+${line}` : `${line}`}
-                  </div>
-                )}
-                <div className="font-bold text-base sm:text-lg">{odds.toFixed(2)}</div>
+      ) : isMatchResult && market.outcomes.length <= 3 ? (
+        /* Match Result layout: header row, team names left + 3-col grid (label top, odds bottom), dots, bottom bar with star, BB, bar chart, +N */
+        <div className="space-y-4">
+          {/* Header: date/time left, "Match Result" right */}
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <span className="text-gray-400 text-sm truncate" title={formattedTime}>
+              {formattedTime}
+            </span>
+            <span className="text-gray-400 text-sm font-medium shrink-0">{marketTitle}</span>
+          </div>
+
+          {/* Body: team names stacked left | 3-column grid (each card: label on top, odds below) */}
+          <div className="flex gap-3 min-w-0">
+            <div className="flex flex-col justify-center gap-2 shrink-0 text-left min-w-[80px] sm:min-w-[100px]">
+              <span className="text-sm text-gray-300 truncate max-w-[100px] sm:max-w-[140px]" title={homeTeam}>
+                {homeTeam}
+              </span>
+              <span className="text-sm text-gray-300 truncate max-w-[100px] sm:max-w-[140px]" title={awayTeam}>
+                {awayTeam}
+              </span>
+            </div>
+            <div className={`grid ${gridCols} gap-2 sm:gap-3 flex-1 min-w-0`}>
+              {market.outcomes.map((outcome, index) => {
+                const odds = normalizeToDecimal(outcome.price);
+                const label = formatOutcomeLabel(outcome);
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleOutcomeClick(outcome)}
+                    className="bg-gray-700 hover:bg-green-500 text-white p-3 sm:p-4 rounded-lg transition-colors text-center min-w-0 flex flex-col items-center justify-center gap-1"
+                  >
+                    <span className="text-xs sm:text-sm text-gray-300 truncate w-full" title={label}>
+                      {label}
+                    </span>
+                    <span className="font-bold text-base sm:text-lg text-yellow-400">{odds.toFixed(2)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Pagination dots – keep circular on mobile (items-center + shrink-0 prevent stretch) */}
+          {showDots && (
+            <div className="flex items-center justify-center gap-1.5 py-2">
+              {Array.from({ length: marketCount }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => onMarketIndexChange(i)}
+                  className={`shrink-0 w-2 h-2 min-w-[8px] min-h-[8px] rounded-full transition-colors ${
+                    i === activeMarketIndex ? 'bg-white scale-110' : 'bg-gray-500 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Market ${i + 1} of ${marketCount}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Bottom bar: star, BB, bar chart | +N markets */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+            <div className="flex items-center gap-3 sm:gap-4 text-gray-400">
+              <button type="button" className="p-1 hover:text-white transition-colors" aria-label="Add to favorites">
+                <Star className="w-4 h-4" />
               </button>
-            );
-          })}
+              <span className="text-xs sm:text-sm text-gray-400 font-medium">BB</span>
+              <button type="button" className="p-1 hover:text-white transition-colors" aria-label="Statistics">
+                <BarChart2 className="w-4 h-4" />
+              </button>
+            </div>
+            {otherMarketsCount > 0 && (
+              <span className="text-sm text-gray-400">+{otherMarketsCount}</span>
+            )}
+          </div>
         </div>
+      ) : (
+        <>
+          <div className={`grid gap-3 ${gridCols}`}>
+            {market.outcomes.map((outcome, index) => {
+              const odds = normalizeToDecimal(outcome.price);
+              const line = outcome.line ?? outcome.point;
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleOutcomeClick(outcome)}
+                  className="bg-gray-700 hover:bg-green-500 text-white p-3 sm:p-4 rounded-lg transition-colors text-left min-w-0"
+                >
+                  <div className="text-xs sm:text-sm text-gray-300 mb-1 truncate">
+                    {formatOutcomeLabel(outcome)}
+                  </div>
+                  {line !== undefined && (marketType === 'totals' || marketType === 'spreads' || marketType === 'alternate_totals' || marketType === 'alternate_spreads') && (
+                    <div className="text-[10px] text-gray-400 mb-1">
+                      Line: {line > 0 ? `+${line}` : `${line}`}
+                    </div>
+                  )}
+                  <div className="font-bold text-base sm:text-lg text-yellow-400">{odds.toFixed(2)}</div>
+                </button>
+              );
+            })}
+          </div>
+          {/* Pagination dots + bottom bar for non–Match Result markets */}
+          {(showDots || otherMarketsCount > 0) && (
+            <div className="mt-4 pt-4 border-t border-gray-700 space-y-3">
+              {showDots && (
+                <div className="flex items-center justify-center gap-1.5">
+                  {Array.from({ length: marketCount }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onMarketIndexChange?.(i)}
+                      className={`shrink-0 w-2 h-2 min-w-[8px] min-h-[8px] rounded-full transition-colors ${
+                        i === activeMarketIndex ? 'bg-white' : 'bg-gray-500 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Market ${i + 1} of ${marketCount}`}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 sm:gap-4 text-gray-400">
+                  <button type="button" className="p-1 hover:text-white transition-colors" aria-label="Add to favorites">
+                    <Star className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs sm:text-sm text-gray-400 font-medium">BB</span>
+                  <button type="button" className="p-1 hover:text-white transition-colors" aria-label="Statistics">
+                    <BarChart2 className="w-4 h-4" />
+                  </button>
+                </div>
+                {otherMarketsCount > 0 && <span className="text-sm text-gray-400">+{otherMarketsCount}</span>}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

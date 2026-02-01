@@ -353,10 +353,10 @@ export default function MatchDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header />
-      <div className="flex overflow-x-hidden">
+      <div className="flex min-w-0">
         <Sidebar />
         
-        <main className="flex-1 p-4 sm:p-6 min-w-0 overflow-x-hidden">
+        <main className="flex-1 min-w-0 px-4 sm:px-6 py-4 sm:py-6 overflow-x-auto">
           {/* Back Button */}
           <Link 
             href="/" 
@@ -366,30 +366,27 @@ export default function MatchDetailsPage() {
             <span>Back to Home</span>
           </Link>
 
-          {/* Match Header */}
+          {/* Match Header - compact like reference: league left, time right, teams below */}
           <div className="bg-gray-800 rounded-xl p-4 sm:p-6 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <div className="flex items-center flex-wrap gap-2 sm:gap-4">
-                <span className="bg-blue-500 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
-                  {match.league}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <span className="text-gray-400 text-sm font-medium">{match.league}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-sm">
+                  {new Date(match.startTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}{' '}
+                  {new Date(match.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}
                 </span>
                 {match.status === 'live' && (
-                  <span className="bg-red-500 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold animate-pulse">
-                    LIVE
-                  </span>
+                  <span className="bg-red-500 px-2 py-0.5 rounded text-xs font-semibold animate-pulse">LIVE</span>
                 )}
-              </div>
-              
-              <div className="flex items-center space-x-3">
                 <button
-                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  className="p-2 bg-gray-700/50 hover:bg-gray-600 rounded-lg transition-colors shrink-0"
                   aria-label="Add to favorites"
                   title="Add to favorites"
                 >
                   <Heart className="w-4 h-4" />
                 </button>
                 <button
-                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  className="p-2 bg-gray-700/50 hover:bg-gray-600 rounded-lg transition-colors shrink-0"
                   aria-label="Share match"
                   title="Share match"
                 >
@@ -479,6 +476,9 @@ export default function MatchDetailsPage() {
                   sportKey={match.sport}
                   league={match.league}
                   commenceTime={match.startTime}
+                  marketCount={availableMarkets.length}
+                  activeMarketIndex={availableMarkets.indexOf(activeMarket)}
+                  onMarketIndexChange={(i) => setActiveMarket(availableMarkets[i] ?? null)}
                 />
               ) : (
                 <div className="bg-gray-800 rounded-xl p-6">

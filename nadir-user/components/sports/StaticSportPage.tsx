@@ -94,7 +94,7 @@ export default function StaticSportPage({ config }: StaticSportPageProps) {
           {/* Matches Display */}
           {sportMatches.length > 0 ? (
             view === 'cards' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {sportMatches.map((match) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
@@ -132,7 +132,7 @@ export default function StaticSportPage({ config }: StaticSportPageProps) {
 
           {/* Mock additional matches for visual completeness */}
           {sportMatches.length === 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="bet-card">
                   <div className="loading-skeleton h-4 w-24 mb-3" />

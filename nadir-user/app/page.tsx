@@ -172,8 +172,100 @@ export default function HomePage() {
             <div className="absolute -right-10 -bottom-10 w-40 h-40 sm:w-60 sm:h-60 bg-black/5 rounded-full hidden sm:block" />
           </div>
 
-          {/* Live Matches */}
+          {/* 1. Trending Matches */}
           <section className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="bg-green-500 p-2 rounded-lg">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
+                </div>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Trending Matches</h2>
+              </div>
+              <div className="flex items-center space-x-3">
+                <ViewToggle view={viewMode} onViewChange={setViewMode} />
+                <Link href="/sports" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
+                  <span>Browse All Sports</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+            
+            {viewMode === 'cards' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {trendingMatches.map((match) => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
+                <div className="flex items-center px-3 sm:px-4 py-2.5 bg-gray-800/60 border-b border-gray-700/50 text-xs text-gray-400 font-semibold uppercase tracking-wide">
+                  <div className="w-20 sm:w-24 flex-shrink-0">
+                    <span className="hidden sm:inline">HEURE</span>
+                    <span className="sm:hidden">H</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="hidden sm:inline">ÉQUIPES</span>
+                    <span className="sm:hidden">Match</span>
+                  </div>
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                    <div className="min-w-[55px] sm:min-w-[65px] text-center">1</div>
+                    {trendingMatches[0]?.odds.draw && (
+                      <div className="min-w-[55px] sm:min-w-[65px] text-center">X</div>
+                    )}
+                    <div className="min-w-[55px] sm:min-w-[65px] text-center">2</div>
+                  </div>
+                </div>
+                <div>
+                  {trendingMatches.map((match) => (
+                    <MatchListRow key={match.id} match={match} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* 2. Casino Preview */}
+          <section className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="bg-purple-500 p-2 rounded-lg">
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Featured Casino Games</h2>
+              </div>
+              <Link href="/casino" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
+                <span>Explore Casino</span>
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            {casinoGamesLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="casino-game-card">
+                    <div className="aspect-[4/3] loading-skeleton mb-3" />
+                    <div className="p-2 sm:p-3">
+                      <div className="loading-skeleton h-4 w-full mb-2" />
+                      <div className="loading-skeleton h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                {displayCasinoGames.map((game) => (
+                  <GameCard
+                    key={game.uuid || game.id}
+                    game={game}
+                    onPlay={handlePlayFeaturedGame}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* 3. Live Matches */}
+          <section>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="bg-red-500 p-2 rounded-lg">
@@ -223,99 +315,6 @@ export default function HomePage() {
                     <MatchListRow key={match.id} match={match} />
                   ))}
                 </div>
-              </div>
-            )}
-          </section>
-
-          {/* Featured Matches */}
-          <section className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="bg-green-500 p-2 rounded-lg">
-                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
-                </div>
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Trending Matches</h2>
-              </div>
-              <div className="flex items-center space-x-3">
-                <ViewToggle view={viewMode} onViewChange={setViewMode} />
-                <Link href="/sports" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
-                  <span>Browse All Sports</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-            
-            {viewMode === 'cards' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {trendingMatches.map((match) => (
-                  <MatchCard key={match.id} match={match} />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg overflow-hidden">
-                {/* List View Header */}
-                <div className="flex items-center px-3 sm:px-4 py-2.5 bg-gray-800/60 border-b border-gray-700/50 text-xs text-gray-400 font-semibold uppercase tracking-wide">
-                  <div className="w-20 sm:w-24 flex-shrink-0">
-                    <span className="hidden sm:inline">HEURE</span>
-                    <span className="sm:hidden">H</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="hidden sm:inline">ÉQUIPES</span>
-                    <span className="sm:hidden">Match</span>
-                  </div>
-                  <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                    <div className="min-w-[55px] sm:min-w-[65px] text-center">1</div>
-                    {trendingMatches[0]?.odds.draw && (
-                      <div className="min-w-[55px] sm:min-w-[65px] text-center">X</div>
-                    )}
-                    <div className="min-w-[55px] sm:min-w-[65px] text-center">2</div>
-                  </div>
-                </div>
-                <div>
-                  {trendingMatches.map((match) => (
-                    <MatchListRow key={match.id} match={match} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Casino Preview */}
-          <section>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="bg-purple-500 p-2 rounded-lg">
-                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Featured Casino Games</h2>
-              </div>
-              <Link href="/casino" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
-                <span>Explore Casino</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            
-            {casinoGamesLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="casino-game-card">
-                    <div className="aspect-[4/3] loading-skeleton mb-3" />
-                    <div className="p-2 sm:p-3">
-                      <div className="loading-skeleton h-4 w-full mb-2" />
-                      <div className="loading-skeleton h-3 w-16" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                {displayCasinoGames.map((game) => (
-                  <GameCard
-                    key={game.uuid || game.id}
-                    game={game}
-                    onPlay={handlePlayFeaturedGame}
-                  />
-                ))}
               </div>
             )}
           </section>

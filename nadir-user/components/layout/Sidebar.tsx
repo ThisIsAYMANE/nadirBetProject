@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Star, TrendingUp } from 'lucide-react';
+import { ChevronRight, Star } from 'lucide-react';
 import { sports } from '@/lib/mockData';
 
 type CategoryCounts = Record<string, number>;
@@ -58,15 +58,7 @@ export default function Sidebar() {
       <div className="hidden lg:block w-64 flex-shrink-0" aria-hidden="true" />
       <aside className="hidden lg:block w-64 bg-gray-900 border-r border-gray-800 fixed top-16 left-0 h-[calc(100vh-4rem)] overflow-y-auto z-40">
         <div className="p-4">
-        {/* Quick Links */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 px-4 py-3 bg-green-500/10 rounded-lg border border-green-500/20">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-green-500 font-semibold">Trending Now</span>
-          </div>
-        </div>
-
-        <div className="mb-6">
+        <div className="pt-6 mb-6">
           <Link href="/favorites" className="sport-nav-item">
             <Star className="w-4 h-4" />
             <span>My Favorites</span>

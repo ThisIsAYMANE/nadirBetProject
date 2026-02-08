@@ -43,17 +43,69 @@ router.get('/games', async (req, res) => {
       return items.filter((g) => g.provider && normalizeProvider(g.provider) === want);
     };
 
-    // When provider or type is set: fetch ONE Slotegrator page per request (one API call). Avoids long loops.
-    const hasProviderOrTypeFilter = provider || type;
-    if (hasProviderOrTypeFilter) {
+    // Match game type: exact match, or for "Live Casino" also accept any type containing "live"
+    const matchesType = (gameType, requestedType) => {
+      if (!requestedType || !gameType) return false;
+      const r = String(requestedType).trim();
+      const g = String(gameType).trim();
+      if (g === r) return true;
+      if (r === 'Live Casino' && g.toLowerCase().includes('live')) return true;
+      return false;
+    };
+    const filterByType = (items, typeValue) => {
+      if (!typeValue || !Array.isArray(items)) return items;
+      return items.filter((g) => matchesType(g.type, typeValue));
+    };
+
+    // When TYPE is set: Slotegrator doesn't filter by type, so we must fetch multiple pages and collect all matching games.
+    if (type) {
+      if (expand) options.expand = expand;
+      const skip = (ourPage - 1) * targetPerPage;
+      let slotegratorPage = 1;
+      const allMatching = [];
+      const maxPages = 50; // safety limit
+
+      while (slotegratorPage <= maxPages) {
+        const response = await casinoApiService.getGames({
+          ...options,
+          page: slotegratorPage,
+        });
+        let items = response.items || [];
+        if (provider) items = filterByProvider(items, provider);
+        items = filterByType(items, type);
+        if (device) items = filterByDevice(items, device);
+        allMatching.push(...items);
+        // Stop if we have enough for this page and next, or Slotegrator returned less than full page
+        const rawCount = (response.items || []).length;
+        if (rawCount < SLOTEGRATOR_MAX_PER_PAGE) break;
+        slotegratorPage++;
+      }
+
+      const games = allMatching.slice(skip, skip + targetPerPage);
+      const totalCount = allMatching.length;
+      const pageCount = Math.max(1, Math.ceil(totalCount / targetPerPage));
+
+      return res.json({
+        items: games,
+        _meta: {
+          totalCount,
+          pageCount,
+          currentPage: ourPage,
+          perPage: targetPerPage,
+        },
+        _links: {},
+      });
+    }
+
+    // When only PROVIDER is set (no type): fetch ONE Slotegrator page and filter by provider.
+    if (provider) {
       if (expand) options.expand = expand;
       const response = await casinoApiService.getGames({
         ...options,
         page: ourPage,
       });
       let games = response.items || [];
-      if (provider) games = filterByProvider(games, provider);
-      if (type) games = games.filter((g) => g.type === type);
+      games = filterByProvider(games, provider);
       if (device) games = filterByDevice(games, device);
 
       const pageCount = response._meta?.pageCount ?? Math.max(1, Math.ceil((response._meta?.totalCount ?? games.length) / targetPerPage));

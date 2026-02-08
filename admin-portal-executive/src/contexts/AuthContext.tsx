@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: true } | { success: false; error: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   dashboardType: DashboardType['type'];
@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth();
   }, [isLoggingOut]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: true } | { success: false; error: string }> => {
     try {
       setIsLoading(true);
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/login`, {
@@ -108,20 +108,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json().catch(() => ({}));
       if (response.ok) {
-        const { user: userData, token } = await response.json();
+        const userData = data.user;
+        const token = data.token;
+        if (!token || !userData) return { success: false, error: 'Invalid response from server' };
         localStorage.setItem('auth_token', token);
         if (!checkRoleAccess(userData)) {
-          return false;
+          return { success: false, error: 'Your role cannot access this portal.' };
         }
         setUser(userData);
         setDashboardType(userData.role === 'owner' ? 'super_admin' : 'super_admin');
-        return true;
+        return { success: true };
       }
-      return false;
+      const message = data.error || data.message || (data.errors?.[0]?.msg) || 'Invalid email or password';
+      return { success: false, error: message };
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      return { success: false, error: 'Cannot reach server. Is the backend running on http://localhost:3001?' };
     } finally {
       setIsLoading(false);
     }

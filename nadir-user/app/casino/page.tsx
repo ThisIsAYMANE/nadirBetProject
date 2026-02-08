@@ -372,7 +372,7 @@ export default function CasinoPage() {
         {/* Featured Games Section */}
         <section className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">ONLY AT FREEBET</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">POPULAR GAMES</h2>
             <button className="text-green-500 hover:text-green-400 flex items-center space-x-1 text-sm sm:text-base self-start sm:self-auto">
               <span>View All</span>
               <ChevronRight className="w-4 h-4" />

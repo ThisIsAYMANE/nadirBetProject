@@ -1,10 +1,7 @@
 import { User, Broker, Transaction } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-
-// Debug logging
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('Environment:', import.meta.env);
+// Use local backend by default; set VITE_API_URL only when pointing to another host (e.g. ngrok for sharing)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiService {
   private getAuthHeaders() {

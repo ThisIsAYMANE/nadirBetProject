@@ -113,11 +113,12 @@ async function seedDatabase() {
     console.log('┌────────────────┬──────────────────────────┬──────────────┐');
     console.log('│ Role           │ Email                    │ Password     │');
     console.log('├────────────────┼──────────────────────────┼──────────────┤');
-    console.log('│ Owner          │ owner@example.com        │ password123  │');
-    console.log('│ Super Admin    │ superadmin@example.com   │ password123  │');
-    console.log('│ Admin          │ admin@example.com        │ password123  │');
-    console.log('│ Broker         │ broker@example.com       │ password123  │');
-    console.log('│ Regular User   │ user@example.com         │ password123  │');
+    console.log('│ Owner          │ owner@example.com        │ password123  │  ← Executive portal');
+    console.log('│ Super Admin    │ superadmin@example.com   │ password123  │  ← Executive portal');
+    console.log('│ Admin          │ admin@example.com        │ password123  │  ← Management portal');
+    console.log('│ Broker         │ broker@example.com       │ password123  │  ← Management portal');
+    console.log('│ Regular User   │ user@example.com         │ password123  │  ← User portal');
+    console.log('\n💡 First time? Use owner@example.com / password123 for Executive, admin@example.com for Management.');
     console.log('└────────────────┴──────────────────────────┴──────────────┘\n');
 
   } catch (error) {

@@ -59,26 +59,39 @@ app.set('trust proxy', 1); // Trust proxy for rate limiting
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
-// CORS for all 3 portals
-const corsOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',')
+// CORS for all 3 portals (and when frontend calls backend via ngrok)
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
   : [
-      'http://localhost:5173', // Executive Portal
-      'http://localhost:5174', // Management Portal
-      'http://localhost:3002'  // User Portal
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3002',
     ];
+
+// Allow localhost / 127.0.0.1 on any port in development so ngrok + local frontend work
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (corsOrigins.indexOf(origin) !== -1) return true;
+  try {
+    const u = new URL(origin);
+    const isLocal =
+      u.hostname === 'localhost' ||
+      u.hostname === '127.0.0.1' ||
+      u.hostname.endsWith('.ngrok-free.app') ||
+      u.hostname.endsWith('.ngrok.app');
+    if (isLocal) return true;
+  } catch (_) {}
+  return false;
+};
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (corsOrigins.indexOf(origin) === -1) {
-      return callback(new Error('Not allowed by CORS'), false);
-    }
-    callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'), false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

@@ -32,9 +32,9 @@ export default function HomePage() {
   const { matches: liveApiMatches } = useLiveOdds('all', 0);
   const liveNowMatches = liveApiMatches.length ? liveApiMatches : liveMatches;
 
-  // Trending matches from API (football/upcoming). Fall back to mockData if empty.
+  // Trending matches from API (football/upcoming). 2 rows on desktop (6 matches).
   const { matches: trendingApiMatches } = useSportsData('football', 'all');
-  const trendingMatches = trendingApiMatches.length ? trendingApiMatches.slice(0, 8) : matches.slice(0, 8);
+  const trendingMatches = trendingApiMatches.length ? trendingApiMatches.slice(0, 6) : matches.slice(0, 6);
 
   // Featured casino games from API (dynamic). Fall back to mockData if empty.
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function HomePage() {
     casinoApi
       .getGames({
         page: 1,
-        perPage: 6,
+        perPage: 24,
         expand: 'tags,parameters,images',
         device: isMobile ? 'mobile' : 'desktop',
       })
@@ -101,7 +101,8 @@ export default function HomePage() {
     setSelectedGame(null);
   };
 
-  const displayCasinoGames = featuredCasinoGames.length ? featuredCasinoGames : casinoGames.slice(0, 6);
+  // 4 rows: ~20 games on desktop (5 cols), 12 on tablet, 8 on mobile
+  const displayCasinoGames = featuredCasinoGames.length ? featuredCasinoGames : casinoGames.slice(0, 20);
 
   if (isLoading) {
     return (
@@ -172,7 +173,47 @@ export default function HomePage() {
             <div className="absolute -right-10 -bottom-10 w-40 h-40 sm:w-60 sm:h-60 bg-black/5 rounded-full hidden sm:block" />
           </div>
 
-          {/* 1. Trending Matches */}
+          {/* 1. Casino Games – 4 rows first */}
+          <section className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="bg-purple-500 p-2 rounded-lg">
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Featured Casino Games</h2>
+              </div>
+              <Link href="/casino" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
+                <span>Explore Casino</span>
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            {casinoGamesLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div key={i} className="casino-game-card">
+                    <div className="aspect-[4/3] loading-skeleton mb-3" />
+                    <div className="p-2 sm:p-3">
+                      <div className="loading-skeleton h-4 w-full mb-2" />
+                      <div className="loading-skeleton h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+                {displayCasinoGames.map((game) => (
+                  <GameCard
+                    key={game.uuid || game.id}
+                    game={game}
+                    onPlay={handlePlayFeaturedGame}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* 2. Trending Matches – 2 rows */}
           <section className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <div className="flex items-center space-x-2 sm:space-x-3">
@@ -224,47 +265,7 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* 2. Casino Preview */}
-          <section className="mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="bg-purple-500 p-2 rounded-lg">
-                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Featured Casino Games</h2>
-              </div>
-              <Link href="/casino" className="flex items-center space-x-1 text-green-500 hover:text-green-400 transition-colors text-sm sm:text-base self-start sm:self-auto">
-                <span>Explore Casino</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            
-            {casinoGamesLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="casino-game-card">
-                    <div className="aspect-[4/3] loading-skeleton mb-3" />
-                    <div className="p-2 sm:p-3">
-                      <div className="loading-skeleton h-4 w-full mb-2" />
-                      <div className="loading-skeleton h-3 w-16" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
-                {displayCasinoGames.map((game) => (
-                  <GameCard
-                    key={game.uuid || game.id}
-                    game={game}
-                    onPlay={handlePlayFeaturedGame}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* 3. Live Matches */}
+          {/* 3. Live Now – 2 rows */}
           <section>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
               <div className="flex items-center space-x-2 sm:space-x-3">
@@ -287,7 +288,7 @@ export default function HomePage() {
             
             {viewMode === 'cards' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {liveNowMatches.map((match) => (
+                {liveNowMatches.slice(0, 6).map((match) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
               </div>
@@ -311,7 +312,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div>
-                  {liveNowMatches.map((match) => (
+                  {liveNowMatches.slice(0, 6).map((match) => (
                     <MatchListRow key={match.id} match={match} />
                   ))}
                 </div>

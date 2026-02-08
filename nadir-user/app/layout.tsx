@@ -28,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark overflow-x-hidden">
-      <body className={`${inter.className} bg-gray-900 text-white pb-14 lg:pb-0 overflow-x-hidden pt-40 sm:pt-44 lg:pt-24`}>
+      <body className={`${inter.className} bg-gray-900 text-white pb-14 lg:pb-0 overflow-x-hidden pt-48 sm:pt-52 md:pt-36 lg:pt-32`}>
         <BettingProvider>
           {children}
           <Footer />

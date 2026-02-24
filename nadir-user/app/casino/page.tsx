@@ -98,29 +98,37 @@ export default function CasinoPage() {
 
       if (signal.aborted) return;
 
-      const transformedGames: CasinoGame[] = (response.items || []).map((game) => ({
-        uuid: game.uuid,
-        id: game.uuid,
-        name: game.name,
-        image: game.image,
-        type: game.type,
-        provider: game.provider,
-        provider_id: game.provider_id,
-        technology: game.technology,
-        has_lobby: game.has_lobby,
-        is_mobile: game.is_mobile,
-        has_freespins: game.has_freespins,
-        has_tables: game.has_tables,
-        label: game.label,
-        tags: game.tags,
-        parameters: game.parameters,
-        images: game.images,
-        related_games: game.related_games,
-        category: game.type?.toLowerCase() || 'slots',
-        isNew: game.tags?.some(tag => tag.code === 'new') || false,
-        isLive: game.type?.toLowerCase().includes('live') || false,
-        rtp: game.parameters?.rtp,
-      }));
+      const transformedGames: CasinoGame[] = (response.items || []).map((game) => {
+        const typeLower = game.type?.toLowerCase() || '';
+        const category = typeLower || 'slots';
+        const isLive =
+          typeLower.includes('live') ||
+          game.has_lobby === 1;
+
+        return {
+          uuid: game.uuid,
+          id: game.uuid,
+          name: game.name,
+          image: game.image,
+          type: game.type,
+          provider: game.provider,
+          provider_id: game.provider_id,
+          technology: game.technology,
+          has_lobby: game.has_lobby,
+          is_mobile: game.is_mobile,
+          has_freespins: game.has_freespins,
+          has_tables: game.has_tables,
+          label: game.label,
+          tags: game.tags,
+          parameters: game.parameters,
+          images: game.images,
+          related_games: game.related_games,
+          category,
+          isNew: game.tags?.some(tag => tag.code === 'new') || false,
+          isLive,
+          rtp: game.parameters?.rtp,
+        };
+      });
 
       setGames(transformedGames);
       const meta = response._meta || {};

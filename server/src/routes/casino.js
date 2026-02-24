@@ -43,7 +43,7 @@ router.get('/games', async (req, res) => {
       return items.filter((g) => g.provider && normalizeProvider(g.provider) === want);
     };
 
-    // Match game type: exact match, or for "Live Casino" also accept any type containing "live"
+    // Match game type: exact match, or for "Live Casino" also accept any type containing "live" OR has_lobby (live tables)
     const matchesType = (gameType, requestedType) => {
       if (!requestedType || !gameType) return false;
       const r = String(requestedType).trim();
@@ -54,6 +54,14 @@ router.get('/games', async (req, res) => {
     };
     const filterByType = (items, typeValue) => {
       if (!typeValue || !Array.isArray(items)) return items;
+      // "Live Casino" = type contains "live" OR game has lobby (live dealer / table games)
+      if (String(typeValue).trim() === 'Live Casino') {
+        return items.filter(
+          (g) =>
+            (g.type && matchesType(g.type, typeValue)) ||
+            g.has_lobby === 1
+        );
+      }
       return items.filter((g) => matchesType(g.type, typeValue));
     };
 

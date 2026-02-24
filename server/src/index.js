@@ -44,8 +44,9 @@ try {
     }
   });
 } catch (error) {
-  // Fallback to dotenv if env file doesn't exist
-  dotenv.config();
+  // Fallback: load .env from server directory so it works with or without 'env' file
+  const dotenvPath = join(__dirname, '..', '.env');
+  dotenv.config({ path: dotenvPath });
 }
 
 const app = express();

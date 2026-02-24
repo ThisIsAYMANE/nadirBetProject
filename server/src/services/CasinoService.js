@@ -62,12 +62,13 @@ class CasinoService {
       throw new Error(`Provider ${game.provider} is not enabled for currency ${userCurrency}`);
     }
 
-    // Handle lobby games
+    // Handle lobby games: API may return lobby as array of tables or single object
     let lobbyData = null;
     if (game.has_lobby === 1) {
       const lobbyResponse = await casinoApiService.getGameLobby(gameId, userCurrency);
-      lobbyData = lobbyResponse.lobby?.lobbyData;
-      
+      const lobby = lobbyResponse.lobby;
+      const firstTable = Array.isArray(lobby) ? lobby[0] : lobby;
+      lobbyData = firstTable?.lobbyData ?? null;
       if (!lobbyData) {
         throw new Error('Failed to get lobby data for game');
       }
@@ -169,15 +170,17 @@ class CasinoService {
       throw new Error('User not found');
     }
 
+    // Balance check: return immediately (no transaction, doc says response is only { balance })
+    if (action === 'balance') {
+      return { balance: pointsRecord.current_balance };
+    }
+
     let newBalance = pointsRecord.current_balance;
     const transactionRecordId = uuidv4();
 
     try {
       // Process based on action type
       switch (action) {
-        case 'balance':
-          // Just return current balance
-          break;
 
         case 'bet':
           // Deduct points

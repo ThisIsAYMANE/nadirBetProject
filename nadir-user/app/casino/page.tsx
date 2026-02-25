@@ -9,15 +9,15 @@ import Pagination from '@/components/ui/Pagination';
 import { casinoApi, GAMES_FETCH_TIMEOUT_MS } from '@/lib/casinoApi';
 import { CasinoGame } from '@/types';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { 
-  Home, 
-  Percent, 
-  Star, 
-  Users, 
-  Zap, 
-  Rocket, 
-  Circle, 
-  Trophy, 
+import {
+  Home,
+  Percent,
+  Star,
+  Users,
+  Zap,
+  Rocket,
+  Circle,
+  Trophy,
   Grid3X3,
   ChevronRight,
   X,
@@ -34,6 +34,8 @@ export default function CasinoPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [providerList, setProviderList] = useState<string[]>([]);
+  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
+  const providerDropdownRef = useRef<HTMLDivElement>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +69,17 @@ export default function CasinoPage() {
     };
     loadProviders();
     return () => { cancelled = true; };
+  }, []);
+
+  // Close provider dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (providerDropdownRef.current && !providerDropdownRef.current.contains(event.target as Node)) {
+        setProviderDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // AbortController ref so we can cancel the previous request when filters change
@@ -184,12 +197,12 @@ export default function CasinoPage() {
     if (selectedCategory !== 'home' && selectedCategory !== 'all') {
       // These categories need client-side filtering (not supported by API)
       if (selectedCategory === 'jackpots') {
-        filtered = filtered.filter(game => 
+        filtered = filtered.filter(game =>
           game.tags?.some(tag => tag.code === 'jackpots') || game.jackpot !== undefined
         );
       }
       if (selectedCategory === 'new') {
-        filtered = filtered.filter(game => 
+        filtered = filtered.filter(game =>
           game.isNew || game.tags?.some(tag => tag.code === 'new')
         );
       }
@@ -219,7 +232,7 @@ export default function CasinoPage() {
   // Note: With server-side pagination, we can't filter on the server
   // So filters work on the current page only
   // For full filtering, we'd need to implement server-side filtering in the backend
-  
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -321,32 +334,67 @@ export default function CasinoPage() {
                 <SlidersHorizontal className="w-4 h-4" />
                 <span>Provider</span>
               </div>
-              <div className="relative flex items-stretch flex-1 sm:flex-initial min-w-0 rounded-xl overflow-hidden border border-gray-600/80 bg-gray-900/70 focus-within:border-green-500/80 focus-within:ring-2 focus-within:ring-green-500/25 transition-all">
-                <label htmlFor="provider-filter" className="sr-only">
-                  Filter by provider
-                </label>
-                <select
-                  id="provider-filter"
-                  value={selectedProvider || ''}
-                  onChange={(e) => setSelectedProvider(e.target.value || null)}
-                  className={`flex-1 min-w-0 appearance-none bg-transparent pl-4 py-3 text-white text-sm sm:text-base focus:outline-none cursor-pointer w-full sm:min-w-[200px] ${selectedProvider ? 'pr-14' : 'pr-10'}`}
-                  aria-label="Filter by provider"
+              {/* Custom dark-themed provider dropdown (replaces native <select> which can't be styled) */}
+              <div ref={providerDropdownRef} className="relative flex-1 sm:flex-initial min-w-0 sm:min-w-[220px]">
+                {/* Trigger button */}
+                <button
+                  type="button"
+                  onClick={() => setProviderDropdownOpen(prev => !prev)}
+                  className="flex items-center w-full rounded-xl border border-gray-600/80 bg-gray-900/70 pl-4 pr-3 py-3 text-sm sm:text-base text-white focus:outline-none focus:border-green-500/80 focus:ring-2 focus:ring-green-500/25 transition-all cursor-pointer"
+                  aria-haspopup="listbox"
+                  aria-expanded={providerDropdownOpen}
                 >
-                  <option value="">All providers</option>
-                  {providerOptions.map(provider => (
-                    <option key={provider} value={provider}>{provider}</option>
-                  ))}
-                </select>
-                <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none ${selectedProvider ? 'right-11' : 'right-3'}`} />
-                {selectedProvider && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProvider(null)}
-                    className="flex items-center justify-center w-11 h-full shrink-0 bg-gray-700/60 hover:bg-gray-600/80 text-gray-400 hover:text-white transition-colors border-l border-gray-600/80"
-                    aria-label="Clear provider filter"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <span className="flex-1 text-left truncate">{selectedProvider || 'All providers'}</span>
+                  {selectedProvider && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); setSelectedProvider(null); setProviderDropdownOpen(false); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSelectedProvider(null); } }}
+                      className="flex items-center justify-center w-6 h-6 ml-1 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-400 hover:text-white transition-colors"
+                      aria-label="Clear provider filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </span>
+                  )}
+                  <ChevronDown className={`ml-2 w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${providerDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown list */}
+                {providerDropdownOpen && (
+                  <div className="absolute z-50 mt-2 w-full rounded-xl border border-gray-600/80 bg-gray-900 shadow-2xl shadow-black/60 overflow-hidden">
+                    <ul
+                      role="listbox"
+                      className="max-h-64 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
+                    >
+                      {/* All providers option */}
+                      <li
+                        role="option"
+                        aria-selected={!selectedProvider}
+                        onClick={() => { setSelectedProvider(null); setProviderDropdownOpen(false); }}
+                        className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${!selectedProvider
+                            ? 'bg-green-600/30 text-green-400 font-medium'
+                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                          }`}
+                      >
+                        All providers
+                      </li>
+                      {providerOptions.map(provider => (
+                        <li
+                          key={provider}
+                          role="option"
+                          aria-selected={selectedProvider === provider}
+                          onClick={() => { setSelectedProvider(provider); setProviderDropdownOpen(false); }}
+                          className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${selectedProvider === provider
+                              ? 'bg-green-600/30 text-green-400 font-medium'
+                              : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                            }`}
+                        >
+                          {provider}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>
@@ -363,11 +411,10 @@ export default function CasinoPage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex flex-col items-center space-y-2 px-3 sm:px-4 py-3 sm:py-4 transition-colors min-w-[70px] sm:min-w-[85px] rounded-lg ${
-                    active 
-                      ? 'bg-green-500/20 text-green-500' 
+                  className={`flex flex-col items-center space-y-2 px-3 sm:px-4 py-3 sm:py-4 transition-colors min-w-[70px] sm:min-w-[85px] rounded-lg ${active
+                      ? 'bg-green-500/20 text-green-500'
                       : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
                   <span className="text-xs sm:text-sm font-medium whitespace-nowrap text-center">{category.name}</span>
@@ -386,7 +433,7 @@ export default function CasinoPage() {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             {(selectedProvider ? filteredGames : deviceFilteredGames).slice(0, 5).map((game) => (
               <div key={game.uuid || game.id} className="relative">
@@ -409,7 +456,7 @@ export default function CasinoPage() {
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {(selectedProvider ? filteredGames : deviceFilteredGames).filter(g => g.isLive).slice(0, 5).map((game) => (
                 <div key={`live-${game.uuid || game.id}`} className="relative">
@@ -430,7 +477,7 @@ export default function CasinoPage() {
               {selectedCategory === 'all' ? 'ALL GAMES' : "DISCOVER WHAT'S NEW"}
             </h2>
             {selectedCategory !== 'all' && (
-              <button 
+              <button
                 onClick={() => setSelectedCategory('all')}
                 className="text-green-500 hover:text-green-400 flex items-center space-x-1 text-sm sm:text-base self-start sm:self-auto"
               >
@@ -439,58 +486,58 @@ export default function CasinoPage() {
               </button>
             )}
           </div>
-          
+
           {filteredGames.length === 0 && !isLoading ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg">
-                {isMobile 
-                  ? 'No mobile games available at the moment.' 
+                {isMobile
+                  ? 'No mobile games available at the moment.'
                   : 'No desktop games available at the moment.'}
               </p>
               <p className="text-gray-500 text-sm mt-2">
-                {searchQuery || selectedProvider 
-                  ? 'Try adjusting your filters.' 
+                {searchQuery || selectedProvider
+                  ? 'Try adjusting your filters.'
                   : 'Please check back later.'}
               </p>
             </div>
           ) : (
             <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-              {filteredGames.length > 0 ? (
-                filteredGames.map((game) => (
-                  <GameCard key={game.uuid || game.id} game={game} onPlay={handlePlayGame} />
-                ))
-              ) : (
-                // Loading cards (10 rows × 5 = 50, matches Slotegrator max per page)
-                Array.from({ length: 50 }).map((_, i) => (
-                <div key={`skeleton-${i}`} className="casino-game-card">
-                  <div className="aspect-[4/3] loading-skeleton mb-3" />
-                  <div className="p-2 sm:p-3">
-                    <div className="loading-skeleton h-4 w-full mb-2" />
-                    <div className="loading-skeleton h-3 w-16" />
-                  </div>
-                </div>
-                ))
-              )}
-            </div>
-
-            {/* Pagination Component */}
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                isLoading={isLoading}
-              />
-            )}
-
-            {/* Pagination Info */}
-            {filteredGames.length > 0 && (
-              <div className="mt-4 text-center text-gray-400 text-sm">
-                Showing {filteredGames.length} games on page {currentPage} of {totalPages}
-                {totalPages > 1 && ` (${(currentPage - 1) * GAMES_PER_PAGE + 1}-${Math.min(currentPage * GAMES_PER_PAGE, filteredGames.length)} of many)`}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                {filteredGames.length > 0 ? (
+                  filteredGames.map((game) => (
+                    <GameCard key={game.uuid || game.id} game={game} onPlay={handlePlayGame} />
+                  ))
+                ) : (
+                  // Loading cards (10 rows × 5 = 50, matches Slotegrator max per page)
+                  Array.from({ length: 50 }).map((_, i) => (
+                    <div key={`skeleton-${i}`} className="casino-game-card">
+                      <div className="aspect-[4/3] loading-skeleton mb-3" />
+                      <div className="p-2 sm:p-3">
+                        <div className="loading-skeleton h-4 w-full mb-2" />
+                        <div className="loading-skeleton h-3 w-16" />
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
+
+              {/* Pagination Component */}
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  isLoading={isLoading}
+                />
+              )}
+
+              {/* Pagination Info */}
+              {filteredGames.length > 0 && (
+                <div className="mt-4 text-center text-gray-400 text-sm">
+                  Showing {filteredGames.length} games on page {currentPage} of {totalPages}
+                  {totalPages > 1 && ` (${(currentPage - 1) * GAMES_PER_PAGE + 1}-${Math.min(currentPage * GAMES_PER_PAGE, filteredGames.length)} of many)`}
+                </div>
+              )}
             </>
           )}
         </section>

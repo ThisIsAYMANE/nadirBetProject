@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { pool, db } from './database/db.js';
 import settlementService from './services/SettlementService.js';
+import gamesCache from './services/GamesCache.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -64,10 +65,10 @@ app.use(morgan('combined'));
 const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
   : [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:3002',
-    ];
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3002',
+  ];
 
 // Allow localhost / 127.0.0.1 on any port in development so ngrok + local frontend work
 const isAllowedOrigin = (origin) => {
@@ -81,7 +82,7 @@ const isAllowedOrigin = (origin) => {
       u.hostname.endsWith('.ngrok-free.app') ||
       u.hostname.endsWith('.ngrok.app');
     if (isLocal) return true;
-  } catch (_) {}
+  } catch (_) { }
   return false;
 };
 
@@ -147,6 +148,9 @@ app.listen(PORT, () => {
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   // Start automatic betting settlement worker
   settlementService.startSettlementWorker();
+  // Start loading all casino games into memory (in background, non-blocking)
+  // This enables instant provider/type/device filtering once ready (~2–5 min)
+  gamesCache.startLoading();
 });
 
 export { pool };

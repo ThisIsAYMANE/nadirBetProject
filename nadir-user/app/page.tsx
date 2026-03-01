@@ -120,7 +120,7 @@ export default function HomePage() {
       <Header />
       <div className="flex overflow-x-hidden">
         <Sidebar />
-        
+
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden mt-4 sm:mt-6">
           {/* Promotional Carousel */}
           <PromotionalCarousel
@@ -130,21 +130,24 @@ export default function HomePage() {
                 description: "Get 15% weekly cashback from what you spend on Paris sportive",
                 percentage: "15%",
                 period: "Weekly",
-                type: "sports"
+                type: "sports",
+                image: "/banners/Daily-cashback-on-sportgames-vf.png"
               },
               {
                 title: "Daily Cashback on Slots",
                 description: "Get 15% daily cashback from what you spend on slot games",
                 percentage: "15%",
                 period: "Daily",
-                type: "slots"
+                type: "slots",
+                image: "/banners/Daily-cashback-on-slotgames-vf.png"
               },
               {
                 title: "Daily Cashback on Live Games",
                 description: "Get 10% daily cashback from what you spend on live games",
                 percentage: "10%",
                 period: "Daily",
-                type: "live"
+                type: "live",
+                image: "/banners/Daily-cashback-on-livegames-vf.png"
               }
             ]}
             autoplayDelay={5000}
@@ -157,7 +160,7 @@ export default function HomePage() {
                 Welcome to Freebet
               </h1>
               <p className="text-black/80 text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 max-w-2xl">
-                Experience the ultimate sports betting and casino platform with live odds, 
+                Experience the ultimate sports betting and casino platform with live odds,
                 extensive markets, and premium casino games.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -187,7 +190,7 @@ export default function HomePage() {
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-            
+
             {casinoGamesLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 {Array.from({ length: 20 }).map((_, i) => (
@@ -230,7 +233,7 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-            
+
             {viewMode === 'cards' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {trendingMatches.map((match) => (
@@ -285,7 +288,7 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-            
+
             {viewMode === 'cards' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {liveNowMatches.slice(0, 6).map((match) => (

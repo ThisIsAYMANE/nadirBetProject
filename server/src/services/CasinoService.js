@@ -2,6 +2,7 @@ import { db } from '../database/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import casinoApiService from './CasinoApiService.js';
 import PointsService from './PointsService.js';
+import gamesCache from './GamesCache.js';
 
 class CasinoService {
   /**
@@ -48,9 +49,19 @@ class CasinoService {
     const pointsRecord = pointsResult.rows?.[0];
     const totalBalance = pointsRecord?.current_balance || 0;
 
-    // Get game details to check if it requires lobby
-    const gamesResponse = await casinoApiService.getGames({ perPage: 100 });
-    const game = gamesResponse.items?.find((g) => g.uuid === gameId);
+    // Look up game details — prefer the in-memory cache (all 18k+ games).
+    // Fall back to scanning live pages if cache isn't ready yet.
+    let game = null;
+    if (gamesCache.isReady) {
+      game = gamesCache.allGames.find((g) => g.uuid === gameId) || null;
+    } else {
+      // Cache still warming: scan the first 10 pages live (500 games)
+      for (let p = 1; p <= 10 && !game; p++) {
+        const resp = await casinoApiService.getGames({ perPage: 50, page: p });
+        game = (resp.items || []).find((g) => g.uuid === gameId) || null;
+        if ((resp.items || []).length < 50) break; // no more pages
+      }
+    }
 
     if (!game) {
       throw new Error('Game not found');
@@ -151,7 +162,7 @@ class CasinoService {
         'SELECT current_balance FROM user_points WHERE user_id = ?',
         [player_id]
       );
-      
+
       const pointsRecord = pointsResult.rows?.[0];
       return {
         balance: pointsRecord?.current_balance || 0,
@@ -370,7 +381,7 @@ class CasinoService {
             amount,
             currency,
           ]
-        ).catch(() => {});
+        ).catch(() => { });
       });
 
       console.error('Error processing casino transaction:', error);

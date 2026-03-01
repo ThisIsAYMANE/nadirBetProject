@@ -55,7 +55,7 @@ export default function StaticSportPage({ config }: StaticSportPageProps) {
       <Header />
       <div className="flex overflow-x-hidden">
         <Sidebar />
-        
+
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
           {/* Promotional Banner - Sports Cashback */}
           <PromotionalBanner
@@ -64,6 +64,7 @@ export default function StaticSportPage({ config }: StaticSportPageProps) {
             percentage="15%"
             period="Weekly"
             type="sports"
+            image="/banners/Sport-vf.png"
           />
 
           {/* Header */}
@@ -77,7 +78,7 @@ export default function StaticSportPage({ config }: StaticSportPageProps) {
                 <p className="text-gray-400 text-xs sm:text-sm lg:text-base">{config.description}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2 sm:space-x-3">
               <ViewToggle view={view} onViewChange={setView} />
               <button className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base min-h-[44px]">

@@ -47,7 +47,7 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
       <Header />
       <div className="flex overflow-x-hidden">
         <Sidebar />
-        
+
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
           {/* Promotional Banner - Sports Cashback */}
           <PromotionalBanner
@@ -56,6 +56,7 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
             percentage="15%"
             period="Weekly"
             type="sports"
+            image="/banners/Sport-vf.png"
           />
 
           {/* Header */}
@@ -69,7 +70,7 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
                 <p className="text-gray-400 text-xs sm:text-sm lg:text-base">{config.description}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={refetch}
@@ -94,11 +95,10 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
             <div className="flex items-center space-x-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6">
               <button
                 onClick={() => setSelectedLeague('all')}
-                className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${
-                  selectedLeague === 'all'
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${selectedLeague === 'all'
                     ? 'bg-green-500 text-black'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 All Leagues
               </button>
@@ -106,11 +106,10 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
                 <button
                   key={league.key}
                   onClick={() => setSelectedLeague(league.key)}
-                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${
-                    selectedLeague === league.key
+                  className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${selectedLeague === league.key
                       ? 'bg-green-500 text-black'
                       : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
+                    }`}
                 >
                   {league.label}
                 </button>
@@ -125,7 +124,7 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
               <div>
                 <h3 className="text-red-500 font-semibold mb-1">Error Loading Data</h3>
                 <p className="text-red-400 text-sm">{error}</p>
-                <button 
+                <button
                   onClick={refetch}
                   className="mt-2 text-sm text-red-400 hover:text-red-300 underline"
                 >

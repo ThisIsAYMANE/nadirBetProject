@@ -48,7 +48,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
       <Header />
       <div className="flex overflow-x-hidden">
         <Sidebar />
-        
+
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
           {/* Promotional Banner */}
           <PromotionalBanner
@@ -57,6 +57,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
             percentage="15%"
             period="Weekly"
             type="sports"
+            image="/banners/Sport-vf.png"
           />
 
           {/* Header */}
@@ -70,7 +71,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
                 <p className="text-gray-400 text-xs sm:text-sm lg:text-base">{config.description}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2 sm:space-x-3">
               <ViewToggle view={view} onViewChange={setView} />
               <button
@@ -98,7 +99,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
               <div>
                 <h3 className="text-red-500 font-semibold mb-1">Error Loading Data</h3>
                 <p className="text-red-400 text-sm">{error}</p>
-                <button 
+                <button
                   onClick={refetch}
                   className="mt-2 text-sm text-red-400 hover:text-red-300 underline"
                 >
@@ -114,14 +115,14 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
               <div className="mb-4 text-sm text-gray-400">
                 Showing {matches.length} live betting opportunities
               </div>
-              
-            {view === 'cards' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {matches.map((match) => (
-                  <MatchCard key={match.id} match={match} category={config.key} />
-                ))}
-              </div>
-            ) : (
+
+              {view === 'cards' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {matches.map((match) => (
+                    <MatchCard key={match.id} match={match} category={config.key} />
+                  ))}
+                </div>
+              ) : (
                 <div className="bg-gray-800/40 rounded-lg border border-gray-700/50 overflow-hidden">
                   {/* Table Header */}
                   <div className="border-b border-gray-700/50 bg-gray-800/60">

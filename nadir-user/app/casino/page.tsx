@@ -5,7 +5,7 @@ import GameCard from '@/components/casino/GameCard';
 import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
-import Pagination from '@/components/ui/Pagination';
+import Pagination from '@/components/ui/pagination';
 import { casinoApi, GAMES_FETCH_TIMEOUT_MS } from '@/lib/casinoApi';
 import { CasinoGame } from '@/types';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -294,21 +294,24 @@ export default function CasinoPage() {
               description: "Get 15% daily cashback from what you spend on slot games",
               percentage: "15%",
               period: "Daily",
-              type: "slots"
+              type: "slots",
+              image: "/banners/Daily-cashback-on-slotgames-vf.png"
             },
             {
               title: "Daily Cashback on Live Games",
               description: "Get 10% daily cashback from what you spend on live games",
               percentage: "10%",
               period: "Daily",
-              type: "live"
+              type: "live",
+              image: "/banners/Daily-cashback-on-livegames-vf.png"
             },
             {
               title: "Weekly Cashback on Sports Betting",
               description: "Get 15% weekly cashback from what you spend on Paris sportive",
               percentage: "15%",
               period: "Weekly",
-              type: "sports"
+              type: "sports",
+              image: "/banners/Daily-cashback-on-sportgames-vf.png"
             }
           ]}
           autoplayDelay={5000}
@@ -373,8 +376,8 @@ export default function CasinoPage() {
                         aria-selected={!selectedProvider}
                         onClick={() => { setSelectedProvider(null); setProviderDropdownOpen(false); }}
                         className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${!selectedProvider
-                            ? 'bg-green-600/30 text-green-400 font-medium'
-                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                          ? 'bg-green-600/30 text-green-400 font-medium'
+                          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                           }`}
                       >
                         All providers
@@ -386,8 +389,8 @@ export default function CasinoPage() {
                           aria-selected={selectedProvider === provider}
                           onClick={() => { setSelectedProvider(provider); setProviderDropdownOpen(false); }}
                           className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${selectedProvider === provider
-                              ? 'bg-green-600/30 text-green-400 font-medium'
-                              : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                            ? 'bg-green-600/30 text-green-400 font-medium'
+                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                             }`}
                         >
                           {provider}
@@ -412,8 +415,8 @@ export default function CasinoPage() {
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
                   className={`flex flex-col items-center space-y-2 px-3 sm:px-4 py-3 sm:py-4 transition-colors min-w-[70px] sm:min-w-[85px] rounded-lg ${active
-                      ? 'bg-green-500/20 text-green-500'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                    ? 'bg-green-500/20 text-green-500'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
                     }`}
                 >
                   <Icon className="w-6 h-6 sm:w-7 sm:h-7" />

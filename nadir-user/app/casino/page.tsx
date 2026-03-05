@@ -285,10 +285,26 @@ export default function CasinoPage() {
   return (
     <div className="min-h-screen bg-gray-900 overflow-x-hidden">
       <Header />
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 pb-6 pt-1 sm:pt-2 min-w-0 overflow-x-hidden">
         {/* Promotional Carousel */}
         <PromotionalCarousel
           promotions={[
+            {
+              title: "Casino Welcome",
+              description: "Play our latest casino games",
+              percentage: "100%",
+              period: "Bonus",
+              type: "slots",
+              image: "/banners/Casino-vf.png"
+            },
+            {
+              title: "Sports Welcome",
+              description: "Bet on your favorite sports",
+              percentage: "100%",
+              period: "Bonus",
+              type: "sports",
+              image: "/banners/Sport-vf.png"
+            },
             {
               title: "Daily Cashback on Slots",
               description: "Get 15% daily cashback from what you spend on slot games",

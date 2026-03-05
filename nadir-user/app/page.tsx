@@ -121,10 +121,26 @@ export default function HomePage() {
       <div className="flex overflow-x-hidden">
         <Sidebar />
 
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden mt-4 sm:mt-6">
+        <main className="flex-1 px-3 sm:px-4 lg:px-6 pb-6 pt-1 sm:pt-2 min-w-0 overflow-x-hidden">
           {/* Promotional Carousel */}
           <PromotionalCarousel
             promotions={[
+              {
+                title: "Casino Welcome",
+                description: "Play our latest casino games",
+                percentage: "100%",
+                period: "Bonus",
+                type: "slots",
+                image: "/banners/Casino-vf.png"
+              },
+              {
+                title: "Sports Welcome",
+                description: "Bet on your favorite sports",
+                percentage: "100%",
+                period: "Bonus",
+                type: "sports",
+                image: "/banners/Sport-vf.png"
+              },
               {
                 title: "Weekly Cashback on Sports Betting",
                 description: "Get 15% weekly cashback from what you spend on Paris sportive",

@@ -23,7 +23,7 @@ export default function PromotionalCarousel({
   promotions,
   autoplayDelay = 5000
 }: PromotionalCarouselProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start', breakpoints: { '(max-width: 768px)': { align: 'center' } } });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -97,7 +97,7 @@ export default function PromotionalCarousel({
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex">
           {promotions.map((promo, index) => (
-            <div key={index} className="flex-[0_0_100%] min-w-0 px-2">
+            <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] min-w-0 px-2">
               <div className={`relative ${promo.image ? '' : `bg-gradient-to-r ${getGradient(promo.type)} p-4 sm:p-6`} rounded-xl overflow-hidden`}>
                 {promo.image ? (
                   <Image
@@ -179,8 +179,8 @@ export default function PromotionalCarousel({
               key={index}
               onClick={() => scrollTo(index)}
               className={`shrink-0 w-2.5 h-2.5 min-w-[10px] min-h-[10px] transition-all rounded-full ${index === selectedIndex
-                  ? 'bg-white opacity-100'
-                  : 'bg-gray-400 opacity-50 hover:opacity-75'
+                ? 'bg-white opacity-100'
+                : 'bg-gray-400 opacity-50 hover:opacity-75'
                 }`}
               aria-label={`Go to promotion ${index + 1}`}
             />

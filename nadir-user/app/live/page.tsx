@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
+import GlobalPromotionalCarousel from '@/components/ui/GlobalPromotionalCarousel';
 import { Play, Filter, Zap } from 'lucide-react';
 import { useLiveOdds } from '@/hooks/useLiveOdds';
 
@@ -34,35 +34,10 @@ export default function LivePage() {
       <Header />
       <div className="flex overflow-x-hidden">
         <Sidebar />
-        
+
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
           {/* Promotional Carousel */}
-          <PromotionalCarousel
-            promotions={[
-              {
-                title: "Daily Cashback on Live Games",
-                description: "Get 10% daily cashback from what you spend on live games",
-                percentage: "10%",
-                period: "Daily",
-                type: "live"
-              },
-              {
-                title: "Weekly Cashback on Sports Betting",
-                description: "Get 15% weekly cashback from what you spend on Paris sportive",
-                percentage: "15%",
-                period: "Weekly",
-                type: "sports"
-              },
-              {
-                title: "Daily Cashback on Slots",
-                description: "Get 15% daily cashback from what you spend on slot games",
-                percentage: "15%",
-                period: "Daily",
-                type: "slots"
-              }
-            ]}
-            autoplayDelay={5000}
-          />
+          <GlobalPromotionalCarousel />
 
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
@@ -75,7 +50,7 @@ export default function LivePage() {
                 <p className="text-gray-400 text-xs sm:text-sm lg:text-base">Real-time odds and in-play betting</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base min-h-[44px]">
                 <Filter className="w-4 h-4" />
@@ -96,11 +71,10 @@ export default function LivePage() {
               <button
                 key={sport}
                 onClick={() => setSelectedSport(sport)}
-                className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${
-                  selectedSport === sport
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${selectedSport === sport
                     ? 'bg-green-500 text-black'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 {sport === 'all' ? 'All Sports' : sport.charAt(0).toUpperCase() + sport.slice(1).replace('-', ' ')}
               </button>
@@ -130,7 +104,7 @@ export default function LivePage() {
                 </div>
               </div>
             ))}
-            
+
             {/* Skeleton Loading Cards for Demo */}
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="bet-card">

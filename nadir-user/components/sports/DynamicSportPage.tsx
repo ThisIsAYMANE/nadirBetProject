@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import MatchCard from '@/components/sports/MatchCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalBanner from '@/components/ui/PromotionalBanner';
+import GlobalPromotionalCarousel from '@/components/ui/GlobalPromotionalCarousel';
 import { useSportsData } from '@/hooks/useSportsData';
 import { Filter, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -50,14 +50,7 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
 
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
           {/* Promotional Banner - Sports Cashback */}
-          <PromotionalBanner
-            title="Weekly Cashback on Sports Betting"
-            description="Get 15% weekly cashback from what you spend on Paris sportive"
-            percentage="15%"
-            period="Weekly"
-            type="sports"
-            image="/banners/Sport-vf.png"
-          />
+          <GlobalPromotionalCarousel />
 
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
@@ -96,8 +89,8 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
               <button
                 onClick={() => setSelectedLeague('all')}
                 className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${selectedLeague === 'all'
-                    ? 'bg-green-500 text-black'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-green-500 text-black'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
               >
                 All Leagues
@@ -107,8 +100,8 @@ export default function DynamicSportPage({ config }: DynamicSportPageProps) {
                   key={league.key}
                   onClick={() => setSelectedLeague(league.key)}
                   className={`px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors text-sm sm:text-base min-h-[44px] ${selectedLeague === league.key
-                      ? 'bg-green-500 text-black'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-green-500 text-black'
+                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                     }`}
                 >
                   {league.label}

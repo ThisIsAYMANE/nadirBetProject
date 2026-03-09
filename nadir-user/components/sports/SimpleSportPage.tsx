@@ -6,7 +6,7 @@ import MatchCard from '@/components/sports/MatchCard';
 import MatchListRow from '@/components/sports/MatchListRow';
 import ViewToggle from '@/components/sports/ViewToggle';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalBanner from '@/components/ui/PromotionalBanner';
+import GlobalPromotionalCarousel from '@/components/ui/GlobalPromotionalCarousel';
 import { Filter, TrendingUp, RefreshCw, AlertCircle } from 'lucide-react';
 import { useSportsData } from '@/hooks/useSportsData';
 
@@ -51,14 +51,7 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
 
         <main className="flex-1 p-3 sm:p-4 lg:p-6 min-w-0 overflow-x-hidden">
           {/* Promotional Banner */}
-          <PromotionalBanner
-            title="Weekly Cashback on Sports Betting"
-            description="Get 15% weekly cashback from what you spend on Paris sportive"
-            percentage="15%"
-            period="Weekly"
-            type="sports"
-            image="/banners/Sport-vf.png"
-          />
+          <GlobalPromotionalCarousel />
 
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">

@@ -8,7 +8,7 @@ import ViewToggle from '@/components/sports/ViewToggle';
 import GameCard from '@/components/casino/GameCard';
 import GameLaunchModal from '@/components/casino/GameLaunchModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import PromotionalCarousel from '@/components/ui/PromotionalCarousel';
+import GlobalPromotionalCarousel from '@/components/ui/GlobalPromotionalCarousel';
 import { matches, liveMatches, casinoGames } from '@/lib/mockData';
 import { casinoApi } from '@/lib/casinoApi';
 import type { CasinoGame } from '@/types';
@@ -123,51 +123,7 @@ export default function HomePage() {
 
         <main className="flex-1 px-3 sm:px-4 lg:px-6 pb-6 pt-1 sm:pt-2 min-w-0 overflow-x-hidden">
           {/* Promotional Carousel */}
-          <PromotionalCarousel
-            promotions={[
-              {
-                title: "Casino Welcome",
-                description: "Play our latest casino games",
-                percentage: "100%",
-                period: "Bonus",
-                type: "slots",
-                image: "/banners/Casino-vf.png"
-              },
-              {
-                title: "Sports Welcome",
-                description: "Bet on your favorite sports",
-                percentage: "100%",
-                period: "Bonus",
-                type: "sports",
-                image: "/banners/Sport-vf.png"
-              },
-              {
-                title: "Weekly Cashback on Sports Betting",
-                description: "Get 15% weekly cashback from what you spend on Paris sportive",
-                percentage: "15%",
-                period: "Weekly",
-                type: "sports",
-                image: "/banners/Daily-cashback-on-sportgames-vf.png"
-              },
-              {
-                title: "Daily Cashback on Slots",
-                description: "Get 15% daily cashback from what you spend on slot games",
-                percentage: "15%",
-                period: "Daily",
-                type: "slots",
-                image: "/banners/Daily-cashback-on-slotgames-vf.png"
-              },
-              {
-                title: "Daily Cashback on Live Games",
-                description: "Get 10% daily cashback from what you spend on live games",
-                percentage: "10%",
-                period: "Daily",
-                type: "live",
-                image: "/banners/Daily-cashback-on-livegames-vf.png"
-              }
-            ]}
-            autoplayDelay={5000}
-          />
+          <GlobalPromotionalCarousel />
 
           {/* Hero Banner */}
           <div className="relative bg-gradient-to-r from-green-600 to-green-400 rounded-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 overflow-hidden">

@@ -25,6 +25,7 @@ import pragmaticRoutes from './routes/pragmatic.js';
 import pointsRoutes from './routes/points.js';
 import bettingRoutes from './routes/betting.js';
 import casinoRoutes from './routes/casino.js';
+import sportsRoutes from './routes/sports.js';
 import { authenticateToken } from './middleware/auth.js';
 
 // Load environment variables from 'env' file (not .env)
@@ -127,6 +128,7 @@ app.use('/api/cashout-requests', authenticateToken, cashoutRoutes);
 app.use('/api', pragmaticRoutes);
 app.use('/api/betting', bettingRoutes);
 app.use('/api/casino', casinoRoutes);
+app.use('/api/sports', sportsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -148,6 +150,7 @@ app.listen(PORT, () => {
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   // Start automatic betting settlement worker
   settlementService.startSettlementWorker();
+  // API-Sports is used for football data - cron sync disabled
   // Start loading all casino games into memory (in background, non-blocking)
   // This enables instant provider/type/device filtering once ready (~2–5 min)
   gamesCache.startLoading();

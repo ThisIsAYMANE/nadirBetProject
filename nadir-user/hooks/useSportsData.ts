@@ -9,7 +9,7 @@ interface UseSportsDataResult {
   refetch: () => void;
 }
 
-export function useSportsData(sportKey: string, selectedLeague: string = 'all'): UseSportsDataResult {
+export function useSportsData(sportKey: string, selectedLeague: string = 'all', date?: string): UseSportsDataResult {
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,8 +19,12 @@ export function useSportsData(sportKey: string, selectedLeague: string = 'all'):
       setIsLoading(true);
       setError(null);
 
-      const leagueParam = selectedLeague !== 'all' ? `?league=${selectedLeague}` : '';
-      const response = await fetch(`/api/sports/${sportKey}${leagueParam}`, {
+      const leagueParam = selectedLeague !== 'all' ? `league=${selectedLeague}` : '';
+      const dateParam = date ? `date=${date}` : '';
+      const queryParams = [leagueParam, dateParam].filter(Boolean).join('&');
+      const queryString = queryParams ? `?${queryParams}` : '';
+
+      const response = await fetch(`/api/sports/${sportKey}${queryString}`, {
         cache: 'no-store'
       });
 
@@ -29,7 +33,7 @@ export function useSportsData(sportKey: string, selectedLeague: string = 'all'):
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         setMatches(data.matches || []);
       } else {
@@ -47,7 +51,7 @@ export function useSportsData(sportKey: string, selectedLeague: string = 'all'):
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sportKey, selectedLeague]);
+  }, [sportKey, selectedLeague, date]);
 
   return {
     matches,

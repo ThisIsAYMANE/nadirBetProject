@@ -15,6 +15,7 @@ export async function GET(
     const eventId = searchParams.get('eventId');
     const region = searchParams.get('region') || 'eu';
     const markets = searchParams.get('markets') || 'h2h';
+    const dateParam = searchParams.get('date');
 
     // Map high-level sport key (e.g. "football") to underlying Odds API leagues.
     const sportLeagues = getSportLeagues(sportKey);
@@ -24,6 +25,73 @@ export async function GET(
       league && league !== 'all'
         ? [league]
         : sportLeagues;
+
+    // --- API-SPORTS FOOTBALL INTEGRATION ---
+    if (sportKey === 'football') {
+      try {
+        const targetUrl = dateParam
+          ? `${BACKEND_BASE_URL}/api/sports/football/fixtures?date=${dateParam}`
+          : `${BACKEND_BASE_URL}/api/sports/football/fixtures`;
+
+        const smRes = await fetch(targetUrl, { cache: 'no-store' });
+
+        if (!smRes.ok) {
+          throw new Error('Failed to fetch from API-Sports proxy');
+        }
+
+        const smData = await smRes.json();
+        
+        let matches = (smData.matches || []).filter((m: any) => {
+          return m.odds && (m.odds.home > 0 || m.odds.draw > 0 || m.odds.away > 0);
+        });
+
+        if (eventId) {
+          matches = matches.filter((m: any) => m.id === eventId);
+        }
+
+        return NextResponse.json({
+          success: true,
+          sport: sportKey,
+          count: matches.length,
+          matches,
+        });
+      } catch (e) {
+        console.error('Error fetching API-Sports football data:', e);
+        return NextResponse.json({ success: true, sport: sportKey, count: 0, matches: [] });
+      }
+    }
+    // ------------------------------------------
+
+    // --- API-NBA INTEGRATION ---
+    if (sportKey === 'basketball_nba') {
+      try {
+        const nbaUrl = `${BACKEND_BASE_URL}/api/sports/basketball_nba/games`;
+        const nbaRes = await fetch(nbaUrl, { cache: 'no-store' });
+
+        if (!nbaRes.ok) {
+          throw new Error('Failed to fetch NBA games');
+        }
+
+        const nbaData = await nbaRes.json();
+        
+        let matches = nbaData.matches || [];
+        // For NBA, show all games (no odds filtering needed)
+        if (eventId) {
+          matches = matches.filter((m: any) => m.id === eventId);
+        }
+
+        return NextResponse.json({
+          success: true,
+          sport: sportKey,
+          count: matches.length,
+          matches,
+        });
+      } catch (e) {
+        console.error('Error fetching NBA data:', e);
+        return NextResponse.json({ success: true, sport: sportKey, count: 0, matches: [] });
+      }
+    }
+    // ------------------------------------------
 
     const paramsOdds = new URLSearchParams({
       regions: region,

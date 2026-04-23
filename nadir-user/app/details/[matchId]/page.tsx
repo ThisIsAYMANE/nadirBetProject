@@ -44,14 +44,14 @@ export default function MatchDetailsPage() {
 
     // Create a unique key for this fetch
     const fetchKey = `${matchId}-${category}-${sportKey}`;
-    
+
     // If we already have data for this exact match, don't refetch
     if (match && match.id === matchId && lastFetchKeyRef.current === fetchKey) {
       setIsLoading(false);
       isCurrentlyFetchingRef.current = false;
       return;
     }
-    
+
     // If we're already fetching this exact match, don't start another fetch
     if (lastFetchKeyRef.current === fetchKey && isCurrentlyFetchingRef.current) {
       return;
@@ -61,7 +61,7 @@ export default function MatchDetailsPage() {
     if (abortControllerRef.current && lastFetchKeyRef.current !== fetchKey) {
       abortControllerRef.current.abort();
     }
-    
+
     // Reset fetching flag for new fetch
     isCurrentlyFetchingRef.current = false;
 
@@ -75,7 +75,7 @@ export default function MatchDetailsPage() {
       setIsLoading(true);
       lastFetchKeyRef.current = fetchKey;
       isCurrentlyFetchingRef.current = true;
-      
+
       try {
         console.log('[MatchDetails] Fetching match:', { matchId, category, sportKey });
 
@@ -84,55 +84,55 @@ export default function MatchDetailsPage() {
 
         let matchData: Match | null = null;
 
-        // First, try the event-specific endpoint which supports all markets
-        try {
-          const eventQuery = new URLSearchParams({
-            regions: 'eu',
-            // Fetch all common markets - backend will default to all if not specified
-            markets: 'h2h,spreads,totals,btts,draw_no_bet,alternate_spreads,alternate_totals,double_chance',
-            oddsFormat: 'decimal',
-          }).toString();
+        // --- API-SPORTS FOOTBALL INTEGRATION ---
+        if (sportKey === 'football') {
+          try {
+            const fixtureUrl = `${BACKEND_BASE_URL}/api/sports/football/fixtures/${encodeURIComponent(matchId)}`;
+            console.log('[MatchDetails] Fetching from:', fixtureUrl);
+            
+            const smRes = await fetch(
+              fixtureUrl,
+              {
+                cache: 'no-store',
+                signal: abortController.signal,
+              }
+            );
 
-          const eventRes = await fetch(
-            `${BACKEND_BASE_URL}/api/betting/event/${encodeURIComponent(matchId)}/odds?${eventQuery}`,
-            { 
-              cache: 'no-store',
-              signal: abortController.signal,
-            },
-          );
+            console.log('[MatchDetails] Response status:', smRes.status);
 
-          // Check if request was aborted before processing
-          if (abortController.signal.aborted) {
-            isCurrentlyFetchingRef.current = false;
-            setIsLoading(false);
-            return;
-          }
-
-          if (eventRes.ok) {
-            const eventData = await eventRes.json();
-            if (eventData && eventData.bookmakers && eventData.bookmakers.length > 0) {
-              const { transformToMatch } = await import('@/lib/sportsbookApi');
-              matchData = transformToMatch(eventData as any) as Match;
+            if (abortController.signal.aborted) {
+              isCurrentlyFetchingRef.current = false;
+              setIsLoading(false);
+              return;
             }
-          } else if (eventRes.status === 404) {
-            // Event not found - silently fall back to sport endpoint
-            // Don't log this as an error since it's expected for some events
-          }
-        } catch (eventErr: any) {
-          // Ignore abort errors and 404s
-          if (eventErr.name === 'AbortError' || abortController.signal.aborted) {
-            clearTimeout(timeoutId);
-            isCurrentlyFetchingRef.current = false;
-            setIsLoading(false);
-            return;
-          }
-          // Only log non-404 errors
-          if (!(eventErr instanceof Error && (eventErr.message.includes('404') || eventErr.message.includes('Not Found')))) {
-            console.warn('Event endpoint failed, trying sport endpoint:', eventErr);
+
+            if (smRes.ok) {
+              const smData = await smRes.json();
+              console.log('[MatchDetails] Response:', JSON.stringify(smData).substring(0, 500));
+              if (smData.success && smData.matches && smData.matches.length > 0) {
+                const fetchedMatch = smData.matches[0];
+                matchData = fetchedMatch;
+                console.log('[MatchDetails] Found match:', fetchedMatch.homeTeam, 'vs', fetchedMatch.awayTeam);
+                console.log('[MatchDetails] Markets:', fetchedMatch.markets?.length || 0);
+              } else {
+                console.log('[MatchDetails] No match found in response');
+              }
+            }
+          } catch (smErr: any) {
+            if (smErr.name === 'AbortError' || abortController.signal.aborted) {
+              isCurrentlyFetchingRef.current = false;
+              setIsLoading(false);
+              return;
+            }
+            console.warn('API-Sports endpoint failed, falling back:', smErr);
           }
         }
+        // ------------------------------------------
 
-        // Fallback to sport endpoint if event endpoint failed or returned no data
+        // Use only API-Sports data - no fallback to Odds API
+        // If API-Sports returns no markets, match simply has no betting odds available
+
+        // Fallback to sport endpoint if API-Sports failed
         if (!matchData) {
           // Check abort before attempting fallback
           if (abortController.signal.aborted) {
@@ -140,7 +140,7 @@ export default function MatchDetailsPage() {
             setIsLoading(false);
             return;
           }
-          
+
           try {
             const sportQuery = new URLSearchParams({
               league: sportKey,
@@ -150,7 +150,7 @@ export default function MatchDetailsPage() {
 
             const sportRes = await fetch(
               `/api/sports/${encodeURIComponent(category)}?${sportQuery}`,
-              { 
+              {
                 cache: 'no-store',
                 signal: abortController.signal,
               },
@@ -168,14 +168,14 @@ export default function MatchDetailsPage() {
             }
 
             const sportData = await sportRes.json();
-            
+
             // Check abort after JSON parsing
             if (abortController.signal.aborted) {
               isCurrentlyFetchingRef.current = false;
               setIsLoading(false);
               return;
             }
-            
+
             if (
               !sportData.success ||
               !Array.isArray(sportData.matches) ||
@@ -205,7 +205,7 @@ export default function MatchDetailsPage() {
           // Always clear loading state, regardless of abort status
           isCurrentlyFetchingRef.current = false;
           setIsLoading(false);
-          
+
           if (!abortController.signal.aborted) {
             setError('Match not found or no odds available at the moment.');
           }
@@ -226,14 +226,14 @@ export default function MatchDetailsPage() {
       } catch (err: any) {
         // Always clear fetching state
         isCurrentlyFetchingRef.current = false;
-        
+
         // Ignore abort errors - don't update state if aborted
         if (err.name === 'AbortError' || abortController.signal.aborted) {
           console.log('[MatchDetails] Request was aborted');
           setIsLoading(false);
           return;
         }
-        
+
         console.error('[MatchDetails] Error loading match details:', err);
         setError(
           err instanceof Error ? err.message : 'Failed to load match details. Please try again.',
@@ -322,14 +322,14 @@ export default function MatchDetailsPage() {
   const bttsMarket = match.markets.find((m) => m.key === 'btts');
 
   const popularBets: { selection: string; odds: number }[] = [];
-  
+
   if (h2hMarket) {
     const homeOutcome = h2hMarket.outcomes.find((o) => o.name === match.homeTeam);
     if (homeOutcome) {
       popularBets.push({ selection: `${match.homeTeam} to Win`, odds: homeOutcome.price });
     }
   }
-  
+
   if (totalsMarket) {
     const overOutcome = totalsMarket.outcomes.find((o) => o.name.toLowerCase().startsWith('over'));
     if (overOutcome && overOutcome.line !== undefined) {
@@ -339,7 +339,7 @@ export default function MatchDetailsPage() {
       });
     }
   }
-  
+
   if (bttsMarket) {
     const bttsYes = bttsMarket.outcomes.find((o) => o.name.toLowerCase().includes('yes'));
     if (bttsYes) {
@@ -355,11 +355,11 @@ export default function MatchDetailsPage() {
       <Header />
       <div className="flex min-w-0">
         <Sidebar />
-        
+
         <main className="flex-1 min-w-0 px-4 sm:px-6 py-4 sm:py-6 overflow-x-auto">
           {/* Back Button */}
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors mb-6 text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -496,7 +496,7 @@ export default function MatchDetailsPage() {
                   <TrendingUp className="w-5 h-5" />
                   <span>Match Statistics</span>
                 </h3>
-                
+
                 <div className="space-y-3 text-sm text-gray-300">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Kick-off</span>
@@ -563,7 +563,7 @@ export default function MatchDetailsPage() {
                   <Users className="w-5 h-5" />
                   <span>Key Markets</span>
                 </h3>
-                
+
                 {popularBets.length > 0 ? (
                   <div className="space-y-3">
                     {popularBets.map((bet, index) => (

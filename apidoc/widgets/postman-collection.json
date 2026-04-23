@@ -1,0 +1,22 @@
+{
+  "info": { "name": "API-Widgets v3 Test Collection", "description": "Test collection for API-Sports Widgets v3", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+  "variable": [ { "key": "baseUrl", "value": "https://widgets.api-sports.io/3.1.0" }, { "key": "apiKey", "value": "303e4402fcec0c684084b2b79a2b6338" } ],
+  "item": [
+    { "name": "Phase 1: Configuration", "item": [
+      { "name": "1. Config Widget", "request": { "method": "GET", "url": "{{baseUrl}}/config", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 2: Games Widget", "item": [
+      { "name": "2. Games Widget", "request": { "method": "GET", "url": "{{baseUrl}}/games", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 3: League Widget", "item": [
+      { "name": "3. League Widget", "request": { "method": "GET", "url": "{{baseUrl}}/league", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 4: Standings Widget", "item": [
+      { "name": "4. Standings Widget", "request": { "method": "GET", "url": "{{baseUrl}}/standings", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 5: Team & Player Widgets", "item": [
+      { "name": "5. Team Widget", "request": { "method": "GET", "url": "{{baseUrl}}/team", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "6. Player Widget", "request": { "method": "GET", "url": "{{baseUrl}}/player", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]}
+  ]
+}

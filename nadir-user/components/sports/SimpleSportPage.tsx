@@ -24,7 +24,8 @@ interface SimpleSportPageProps {
 
 export default function SimpleSportPage({ config }: SimpleSportPageProps) {
   const [view, setView] = useState<'cards' | 'list'>('cards');
-  const { matches, isLoading, error, refetch } = useSportsData(config.key);
+  const [date, setDate] = useState<string>('');
+  const { matches, isLoading, error, refetch } = useSportsData(config.key, 'all', date);
 
   if (isLoading) {
     return (
@@ -65,7 +66,15 @@ export default function SimpleSportPage({ config }: SimpleSportPageProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {config.key === 'football' && (
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="bg-gray-800 text-gray-200 px-3 sm:px-4 py-2 rounded-lg border border-gray-700 text-sm sm:text-base min-h-[44px] focus:outline-none focus:border-green-500"
+                />
+              )}
               <ViewToggle view={view} onViewChange={setView} />
               <button
                 onClick={refetch}

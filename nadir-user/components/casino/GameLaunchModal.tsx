@@ -18,7 +18,7 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
   const [gameUrl, setGameUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Detect device type for game launch
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -43,7 +43,7 @@ export default function GameLaunchModal({ isOpen, onClose, gameId, gameName }: G
       const response = await casinoApi.launchGame(gameId, {
         device: isMobile ? 'mobile' : 'desktop',
         language: 'en',
-        returnUrl: typeof window !== 'undefined' ? window.location.origin + '/casino' : null,
+        returnUrl: typeof window !== 'undefined' ? window.location.origin + '/casino' : undefined,
       });
 
       if (response.url) {

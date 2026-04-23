@@ -1,0 +1,217 @@
+{
+  "info": {
+    "name": "API-AFL v1 Test Collection",
+    "description": "Complete test collection for API-AFL (API-Sports) v1 API - Australian Football League",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://v1.afl.api-sports.io"
+    },
+    {
+      "key": "apiKey",
+      "value": "303e4402fcec0c684084b2b79a2b6338"
+    }
+  ],
+  "item": [
+    {
+      "name": "Phase 1: Core",
+      "item": [
+        {
+          "name": "1. Timezone",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/timezone",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "2. Seasons",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/seasons",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "3. Leagues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leagues",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "4. Leagues by Season",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leagues?season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "5. Leagues Current",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leagues?current=true",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 2: Teams",
+      "item": [
+        {
+          "name": "6. Teams All",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "7. Teams by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams?id=1",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "8. Teams by League",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams?league=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "9. Teams Search",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams?search=adelaide",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "10. Team Statistics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams/statistics?id=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 3: Games",
+      "item": [
+        {
+          "name": "11. Games by Date",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/games?date=2023-09-09",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "12. Games by League",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/games?league=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "13. Games by Team",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/games?team=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "14. Games H2H",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/games/h2h?h2h=1-2",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "15. Games by Live",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/games?live=all",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4: Standings",
+      "item": [
+        {
+          "name": "16. Standings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/standings?league=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 5: Players",
+      "item": [
+        {
+          "name": "17. Players by Team",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players?team=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "18. Players by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players?id=1",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "19. Top Players",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/topscorers?league=1&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 6: Odds",
+      "item": [
+        {
+          "name": "20. Odds",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds?fixture=1",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "21. Live Odds",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds/live?league=1",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import { pool, db } from '../database/db.js';
 import PointsService from './PointsService.js';
+import apiSportsProxyService from './APISportsProxyService.js';
+import oddsAPIService from './OddsAPIService.js';
 
 class BettingService {
   /**
@@ -109,7 +111,7 @@ class BettingService {
         const legId = db.generateUuid();
         // Normalize market type (match_winner -> h2h for database)
         const marketType = sel.marketType === 'match_winner' ? 'h2h' : sel.marketType;
-        
+
         await pool.query(
           `INSERT INTO bet_legs (
             leg_id, bet_id, sport_key, league, event_id, home_team, away_team,
@@ -219,6 +221,88 @@ class BettingService {
 
     const result = await pool.query(sql, params);
     return result.rows;
+  }
+
+  /**
+   * Validates a betslip by checking current live odds from our APIs.
+   * Modifies selections with updated odds or suspended flags.
+   */
+  async verifyBetslip(selections) {
+    if (!Array.isArray(selections) || selections.length === 0) {
+      return { valid: false, message: 'No selections provided' };
+    }
+
+    const verifiedSelections = [];
+    let allValid = true;
+    let oddsChanged = false;
+
+    // Grouping by sport to optimize fetching if needed, but for now we fetch individually or by fixture
+    for (const sel of selections) {
+      let currentOdds = null;
+      let status = 'active';
+
+      try {
+        if (sel.sportKey === 'football') {
+          // Verify with API-Sports
+          const fixture = await apiSportsProxyService.getFixtureDetails(sel.eventId);
+
+          if (!fixture || fixture.status === 'finished') {
+            status = 'suspended';
+          } else {
+            // Find the active market and outcome
+            const marketType = sel.marketType === 'match_winner' ? 'h2h' : sel.marketType;
+            const market = fixture.markets?.find(m => m.key === marketType);
+            if (market) {
+              const outcome = market.outcomes.find(o => o.name === sel.selection);
+              if (outcome) {
+                currentOdds = outcome.price;
+              } else { status = 'suspended'; }
+            } else { status = 'suspended'; }
+          }
+        } else {
+          // Verify with Odds API
+          const options = { markets: sel.marketType === 'match_winner' ? 'h2h' : sel.marketType };
+          const eventOdds = await oddsAPIService.getOddsForEvent(sel.eventId, options);
+
+          if (!eventOdds || !eventOdds.bookmakers || eventOdds.bookmakers.length === 0) {
+            status = 'suspended';
+          } else {
+            const bookie = eventOdds.bookmakers.find(b => b.key === sel.bookmakerKey) || eventOdds.bookmakers[0];
+            const market = bookie.markets.find(m => m.key === options.markets);
+            if (market) {
+              const outcome = market.outcomes.find(o => o.name === sel.selection);
+              if (outcome) {
+                currentOdds = outcome.price;
+              } else { status = 'suspended'; }
+            } else { status = 'suspended'; }
+          }
+        }
+      } catch (err) {
+        console.error(`Verification error for event ${sel.eventId}:`, err);
+        status = 'suspended';
+      }
+
+      // Check if odds changed
+      if (status === 'active' && currentOdds && Math.abs(currentOdds - sel.odds) > 0.01) {
+        oddsChanged = true;
+      }
+
+      if (status === 'suspended') {
+        allValid = false;
+      }
+
+      verifiedSelections.push({
+        ...sel,
+        status,
+        currentOdds: currentOdds || sel.odds
+      });
+    }
+
+    return {
+      valid: allValid,
+      oddsChanged,
+      selections: verifiedSelections
+    };
   }
 }
 

@@ -1,0 +1,358 @@
+{
+  "info": {
+    "name": "API-Football v3 Test Collection",
+    "description": "Complete test collection for API-Football (API-Sports) v3 API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://v3.football.api-sports.io"
+    },
+    {
+      "key": "apiKey",
+      "value": "303e4402fcec0c684084b2b79a2b6338"
+    }
+  ],
+  "item": [
+    {
+      "name": "Phase 1: Core",
+      "item": [
+        {
+          "name": "1. Status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/status",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "2. Timezone",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/timezone",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "3. Countries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/countries?name=england",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "4. Leagues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leagues?country=England&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "5. Seasons",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leagues/seasons",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 2: Teams",
+      "item": [
+        {
+          "name": "6. Teams by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams?id=33",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "7. Teams by League",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "8. Team Statistics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams/statistics?league=39&season=2023&team=33",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "9. Team Seasons",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams/seasons?team=33",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "10. Venues",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/venues?country=England",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 3: Fixtures",
+      "item": [
+        {
+          "name": "11. Fixtures by Date",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures?league=39&season=2023&from=2024-01-01&to=2024-01-31",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "12. Live Fixtures",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures?live=all",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "13. Rounds",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures/rounds?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "14. Head to Head",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures/headtohead?h2h=33-34",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "15. Fixture Statistics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures/statistics?fixture=8032",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "16. Fixture Events",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures/events?fixture=8032",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "17. Fixture Lineups",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/fixtures/lineups?fixture=8032",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 4: Standings",
+      "item": [
+        {
+          "name": "18. Standings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/standings?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "19. Predictions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/predictions?fixture=8032",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 5: Players",
+      "item": [
+        {
+          "name": "20. Player by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players?id=276",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "21. Team Players",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players?team=33&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "22. Player Seasons",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/seasons?player=276",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "23. Player Squads",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/squads?team=33&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "24. Player Teams",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/teams?player=276",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "25. Top Scorers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/topscorers?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "26. Top Assists",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/topassists?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "27. Top Yellow Cards",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/topyellowcards?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "28. Top Red Cards",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/players/topredcards?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 6: Other",
+      "item": [
+        {
+          "name": "29. Injuries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/injuries?league=39&season=2023",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "30. Transfers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transfers?player=276",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "31. Trophies",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/trophies?player=276",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "32. Sidelined",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/sidelined?team=33",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "33. Coaches",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/coachs?team=33",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "34. Bookmakers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds/bookmakers",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phase 7: Odds",
+      "item": [
+        {
+          "name": "35. Odds",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds?fixture=8032",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "36. Live Odds",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds/live?league=39",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "37. Bets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds/bets",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        },
+        {
+          "name": "38. Odds Mapping",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/odds/mapping",
+            "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

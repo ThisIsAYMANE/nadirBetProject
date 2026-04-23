@@ -100,14 +100,14 @@ export const casinoGames: CasinoGame[] = [
     provider: 'NetEnt',
     category: 'slots',
     rtp: 96.1
-  },
+  } as unknown as CasinoGame,
   {
     id: '2',
     name: 'Live Blackjack',
     provider: 'Evolution',
     category: 'live',
     isLive: true
-  },
+  } as unknown as CasinoGame,
   {
     id: '3',
     name: 'Mega Moolah',
@@ -115,7 +115,7 @@ export const casinoGames: CasinoGame[] = [
     category: 'jackpots',
     jackpot: 15420000,
     rtp: 88.1
-  },
+  } as unknown as CasinoGame,
   {
     id: '4',
     name: 'Sweet Bonanza',
@@ -123,7 +123,7 @@ export const casinoGames: CasinoGame[] = [
     category: 'slots',
     isNew: true,
     rtp: 96.5
-  }
+  } as unknown as CasinoGame
 ];
 
 export const casinoCategories = [

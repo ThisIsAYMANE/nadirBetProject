@@ -1,0 +1,12 @@
+{
+  "name": "api-sports-widgets",
+  "version": "1.0.0",
+  "description": "API-Sports Widgets SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": { "build": "tsc", "test": "node test.js" },
+  "keywords": ["api-sports", "widgets", "ui", "components"],
+  "author": "", "license": "MIT",
+  "dependencies": { "axios": "^1.6.0" },
+  "devDependencies": { "@types/node": "^20.0.0", "typescript": "^5.0.0" }
+}

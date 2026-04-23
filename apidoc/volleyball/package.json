@@ -1,0 +1,8 @@
+{
+  "name": "api-sports-volleyball",
+  "version": "1.0.0",
+  "description": "API-Sports Volleyball SDK",
+  "main": "dist/index.js",
+  "scripts": { "build": "tsc", "test": "node test.js" },
+  "dependencies": { "axios": "^1.6.0" }
+}

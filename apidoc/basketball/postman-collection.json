@@ -1,0 +1,53 @@
+{
+  "info": {
+    "name": "API-Basketball v1 Test Collection",
+    "description": "Complete test collection for API-Basketball (API-Sports) v1 API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://v1.basketball.api-sports.io" },
+    { "key": "apiKey", "value": "303e4402fcec0c684084b2b79a2b6338" }
+  ],
+  "item": [
+    {
+      "name": "Phase 1: Core",
+      "item": [
+        { "name": "1. Timezone", "request": { "method": "GET", "url": "{{baseUrl}}/timezone", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "2. Seasons", "request": { "method": "GET", "url": "{{baseUrl}}/seasons", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "3. Countries", "request": { "method": "GET", "url": "{{baseUrl}}/countries", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "4. Leagues", "request": { "method": "GET", "url": "{{baseUrl}}/leagues", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "5. Leagues by Season", "request": { "method": "GET", "url": "{{baseUrl}}/leagues?season=2023-2024", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+      ]
+    },
+    {
+      "name": "Phase 2: Teams",
+      "item": [
+        { "name": "6. Teams by ID", "request": { "method": "GET", "url": "{{baseUrl}}/teams?id=139", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "7. Teams by League", "request": { "method": "GET", "url": "{{baseUrl}}/teams?league=12&season=2023-2024", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "8. Teams Search", "request": { "method": "GET", "url": "{{baseUrl}}/teams?search=Denver", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+      ]
+    },
+    {
+      "name": "Phase 3: Games",
+      "item": [
+        { "name": "9. Games by Date", "request": { "method": "GET", "url": "{{baseUrl}}/games?date=2024-01-01", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "10. Games by League", "request": { "method": "GET", "url": "{{baseUrl}}/games?league=12&season=2023-2024", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "11. Games by Team", "request": { "method": "GET", "url": "{{baseUrl}}/games?team=139&season=2023-2024", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "12. Games H2H", "request": { "method": "GET", "url": "{{baseUrl}}/games/h2h?h2h=139-140", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+      ]
+    },
+    {
+      "name": "Phase 4: Standings",
+      "item": [
+        { "name": "13. Standings", "request": { "method": "GET", "url": "{{baseUrl}}/standings?league=12&season=2023-2024", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+      ]
+    },
+    {
+      "name": "Phase 5: Players",
+      "item": [
+        { "name": "14. Players by Team", "request": { "method": "GET", "url": "{{baseUrl}}/players?team=1&season=2023-2024", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+        { "name": "15. Players by ID", "request": { "method": "GET", "url": "{{baseUrl}}/players?id=1", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+      ]
+    }
+  ]
+}

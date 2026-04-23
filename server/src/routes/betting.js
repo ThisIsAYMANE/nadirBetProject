@@ -51,12 +51,12 @@ router.get('/event/:eventId/odds', async (req, res) => {
     if (dateFormat) options.dateFormat = dateFormat;
 
     const odds = await oddsAPIService.getOddsForEvent(eventId, options);
-    
+
     if (!odds) {
       // Event not found - return 404 without excessive logging
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Event not found',
-        eventId 
+        eventId
       });
     }
 
@@ -66,10 +66,10 @@ router.get('/event/:eventId/odds', async (req, res) => {
     console.error('Error stack:', error.stack);
     console.error('Event ID:', req.params.eventId);
     console.error('Query params:', req.query);
-    
+
     // Return more detailed error information
     const statusCode = error.status || 500;
-    res.status(statusCode).json({ 
+    res.status(statusCode).json({
       error: 'Failed to fetch event odds',
       message: process.env.NODE_ENV === 'development' ? error.message : undefined,
       eventId: req.params.eventId,
@@ -155,6 +155,21 @@ router.post('/place', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error placing bet:', error);
     res.status(400).json({ error: error.message || 'Failed to place bet' });
+  }
+});
+
+/**
+ * POST /api/betting/checkout
+ * Validates the betslip selections against live APIs.
+ */
+router.post('/checkout', authenticateToken, async (req, res) => {
+  try {
+    const { selections } = req.body;
+    const verification = await bettingService.verifyBetslip(selections);
+    res.json(verification);
+  } catch (error) {
+    console.error('Error during checkout verification:', error);
+    res.status(500).json({ error: 'Failed to verify betslip' });
   }
 });
 

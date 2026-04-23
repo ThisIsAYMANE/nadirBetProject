@@ -1,0 +1,27 @@
+{
+  "info": { "name": "API-NBA v2 Test Collection", "description": "Complete test collection for API-NBA (API-Sports) v2 API", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+  "variable": [ { "key": "baseUrl", "value": "https://v2.nba.api-sports.io" }, { "key": "apiKey", "value": "303e4402fcec0c684084b2b79a2b6338" } ],
+  "item": [
+    { "name": "Phase 1: Core", "item": [
+      { "name": "1. Seasons", "request": { "method": "GET", "url": "{{baseUrl}}/seasons", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "2. Leagues", "request": { "method": "GET", "url": "{{baseUrl}}/leagues", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 2: Games", "item": [
+      { "name": "3. Games by Date", "request": { "method": "GET", "url": "{{baseUrl}}/games?date=2022-03-09", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "4. Games by ID", "request": { "method": "GET", "url": "{{baseUrl}}/games?id=10540", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "5. Games by Season", "request": { "method": "GET", "url": "{{baseUrl}}/games?season=2021", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 3: Teams", "item": [
+      { "name": "6. Teams", "request": { "method": "GET", "url": "{{baseUrl}}/teams", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "7. Teams by ID", "request": { "method": "GET", "url": "{{baseUrl}}/teams?id=1", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "8. Teams by Season", "request": { "method": "GET", "url": "{{baseUrl}}/teams?season=2021", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 4: Players", "item": [
+      { "name": "9. Players", "request": { "method": "GET", "url": "{{baseUrl}}/players", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "10. Players by ID", "request": { "method": "GET", "url": "{{baseUrl}}/players?id=1", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 5: Statistics", "item": [
+      { "name": "11. Game Statistics", "request": { "method": "GET", "url": "{{baseUrl}}/games/statistics?id=10540", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]}
+  ]
+}

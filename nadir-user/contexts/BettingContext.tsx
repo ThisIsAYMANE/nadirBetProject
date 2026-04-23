@@ -143,7 +143,38 @@ export const BettingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return { success: false, message: 'LOGIN_REQUIRED' };
       }
 
-      // For single bets, create separate bet requests for each selection
+      // 1. Verify betslip via checkout endpoint
+      const checkoutRes = await fetch('http://localhost:3001/api/betting/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ selections }),
+      });
+
+      const checkoutData = await checkoutRes.json();
+
+      if (!checkoutRes.ok || !checkoutData.valid) {
+        // Update context selections with the new odds/status
+        if (checkoutData.selections) {
+          // map over current selections and update from checkout
+          setSelections(prev => prev.map(sel => {
+            const updated = checkoutData.selections.find((s: any) => s.id === sel.id);
+            if (updated) {
+              return { ...sel, odds: updated.currentOdds || sel.odds, status: updated.status };
+            }
+            return sel;
+          }));
+        }
+
+        if (checkoutData.oddsChanged) {
+          return { success: false, message: 'Odds have changed. Please review your betslip.' };
+        }
+        return { success: false, message: checkoutData.message || 'One or more selections are no longer available or suspended.' };
+      }
+
+      // 2. For single bets, create separate bet requests for each selection
       // For accumulator, send one bet with total stake
       if (betType === 'single') {
         // Place multiple single bets

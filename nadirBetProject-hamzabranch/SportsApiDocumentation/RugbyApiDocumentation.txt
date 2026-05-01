@@ -1,0 +1,178 @@
+RugbyApiDocumentation
+
+1. Base Configuration
+{
+  "base_url": "https://v1.rugby.api-sports.io/",
+  "method": "GET",
+  "auth_header": "x-apisports-key",
+  "format": "JSON"
+}
+💻 cURL Example
+curl -X GET "https://v1.rugby.api-sports.io/status" \
+  -H "x-apisports-key: YOUR_API_KEY"
+🌍 2. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status and quota usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "Available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "List of rugby countries",
+    "params": ["id", "name", "code", "search"]
+  }
+]
+🏆 3. Leagues / Competitions
+[
+  {
+    "endpoint": "/leagues",
+    "description": "Rugby leagues and competitions",
+    "params": ["id", "name", "country", "season", "search"]
+  },
+  {
+    "endpoint": "/leagues/seasons",
+    "description": "Available seasons",
+    "params": []
+  }
+]
+🏟️ 4. Teams
+[
+  {
+    "endpoint": "/teams",
+    "description": "Teams information",
+    "params": ["id", "name", "league", "season", "country", "search"]
+  },
+  {
+    "endpoint": "/teams/statistics",
+    "description": "Team statistics (wins, losses, performance)",
+    "params": ["team", "league", "season"]
+  }
+]
+👥 5. Players
+[
+  {
+    "endpoint": "/players",
+    "description": "Players list and profiles",
+    "params": ["id", "team", "league", "season", "search", "page"]
+  },
+  {
+    "endpoint": "/players/statistics",
+    "description": "Player performance stats",
+    "params": ["id", "team", "season", "league"]
+  }
+]
+🏉 6. Games (Fixtures)
+[
+  {
+    "endpoint": "/games",
+    "description": "Matches schedule and results",
+    "params": ["id", "league", "season", "team", "date", "live", "timezone"]
+  },
+  {
+    "endpoint": "/games/statistics",
+    "description": "Match statistics",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/events",
+    "description": "Match events (tries, penalties, cards)",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/teams",
+    "description": "Teams in a match",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/players",
+    "description": "Player stats per match",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/h2h",
+    "description": "Head-to-head matches",
+    "params": ["h2h", "league", "season"]
+  }
+]
+📊 7. Standings
+[
+  {
+    "endpoint": "/standings",
+    "description": "League rankings / tables",
+    "params": ["league", "season", "team"]
+  }
+]
+📈 8. Statistics
+[
+  {
+    "endpoint": "/statistics",
+    "description": "Advanced rugby statistics",
+    "params": ["team", "league", "season"]
+  }
+]
+🎯 9. Predictions
+[
+  {
+    "endpoint": "/predictions",
+    "description": "Match predictions",
+    "params": ["game_id"]
+  }
+]
+🎲 10. Odds (if enabled by plan)
+[
+  {
+    "endpoint": "/odds",
+    "description": "Match betting odds",
+    "params": ["game", "league", "season", "date"]
+  },
+  {
+    "endpoint": "/odds/live",
+    "description": "Live odds updates",
+    "params": ["game"]
+  },
+  {
+    "endpoint": "/odds/bookmakers",
+    "description": "Bookmakers list",
+    "params": ["id", "search"]
+  }
+]
+🧾 11. Standard Response Format
+{
+  "get": "endpoint_name",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Full Rugby API Structure
+Core Modules:
+🌍 General
+🏆 Leagues
+🏟️ Teams
+👥 Players
+🏉 Games
+📊 Standings
+📈 Statistics
+🎯 Predictions
+🎲 Odds
+⚠️ Key Insight
+
+All API-SPORTS APIs you checked (Football, NBA, NHL, MMA, etc.) follow the same unified structure:
+
+{
+  "teams": "/teams",
+  "players": "/players",
+  "games": "/games",
+  "standings": "/standings",
+  "statistics": "/statistics"
+}

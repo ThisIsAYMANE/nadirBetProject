@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-green: #00ff88;
+  --dark-bg: #2d2d2d;
+  --card-bg: #3a3a3a;
+  --hover-bg: #4a4a4a;
+}
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142 76% 36%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Add padding-top for fixed header */
+@layer utilities {
+  .header-spacer {
+    padding-top: 4rem; /* 64px for mobile h-16 */
+  }
+  
+  @media (min-width: 640px) {
+    .header-spacer {
+      padding-top: 5rem; /* 80px for sm:h-20 */
+    }
+  }
+}
+
+.bet-card {
+  @apply bg-gray-800 rounded-lg p-3 sm:p-4 hover:bg-gray-700 transition-all duration-200 border border-gray-700 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10;
+}
+
+.odds-btn {
+  @apply bg-gray-700 hover:bg-green-500 text-white px-2 sm:px-3 py-2 rounded transition-all duration-200 text-sm font-semibold min-w-[50px] sm:min-w-[60px] text-center hover:scale-105 active:scale-95;
+}
+
+.sport-nav-item {
+  @apply flex items-center space-x-3 px-4 py-3 hover:bg-gray-800 rounded-lg transition-all duration-200 text-gray-300 hover:text-white cursor-pointer;
+}
+
+.casino-game-card {
+  @apply bg-gray-800 rounded-lg overflow-hidden hover:transform hover:scale-105 transition-all duration-300 cursor-pointer border border-gray-700 hover:border-green-500/50 active:scale-95;
+}
+
+.loading-skeleton {
+  @apply animate-pulse bg-gray-700 rounded;
+}
+
+/* Mobile optimizations */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch target improvements */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 44px;
+  }
+  
+  input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* Hide scrollbar toggles/buttons for a cleaner look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Hide scrollbar buttons/toggles */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 transparent;
+}

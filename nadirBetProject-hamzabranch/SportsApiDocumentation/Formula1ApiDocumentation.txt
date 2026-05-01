@@ -1,0 +1,177 @@
+Formula1ApiDocumentation
+
+1. Base Configuration
+✅ Description
+REST API (GET only)
+Authentication via header
+Base URL:
+https://v1.formula-1.api-sports.io/
+💻 cURL Example
+curl --request GET \
+  --url 'https://v1.formula-1.api-sports.io/races' \
+  --header 'x-apisports-key: YOUR_API_KEY'
+💻 JavaScript Example
+const response = await fetch('https://v1.formula-1.api-sports.io/races', {
+  method: 'GET',
+  headers: {
+    'x-apisports-key': 'YOUR_API_KEY'
+  }
+});
+const data = await response.json();
+📌 Notes
+Same architecture as other API-SPORTS APIs
+Covers races, drivers, teams, standings, rankings
+🌍 2. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status and account usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "List all available timezones",
+    "params": []
+  }
+]
+🏁 3. Seasons
+[
+  {
+    "endpoint": "/seasons",
+    "description": "List all available seasons",
+    "params": []
+  }
+]
+🏎️ 4. Competitions / Leagues (Championships)
+💻 Example
+curl -X GET "https://v1.formula-1.api-sports.io/competitions" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/competitions",
+    "description": "List competitions (Formula 1 championships)",
+    "params": ["id", "name", "location", "search"]
+  }
+]
+🏆 5. Teams (Constructors)
+💻 Example
+curl -X GET "https://v1.formula-1.api-sports.io/teams?season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/teams",
+    "description": "Teams (constructors) information",
+    "params": ["id", "name", "season", "search"]
+  }
+]
+👨‍🏎️ 6. Drivers
+💻 Example
+curl -X GET "https://v1.formula-1.api-sports.io/drivers?season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/drivers",
+    "description": "Drivers information",
+    "params": ["id", "name", "season", "search"]
+  }
+]
+🏁 7. Races (Grand Prix)
+💻 Example
+curl -X GET "https://v1.formula-1.api-sports.io/races?season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/races",
+    "description": "List of races (Grand Prix)",
+    "params": ["id", "competition", "season", "type", "date"]
+  }
+]
+
+📌 Includes:
+
+race schedule
+results
+qualifying info
+📊 8. Rankings / Standings
+💻 Example
+curl -X GET "https://v1.formula-1.api-sports.io/rankings/drivers?season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/rankings/drivers",
+    "description": "Driver standings (championship ranking)",
+    "params": ["season"]
+  },
+  {
+    "endpoint": "/rankings/teams",
+    "description": "Constructor standings",
+    "params": ["season"]
+  }
+]
+🏁 9. Race Results
+[
+  {
+    "endpoint": "/results",
+    "description": "Race results",
+    "params": ["race", "season"]
+  }
+]
+⏱️ 10. Laps / Timing (if available in plan)
+[
+  {
+    "endpoint": "/laps",
+    "description": "Lap-by-lap timing data",
+    "params": ["race", "driver"]
+  }
+]
+
+📌 Includes:
+
+lap times
+sector times
+performance data
+🧾 11. Response Format
+{
+  "get": "endpoint_name",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Complete Endpoint Overview
+Categories:
+General
+Seasons
+Competitions
+Teams (Constructors)
+Drivers
+Races
+Rankings
+Results
+Laps / Timing
+⚠️ Important Notes
+Formula-1 API has fewer endpoints than Football API
+Focused on:
+races
+drivers
+teams
+standings
+Same architecture as all API-SPORTS APIs
+Requires API key (x-apisports-key)
+✅ Big Picture (Important for you)
+
+Across all APIs you asked (Football, Basketball, AFL, Baseball, F1):
+
+👉 They ALL share the same pattern:
+
+/teams
+/players
+/games or /races
+/standings
+/statistics
+
+So you can build ONE unified backend for all sports.

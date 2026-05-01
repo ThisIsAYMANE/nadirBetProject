@@ -1,0 +1,80 @@
+{
+  "count": 5,
+  "data": [
+    {
+      "id": "19116488",
+      "homeTeam": "Celtic",
+      "awayTeam": "Rangers",
+      "sport": "football",
+      "league": "Premiership",
+      "startTime": "2024-05-11 11:30:00",
+      "status": "upcoming",
+      "isLive": false,
+      "odds": {
+        "home": 0,
+        "draw": 0,
+        "away": 0
+      }
+    },
+    {
+      "id": "19116489",
+      "homeTeam": "Hearts",
+      "awayTeam": "Dundee",
+      "sport": "football",
+      "league": "Premiership",
+      "startTime": "2024-05-11 14:00:00",
+      "status": "upcoming",
+      "isLive": false,
+      "odds": {
+        "home": 0,
+        "draw": 0,
+        "away": 0
+      }
+    },
+    {
+      "id": "19116490",
+      "homeTeam": "St. Mirren",
+      "awayTeam": "Kilmarnock",
+      "sport": "football",
+      "league": "Premiership",
+      "startTime": "2024-05-11 14:00:00",
+      "status": "upcoming",
+      "isLive": false,
+      "odds": {
+        "home": 0,
+        "draw": 0,
+        "away": 0
+      }
+    },
+    {
+      "id": "19116500",
+      "homeTeam": "Livingston",
+      "awayTeam": "St. Johnstone",
+      "sport": "football",
+      "league": "Premiership",
+      "startTime": "2024-05-11 14:00:00",
+      "status": "upcoming",
+      "isLive": false,
+      "odds": {
+        "home": 0,
+        "draw": 0,
+        "away": 0
+      }
+    },
+    {
+      "id": "19116501",
+      "homeTeam": "Ross County",
+      "awayTeam": "Motherwell",
+      "sport": "football",
+      "league": "Premiership",
+      "startTime": "2024-05-11 14:00:00",
+      "status": "upcoming",
+      "isLive": false,
+      "odds": {
+        "home": 0,
+        "draw": 0,
+        "away": 0
+      }
+    }
+  ]
+}

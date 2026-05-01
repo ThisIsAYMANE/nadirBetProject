@@ -1,0 +1,41 @@
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import MobileNav from '@/components/layout/MobileNav';
+import Footer from '@/components/layout/Footer';
+import { BettingProvider } from '@/contexts/BettingContext';
+import { BettingSlip } from '@/components/betting/BettingSlip';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Freebet - Sports Betting & Casino',
+  description: 'Professional sports betting platform with integrated casino',
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/freebet.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/freebet.png',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className="dark overflow-x-hidden">
+      <body className={`${inter.className} bg-gray-900 text-white pb-14 lg:pb-0 overflow-x-hidden pt-48 sm:pt-52 md:pt-36 lg:pt-32`}>
+        <BettingProvider>
+          {children}
+          <Footer />
+          <BettingSlip />
+        </BettingProvider>
+        <MobileNav />
+      </body>
+    </html>
+  );
+}

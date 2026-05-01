@@ -1,0 +1,196 @@
+NflApiDocumentation
+
+1. Base Configuration
+{
+  "base_url": "https://v1.nfl.api-sports.io/",
+  "method": "GET",
+  "auth_header": "x-apisports-key",
+  "format": "JSON"
+}
+💻 Authentication Example
+cURL
+curl -X GET "https://v1.nfl.api-sports.io/status" \
+  -H "x-apisports-key: YOUR_API_KEY"
+JavaScript
+const response = await fetch("https://v1.nfl.api-sports.io/status", {
+  method: "GET",
+  headers: {
+    "x-apisports-key": "YOUR_API_KEY"
+  }
+});
+const data = await response.json();
+🌍 2. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status + quota usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "Available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "Countries with NFL data",
+    "params": ["id", "name", "code", "search"]
+  }
+]
+🏆 3. Leagues
+[
+  {
+    "endpoint": "/leagues",
+    "description": "NFL competitions / leagues",
+    "params": ["id", "name", "season", "country", "type", "search"]
+  },
+  {
+    "endpoint": "/leagues/seasons",
+    "description": "Available seasons",
+    "params": []
+  }
+]
+🏟️ 4. Teams
+[
+  {
+    "endpoint": "/teams",
+    "description": "NFL teams list and info",
+    "params": ["id", "name", "league", "season", "country", "search"]
+  },
+  {
+    "endpoint": "/teams/statistics",
+    "description": "Team season statistics",
+    "params": ["team", "season", "league"]
+  }
+]
+👥 5. Players
+[
+  {
+    "endpoint": "/players",
+    "description": "NFL players list",
+    "params": ["id", "team", "season", "search", "page"]
+  },
+  {
+    "endpoint": "/players/statistics",
+    "description": "Player statistics (season performance)",
+    "params": ["id", "team", "season", "league"]
+  }
+]
+🏈 6. Games (Fixtures)
+[
+  {
+    "endpoint": "/games",
+    "description": "NFL schedule + results",
+    "params": ["id", "league", "season", "team", "date", "live", "timezone"]
+  },
+  {
+    "endpoint": "/games/statistics",
+    "description": "Game statistics breakdown",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/events",
+    "description": "Play-by-play events",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/teams",
+    "description": "Teams in a game",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/players",
+    "description": "Player stats per game",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/h2h",
+    "description": "Head-to-head matchups",
+    "params": ["h2h", "season", "league"]
+  }
+]
+📊 7. Standings
+[
+  {
+    "endpoint": "/standings",
+    "description": "NFL division / conference standings",
+    "params": ["league", "season", "team"]
+  }
+]
+📈 8. Statistics
+[
+  {
+    "endpoint": "/statistics",
+    "description": "Advanced team statistics",
+    "params": ["team", "season", "league"]
+  }
+]
+🤕 9. Injuries
+[
+  {
+    "endpoint": "/injuries",
+    "description": "Player injury reports",
+    "params": ["team", "player", "season", "date"]
+  }
+]
+🎯 10. Predictions
+[
+  {
+    "endpoint": "/predictions",
+    "description": "Match outcome predictions",
+    "params": ["game_id"]
+  }
+]
+🎲 11. Odds
+[
+  {
+    "endpoint": "/odds",
+    "description": "Game betting odds",
+    "params": ["game", "league", "season", "date"]
+  },
+  {
+    "endpoint": "/odds/live",
+    "description": "Live odds updates",
+    "params": ["game"]
+  },
+  {
+    "endpoint": "/odds/bookmakers",
+    "description": "Bookmakers list",
+    "params": ["id", "search"]
+  }
+]
+🧾 12. Standard API Response
+{
+  "get": "endpoint_name",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Full NFL API Structure
+Core Modules:
+🌍 General
+🏆 Leagues
+🏟️ Teams
+👥 Players
+🏈 Games
+📊 Standings
+📈 Statistics
+🤕 Injuries
+🎯 Predictions
+🎲 Odds
+⚠️ Key Insight (important for your project)
+
+NFL API follows the same structure as ALL API-SPORTS APIs:
+
+{
+  "teams": "/teams",
+  "players": "/players",
+  "games": "/games",
+  "standings": "/standings",
+  "statistics": "/statistics"
+}

@@ -1,0 +1,21 @@
+{
+  "info": { "name": "API-MMA v1 Test Collection", "description": "Complete test collection for API-MMA (API-Sports) v1 API", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+  "variable": [ { "key": "baseUrl", "value": "https://v1.mma.api-sports.io" }, { "key": "apiKey", "value": "303e4402fcec0c684084b2b79a2b6338" } ],
+  "item": [
+    { "name": "Phase 1: Core", "item": [
+      { "name": "1. Timezone", "request": { "method": "GET", "url": "{{baseUrl}}/timezone", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "2. Seasons", "request": { "method": "GET", "url": "{{baseUrl}}/seasons", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "3. Categories", "request": { "method": "GET", "url": "{{baseUrl}}/categories", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 2: Fighters", "item": [
+      { "name": "4. Fighters by ID", "request": { "method": "GET", "url": "{{baseUrl}}/fighters?id=691", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "5. Fighters by Team", "request": { "method": "GET", "url": "{{baseUrl}}/fighters?team=1", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "6. Fighters Search", "request": { "method": "GET", "url": "{{baseUrl}}/fighters?search=Conor", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "7. Fighter Records", "request": { "method": "GET", "url": "{{baseUrl}}/fighters/records?id=691", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 3: Fights", "item": [
+      { "name": "8. Fights by Date", "request": { "method": "GET", "url": "{{baseUrl}}/fights?date=2023-01-01", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "9. Fights by Fighter", "request": { "method": "GET", "url": "{{baseUrl}}/fights?fighter=691", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]}
+  ]
+}

@@ -1,0 +1,189 @@
+VolleyballApiDocumentation
+
+1. Base Configuration
+{
+  "base_url": "https://v1.volleyball.api-sports.io/",
+  "method": "GET",
+  "auth_header": "x-apisports-key",
+  "format": "JSON"
+}
+💻 Authentication Example
+cURL
+curl -X GET "https://v1.volleyball.api-sports.io/status" \
+  -H "x-apisports-key: YOUR_API_KEY"
+JavaScript
+const response = await fetch("https://v1.volleyball.api-sports.io/status", {
+  method: "GET",
+  headers: {
+    "x-apisports-key": "YOUR_API_KEY"
+  }
+});
+const data = await response.json();
+🌍 2. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status and quota usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "Available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "Countries with volleyball competitions",
+    "params": ["id", "name", "code", "search"]
+  }
+]
+🏆 3. Leagues / Competitions
+[
+  {
+    "endpoint": "/leagues",
+    "description": "Volleyball leagues and tournaments",
+    "params": ["id", "name", "country", "season", "search"]
+  },
+  {
+    "endpoint": "/leagues/seasons",
+    "description": "Available seasons",
+    "params": []
+  }
+]
+🏐 4. Teams
+[
+  {
+    "endpoint": "/teams",
+    "description": "Teams information",
+    "params": ["id", "name", "league", "season", "country", "search"]
+  },
+  {
+    "endpoint": "/teams/statistics",
+    "description": "Team performance statistics",
+    "params": ["team", "league", "season"]
+  }
+]
+👥 5. Players
+[
+  {
+    "endpoint": "/players",
+    "description": "Players list and profiles",
+    "params": ["id", "team", "league", "season", "search", "page"]
+  },
+  {
+    "endpoint": "/players/statistics",
+    "description": "Player performance stats",
+    "params": ["id", "team", "league", "season"]
+  }
+]
+🏟️ 6. Games (Matches)
+[
+  {
+    "endpoint": "/games",
+    "description": "Match schedule and results",
+    "params": ["id", "league", "season", "team", "date", "live", "timezone"]
+  },
+  {
+    "endpoint": "/games/statistics",
+    "description": "Match statistics",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/events",
+    "description": "Match events (sets, points, highlights)",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/teams",
+    "description": "Teams in a match",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/players",
+    "description": "Player stats in a match",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/h2h",
+    "description": "Head-to-head matches",
+    "params": ["h2h", "league", "season"]
+  }
+]
+📊 7. Standings
+[
+  {
+    "endpoint": "/standings",
+    "description": "League rankings and tables",
+    "params": ["league", "season", "team"]
+  }
+]
+📈 8. Statistics
+[
+  {
+    "endpoint": "/statistics",
+    "description": "Advanced team and player stats",
+    "params": ["team", "league", "season"]
+  }
+]
+🎯 9. Predictions
+[
+  {
+    "endpoint": "/predictions",
+    "description": "Match outcome predictions",
+    "params": ["game_id"]
+  }
+]
+🎲 10. Odds (if enabled)
+[
+  {
+    "endpoint": "/odds",
+    "description": "Match betting odds",
+    "params": ["game", "league", "season", "date"]
+  },
+  {
+    "endpoint": "/odds/live",
+    "description": "Live odds updates",
+    "params": ["game"]
+  },
+  {
+    "endpoint": "/odds/bookmakers",
+    "description": "Bookmakers list",
+    "params": ["id", "search"]
+  }
+]
+🧾 11. Standard API Response
+{
+  "get": "endpoint_name",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Full Volleyball API Structure
+Core Modules:
+🌍 General
+🏆 Leagues
+🏐 Teams
+👥 Players
+🏟️ Games
+📊 Standings
+📈 Statistics
+🎯 Predictions
+🎲 Odds
+⚠️ Key Insight (important)
+
+Like all API-SPORTS APIs you collected:
+
+👉 Volleyball API uses the same universal pattern:
+
+{
+  "teams": "/teams",
+  "players": "/players",
+  "games": "/games",
+  "standings": "/standings",
+  "statistics": "/statistics"
+}

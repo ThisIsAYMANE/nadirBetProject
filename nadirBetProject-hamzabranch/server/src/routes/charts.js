@@ -1,0 +1,53 @@
+import express from 'express';
+import { pool, db } from '../database/db.js';
+
+const router = express.Router();
+
+// Get chart data
+router.get('/', async (req, res) => {
+  try {
+    const { type, period, brokerId } = req.query;
+    const userId = req.user.id;
+
+    let chartData = [];
+
+    if (type === 'revenue') {
+      const result = await pool.query(`
+        SELECT 
+          TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as name,
+          SUM(cash_amount) as value
+        FROM transactions 
+        WHERE status = 'completed'
+        ${brokerId ? 'AND broker_id = ?' : ''}
+        AND created_at >= CURRENT_DATE - INTERVAL '12 months'
+        GROUP BY DATE_TRUNC('month', created_at)
+        ORDER BY DATE_TRUNC('month', created_at)
+      `, brokerId ? [brokerId] : []);
+
+      chartData = result.rows;
+
+    } else if (type === 'performance') {
+      const result = await pool.query(`
+        SELECT 
+          TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') as name,
+          COUNT(*) as value
+        FROM transactions 
+        WHERE created_at >= CURRENT_DATE - INTERVAL '12 months'
+        ${brokerId ? 'AND broker_id = ?' : ''}
+        GROUP BY DATE_TRUNC('month', created_at)
+        ORDER BY DATE_TRUNC('month', created_at)
+      `, brokerId ? [brokerId] : []);
+
+      chartData = result.rows;
+    }
+
+    res.json(chartData);
+
+  } catch (error) {
+    console.error('Chart data error:', error);
+    res.status(500).json({ error: 'Failed to fetch chart data' });
+  }
+});
+
+export default router;
+

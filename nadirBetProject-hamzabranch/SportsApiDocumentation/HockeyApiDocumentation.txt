@@ -1,0 +1,201 @@
+HockeyApiDocumentation
+
+1. Base Configuration
+✅ Description
+REST API (GET only)
+Authentication via API key header
+Base URL:
+https://v1.hockey.api-sports.io/
+💻 cURL Example
+curl --request GET \
+  --url 'https://v1.hockey.api-sports.io/leagues' \
+  --header 'x-apisports-key: YOUR_API_KEY'
+💻 JavaScript Example
+const response = await fetch('https://v1.hockey.api-sports.io/leagues', {
+  method: 'GET',
+  headers: {
+    'x-apisports-key': 'YOUR_API_KEY'
+  }
+});
+const data = await response.json();
+📌 Notes
+Same structure as all API-SPORTS APIs
+Covers leagues, teams, players, games, standings, etc.
+🌍 2. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status and account usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "List of available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "Countries with hockey data",
+    "params": ["id", "name", "code", "search"]
+  }
+]
+🏆 3. Leagues
+💻 Example
+curl -X GET "https://v1.hockey.api-sports.io/leagues" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/leagues",
+    "description": "Get leagues and competitions",
+    "params": ["id", "name", "country", "season", "type", "search"]
+  },
+  {
+    "endpoint": "/leagues/seasons",
+    "description": "Available seasons",
+    "params": []
+  }
+]
+🏒 4. Teams
+💻 Example
+curl -X GET "https://v1.hockey.api-sports.io/teams?league=1&season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/teams",
+    "description": "Teams information",
+    "params": ["id", "name", "league", "season", "country", "search"]
+  },
+  {
+    "endpoint": "/teams/statistics",
+    "description": "Team statistics",
+    "params": ["league", "season", "team"]
+  }
+]
+👥 5. Players
+💻 Example
+curl -X GET "https://v1.hockey.api-sports.io/players?team=1&season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/players",
+    "description": "Players info and statistics",
+    "params": ["id", "team", "league", "season", "search", "page"]
+  },
+  {
+    "endpoint": "/players/statistics",
+    "description": "Player statistics",
+    "params": ["id", "team", "season", "league"]
+  }
+]
+🏟️ 6. Games (Fixtures)
+💻 Example
+curl -X GET "https://v1.hockey.api-sports.io/games?date=2023-10-10" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/games",
+    "description": "List of games",
+    "params": ["id", "league", "season", "team", "date", "live", "timezone"]
+  },
+  {
+    "endpoint": "/games/statistics",
+    "description": "Game statistics",
+    "params": ["id", "team"]
+  },
+  {
+    "endpoint": "/games/events",
+    "description": "Game events",
+    "params": ["id", "team"]
+  },
+  {
+    "endpoint": "/games/teams",
+    "description": "Teams in a game",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/players",
+    "description": "Players stats in a game",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/h2h",
+    "description": "Head-to-head games",
+    "params": ["h2h", "league", "season"]
+  }
+]
+📊 7. Standings
+💻 Example
+curl -X GET "https://v1.hockey.api-sports.io/standings?league=1&season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/standings",
+    "description": "League standings",
+    "params": ["league", "season", "team"]
+  }
+]
+📈 8. Statistics
+[
+  {
+    "endpoint": "/statistics",
+    "description": "Advanced statistics",
+    "params": ["league", "season", "team"]
+  }
+]
+🎯 9. Predictions
+curl -X GET "https://v1.hockey.api-sports.io/predictions?game=12345" \
+  -H "x-apisports-key: YOUR_API_KEY"
+[
+  {
+    "endpoint": "/predictions",
+    "description": "Game predictions",
+    "params": ["game"]
+  }
+]
+🧾 10. Response Format
+{
+  "get": "endpoint_name",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Complete Endpoint Overview
+Categories:
+General
+Leagues
+Teams
+Players
+Games
+Standings
+Statistics
+Predictions
+⚠️ Important Notes
+Same architecture as:
+Football
+Basketball
+Baseball
+Handball
+Supports:
+live scores (live=true)
+filtering by league, season, team
+Pagination supported (page)
+🚀 Big Insight (for your project)
+
+At this point, you’ve covered almost the entire API-SPORTS ecosystem.
+
+👉 You can normalize everything like this:
+
+{
+  "sport": "hockey",
+  "core": {
+    "teams": "/teams",
+    "players": "/players",
+    "games": "/games",
+    "standings": "/standings"
+  }
+}

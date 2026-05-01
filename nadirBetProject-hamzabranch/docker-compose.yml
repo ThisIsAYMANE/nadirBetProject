@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Backend API Server (with SQLite)
+  backend:
+    build:
+      context: ./server
+      dockerfile: ../Dockerfile.backend
+    container_name: betting_platform_backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=your_super_secret_jwt_key_here_change_in_production
+      - CORS_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:3002
+    volumes:
+      - ./server:/app
+      - ./server/data:/app/data
+      - /app/node_modules
+
+  # Executive Portal (Owner + Super Admin) - Port 5173
+  admin-executive:
+    build:
+      context: ./admin-portal-executive
+      dockerfile: Dockerfile
+    container_name: betting_platform_executive
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+      - VITE_PORTAL_TYPE=executive
+      - VITE_ALLOWED_ROLES=owner,super_admin
+    depends_on:
+      - backend
+
+  # Management Portal (Admin + Broker) - Port 5174
+  admin-management:
+    build:
+      context: ./admin-portal-management
+      dockerfile: Dockerfile
+    container_name: betting_platform_management
+    ports:
+      - "5174:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+      - VITE_PORTAL_TYPE=management
+      - VITE_ALLOWED_ROLES=admin,broker
+    depends_on:
+      - backend
+
+  # User Portal (Regular Users) - Port 3002
+  user-portal:
+    build:
+      context: ./nadir-user
+      dockerfile: ../Dockerfile.frontend
+    container_name: betting_platform_user
+    ports:
+      - "3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
+    depends_on:
+      - backend
+
+networks:
+  default:
+    name: betting_platform_network

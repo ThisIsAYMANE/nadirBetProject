@@ -1,0 +1,192 @@
+NbaApiDocumentation
+
+1. Base Configuration
+{
+  "base_url": "https://v2.nba.api-sports.io/",
+  "method": "GET",
+  "auth_header": "x-apisports-key",
+  "format": "JSON"
+}
+💻 cURL Example
+curl -X GET "https://v2.nba.api-sports.io/status" \
+  -H "x-apisports-key: YOUR_API_KEY"
+🌍 2. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status and quota usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "List available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "Countries with NBA data",
+    "params": ["id", "name", "code", "search"]
+  }
+]
+🏆 3. Leagues
+[
+  {
+    "endpoint": "/leagues",
+    "description": "NBA leagues and competitions",
+    "params": ["id", "name", "season", "country", "type", "search"]
+  },
+  {
+    "endpoint": "/seasons",
+    "description": "Available NBA seasons",
+    "params": []
+  }
+]
+🏀 4. Teams
+[
+  {
+    "endpoint": "/teams",
+    "description": "NBA teams information",
+    "params": ["id", "name", "league", "season", "country", "search"]
+  },
+  {
+    "endpoint": "/teams/statistics",
+    "description": "Team statistics (offense, defense, wins, losses)",
+    "params": ["team", "season", "league"]
+  }
+]
+👥 5. Players
+[
+  {
+    "endpoint": "/players",
+    "description": "NBA players list and profiles",
+    "params": ["id", "team", "season", "search", "page"]
+  },
+  {
+    "endpoint": "/players/statistics",
+    "description": "Player season statistics",
+    "params": ["id", "team", "season", "league"]
+  }
+]
+🏟️ 6. Games (Fixtures)
+[
+  {
+    "endpoint": "/games",
+    "description": "NBA games schedule and results",
+    "params": ["id", "league", "season", "team", "date", "live", "timezone"]
+  },
+  {
+    "endpoint": "/games/statistics",
+    "description": "Game statistics (team comparison, stats breakdown)",
+    "params": ["id", "team"]
+  },
+  {
+    "endpoint": "/games/events",
+    "description": "Game events (scoring timeline, fouls, etc.)",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/lineups",
+    "description": "Game lineups (starting players, rotations)",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/games/h2h",
+    "description": "Head-to-head match history",
+    "params": ["h2h", "season", "league"]
+  }
+]
+📊 7. Standings
+[
+  {
+    "endpoint": "/standings",
+    "description": "NBA conference standings",
+    "params": ["league", "season", "team"]
+  }
+]
+📈 8. Statistics (Advanced)
+[
+  {
+    "endpoint": "/statistics",
+    "description": "Advanced team statistics (offensive/defensive metrics)",
+    "params": ["team", "season", "league"]
+  }
+]
+🤕 9. Injuries
+[
+  {
+    "endpoint": "/injuries",
+    "description": "Player injuries list",
+    "params": ["team", "player", "season", "date"]
+  }
+]
+🎯 10. Predictions
+[
+  {
+    "endpoint": "/predictions",
+    "description": "AI match predictions",
+    "params": ["game_id"]
+  }
+]
+🎲 11. Odds (Betting Data)
+[
+  {
+    "endpoint": "/odds",
+    "description": "Match odds (bookmakers, markets)",
+    "params": ["game", "league", "season", "date"]
+  },
+  {
+    "endpoint": "/odds/live",
+    "description": "Live odds",
+    "params": ["game"]
+  },
+  {
+    "endpoint": "/odds/bookmakers",
+    "description": "List of bookmakers",
+    "params": ["id", "search"]
+  }
+]
+🧾 12. Response Format (All Endpoints)
+{
+  "get": "endpoint",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Complete NBA API v2 Structure
+Core Modules:
+🌍 General (status, timezone, countries)
+🏆 Leagues & Seasons
+🏀 Teams
+👥 Players
+🏟️ Games
+📊 Standings
+📈 Statistics
+🤕 Injuries
+🎯 Predictions
+🎲 Odds
+⚠️ Important Notes
+NBA API v2 is part of the same ecosystem as:
+Football API
+Basketball API v1
+Baseball / AFL / Hockey APIs
+Most endpoints require:
+league
+season
+team or game id
+Structure is consistent across all sports APIs
+🚀 Key Insight (important for your project)
+
+All API-SPORTS APIs (NBA included) follow the SAME schema:
+
+{
+  "teams": "/teams",
+  "players": "/players",
+  "games": "/games",
+  "standings": "/standings",
+  "statistics": "/statistics"
+}

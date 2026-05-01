@@ -1,0 +1,161 @@
+MmaApiDocumentation
+
+MMA API v1 — Full Structured Endpoints (API-SPORTS)
+🔑 Base Configuration
+{
+  "base_url": "https://v1.mma.api-sports.io/",
+  "method": "GET",
+  "auth_header": "x-apisports-key",
+  "format": "JSON"
+}
+💻 Example
+curl -X GET "https://v1.mma.api-sports.io/status" \
+  -H "x-apisports-key: YOUR_API_KEY"
+🌍 1. General Endpoints
+[
+  {
+    "endpoint": "/status",
+    "description": "API status + quota usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "List of available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "Countries involved in MMA competitions",
+    "params": ["id", "name", "code", "search"]
+  }
+]
+🏆 2. Leagues / Organizations
+[
+  {
+    "endpoint": "/leagues",
+    "description": "MMA organizations / leagues (UFC, etc.)",
+    "params": ["id", "name", "country", "season", "search"]
+  },
+  {
+    "endpoint": "/leagues/seasons",
+    "description": "Available seasons",
+    "params": []
+  }
+]
+🥊 3. Fighters (Core Resource)
+[
+  {
+    "endpoint": "/fighters",
+    "description": "List all MMA fighters",
+    "params": ["id", "name", "country", "weight_class", "search", "page"]
+  },
+  {
+    "endpoint": "/fighters/statistics",
+    "description": "Fighter statistics (wins, losses, KO, submissions, etc.)",
+    "params": ["id", "season", "league"]
+  }
+]
+🥋 4. Fights / Matches
+[
+  {
+    "endpoint": "/fights",
+    "description": "List MMA fights (past + upcoming)",
+    "params": ["id", "league", "season", "fighter", "date", "status"]
+  },
+  {
+    "endpoint": "/fights/statistics",
+    "description": "Fight statistics (strikes, takedowns, rounds)",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/fights/events",
+    "description": "Fight event timeline (round actions, KO, submissions)",
+    "params": ["id"]
+  },
+  {
+    "endpoint": "/fights/h2h",
+    "description": "Head-to-head fights between two fighters",
+    "params": ["h2h", "league", "season"]
+  }
+]
+🎯 5. Rankings
+[
+  {
+    "endpoint": "/rankings",
+    "description": "Division rankings (UFC-style rankings)",
+    "params": ["league", "weight_class", "season"]
+  }
+]
+🏟️ 6. Events (Fight Nights)
+[
+  {
+    "endpoint": "/events",
+    "description": "MMA events (Fight Night, UFC numbered events)",
+    "params": ["id", "league", "season", "date"]
+  }
+]
+📊 7. Statistics
+[
+  {
+    "endpoint": "/statistics",
+    "description": "General MMA stats aggregation",
+    "params": ["fighter", "league", "season"]
+  }
+]
+🎲 8. Predictions (if enabled on plan)
+[
+  {
+    "endpoint": "/predictions",
+    "description": "AI predictions for fights",
+    "params": ["fight_id"]
+  }
+]
+🧾 9. Standard Response Format
+{
+  "get": "endpoint_name",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": []
+}
+🧩 Complete MMA API Overview
+Core Data Model:
+Fighters 🥊
+Fights 🥋
+Events 🏟️
+Rankings 📊
+Leagues (Organizations) 🏆
+Statistics 📈
+⚠️ Important Notes
+MMA API is smaller and more focused than Football/Basketball APIs
+Most important resources:
+Fighters
+Fights
+Events
+Uses same API-SPORTS structure across all sports
+Rate limits depend on subscription plan
+🚀 Big Insight (important for your project)
+
+Now you’ve seen ALL API-SPORTS sports:
+
+✔ Football
+✔ Basketball
+✔ Baseball
+✔ AFL
+✔ Formula 1
+✔ Handball
+✔ Hockey
+✔ MMA
+
+👉 They ALL share the same schema pattern:
+
+{
+  "teams / fighters / drivers": "/teams or /fighters",
+  "matches / games / fights / races": "/games or /fights",
+  "standings / rankings": "/standings or /rankings",
+  "stats": "/statistics"
+}

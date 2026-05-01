@@ -1,0 +1,444 @@
+1. Authentication & Base Request
+✅ Description
+
+All requests:
+
+Use GET only
+Require an API key in headers
+Use base URL:
+https://v3.football.api-sports.io/
+💻 cURL Example
+curl --request GET \
+  --url 'https://v3.football.api-sports.io/countries' \
+  --header 'x-apisports-key: YOUR_API_KEY'
+💻 JavaScript (Fetch)
+const response = await fetch('https://v3.football.api-sports.io/countries', {
+  method: 'GET',
+  headers: {
+    'x-apisports-key': 'YOUR_API_KEY'
+  }
+});
+const data = await response.json();
+📌 Notes
+No POST, PUT, DELETE → read-only API
+JSON responses only
+🌍 2. Countries Endpoint
+✅ Description
+
+Returns all countries with available football data.
+
+💻 cURL
+curl --request GET \
+  --url 'https://v3.football.api-sports.io/countries' \
+  --header 'x-apisports-key: YOUR_API_KEY'
+📌 Notes
+No parameters required
+Used as entry point for leagues filtering
+🏆 3. Leagues Endpoint
+✅ Description
+
+Retrieve leagues and seasons.
+
+💻 cURL (All leagues)
+curl -s "https://v3.football.api-sports.io/leagues" \
+  -H "x-apisports-key: YOUR_API_KEY"
+💻 cURL (Specific league seasons)
+curl -s "https://v3.football.api-sports.io/leagues?league=39" \
+  -H "x-apisports-key: YOUR_API_KEY"
+💻 JS Example
+fetch('https://api-football.com/v3/leagues', {
+  method: 'GET',
+  headers: {
+    'X-RapidAPI-Key': 'your-api-key'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data));
+📌 Notes
+Supports filters: id, name, country, season
+Example: league 39 = Premier League
+⚽ 4. Fixtures Endpoint
+✅ Description
+
+Retrieve matches (fixtures), live or historical.
+
+💻 Example (by date)
+fetch('https://api-football.com/v3/fixtures/date/2022-01-01', {
+  method: 'GET',
+  headers: {
+    'X-RapidAPI-Key': 'your-api-key'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data));
+📌 Notes
+Filters:
+date
+league
+team
+season
+Includes:
+scores
+events
+lineups
+stats
+📊 5. Standings Endpoint
+✅ Description
+
+Returns league standings (rankings table).
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/standings?league=39&season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+📌 Notes
+Requires:
+league
+season
+Returns:
+rank
+points
+goals
+form
+👥 6. Teams Endpoint
+✅ Description
+
+Retrieve teams information.
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/teams?league=39&season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+📌 Notes
+Returns:
+team info
+venue
+logo
+Filterable by:
+league
+season
+country
+🧑‍🤝‍🧑 7. Players Endpoint
+✅ Description
+
+Retrieve player data and statistics.
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/players?team=33&season=2023" \
+  -H "x-apisports-key: YOUR_API_KEY"
+📌 Notes
+Includes:
+player info
+stats
+injuries
+Supports pagination
+🔄 8. Transfers Endpoint
+✅ Description
+
+Returns player transfer history.
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/transfers?player=276" \
+  -H "x-apisports-key: YOUR_API_KEY"
+📌 Notes
+Includes:
+transfer dates
+teams
+fees
+🎯 9. Predictions Endpoint
+✅ Description
+
+Provides AI-based match predictions.
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/predictions?fixture=198772" \
+  -H "x-apisports-key: YOUR_API_KEY"
+📌 Notes
+Includes:
+win probabilities
+advice
+form comparison
+🎲 10. Odds / Bookmakers Endpoint
+✅ Description
+
+Returns betting odds and bookmakers.
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/odds?fixture=198772" \
+  -H "x-apisports-key: YOUR_API_KEY"
+📌 Notes
+Includes:
+odds
+bookmakers
+markets
+🏟️ 11. Venues Endpoint
+✅ Description
+
+Retrieve stadium/venue info.
+
+💻 Example
+curl -X GET "https://v3.football.api-sports.io/venues?id=556" \
+  -H "x-apisports-key: YOUR_API_KEY"
+🧠 12. General API Behavior
+Key technical rules:
+REST API (GET only)
+JSON responses
+Query-based filtering
+Pagination supported
+Real-time + historical data
+
+API-FOOTBALL v3 — Full Endpoint Structure
+🔑 Base Info
+{
+  "base_url": "https://v3.football.api-sports.io/",
+  "method": "GET",
+  "auth_header": "x-apisports-key"
+}
+🌍 1. General
+[
+  {
+    "endpoint": "/status",
+    "description": "API status and your account usage",
+    "params": []
+  },
+  {
+    "endpoint": "/timezone",
+    "description": "List all available timezones",
+    "params": []
+  },
+  {
+    "endpoint": "/countries",
+    "description": "List of countries with football data",
+    "params": ["name", "code", "search"]
+  }
+]
+🏆 2. Leagues
+[
+  {
+    "endpoint": "/leagues",
+    "description": "Get leagues and seasons",
+    "params": ["id", "name", "country", "code", "season", "team", "type", "current", "search"]
+  },
+  {
+    "endpoint": "/leagues/seasons",
+    "description": "List available seasons",
+    "params": []
+  }
+]
+⚽ 3. Teams
+[
+  {
+    "endpoint": "/teams",
+    "description": "Get teams info",
+    "params": ["id", "name", "league", "season", "country", "code", "venue", "search"]
+  },
+  {
+    "endpoint": "/teams/statistics",
+    "description": "Team statistics",
+    "params": ["league", "season", "team"]
+  }
+]
+🏟️ 4. Venues
+[
+  {
+    "endpoint": "/venues",
+    "description": "Get venues (stadiums)",
+    "params": ["id", "name", "city", "country", "search"]
+  }
+]
+👥 5. Players
+[
+  {
+    "endpoint": "/players",
+    "description": "Players info and statistics",
+    "params": ["id", "team", "league", "season", "search", "page"]
+  },
+  {
+    "endpoint": "/players/profiles",
+    "description": "Players profile details",
+    "params": ["player"]
+  },
+  {
+    "endpoint": "/players/topscorers",
+    "description": "Top scorers",
+    "params": ["league", "season"]
+  },
+  {
+    "endpoint": "/players/topassists",
+    "description": "Top assists",
+    "params": ["league", "season"]
+  },
+  {
+    "endpoint": "/players/topyellowcards",
+    "description": "Most yellow cards",
+    "params": ["league", "season"]
+  },
+  {
+    "endpoint": "/players/topredcards",
+    "description": "Most red cards",
+    "params": ["league", "season"]
+  }
+]
+🔄 6. Transfers
+[
+  {
+    "endpoint": "/transfers",
+    "description": "Player transfers",
+    "params": ["player", "team"]
+  }
+]
+🤕 7. Injuries
+[
+  {
+    "endpoint": "/injuries",
+    "description": "Player injuries",
+    "params": ["league", "season", "team", "player", "date"]
+  }
+]
+🧑‍🏫 8. Coaches
+[
+  {
+    "endpoint": "/coachs",
+    "description": "Coach info and career",
+    "params": ["id", "team", "search"]
+  }
+]
+⚽ 9. Fixtures (Matches)
+[
+  {
+    "endpoint": "/fixtures",
+    "description": "Fixtures list",
+    "params": ["id", "live", "date", "league", "season", "team", "last", "next", "from", "to", "round", "status", "venue", "timezone"]
+  },
+  {
+    "endpoint": "/fixtures/headtohead",
+    "description": "Head-to-head matches",
+    "params": ["h2h", "date", "league", "season"]
+  },
+  {
+    "endpoint": "/fixtures/statistics",
+    "description": "Match statistics",
+    "params": ["fixture", "team"]
+  },
+  {
+    "endpoint": "/fixtures/events",
+    "description": "Match events",
+    "params": ["fixture", "team"]
+  },
+  {
+    "endpoint": "/fixtures/lineups",
+    "description": "Lineups",
+    "params": ["fixture"]
+  },
+  {
+    "endpoint": "/fixtures/players",
+    "description": "Player stats in fixture",
+    "params": ["fixture"]
+  },
+  {
+    "endpoint": "/fixtures/rounds",
+    "description": "Rounds list",
+    "params": ["league", "season", "current"]
+  }
+]
+📊 10. Standings
+[
+  {
+    "endpoint": "/standings",
+    "description": "League standings",
+    "params": ["league", "season", "team"]
+  }
+]
+📈 11. Statistics
+[
+  {
+    "endpoint": "/statistics",
+    "description": "Advanced statistics",
+    "params": ["league", "season", "team"]
+  }
+]
+🎯 12. Predictions
+[
+  {
+    "endpoint": "/predictions",
+    "description": "Match predictions",
+    "params": ["fixture"]
+  }
+]
+🎲 13. Odds & Betting
+[
+  {
+    "endpoint": "/odds",
+    "description": "Match odds",
+    "params": ["fixture", "league", "season", "date", "bookmaker", "bet"]
+  },
+  {
+    "endpoint": "/odds/live",
+    "description": "Live odds",
+    "params": ["fixture", "league"]
+  },
+  {
+    "endpoint": "/odds/bookmakers",
+    "description": "Bookmakers list",
+    "params": ["id", "search"]
+  },
+  {
+    "endpoint": "/odds/bets",
+    "description": "Available bets",
+    "params": ["id", "search"]
+  }
+]
+🧾 14. Trophies
+[
+  {
+    "endpoint": "/trophies",
+    "description": "Player trophies",
+    "params": ["player", "coach"]
+  }
+]
+📺 15. TV
+[
+  {
+    "endpoint": "/tv",
+    "description": "TV channels broadcasting matches",
+    "params": ["fixture"]
+  }
+]
+🔥 16. Sidelined
+[
+  {
+    "endpoint": "/sidelined",
+    "description": "Players unavailable (injury/suspension)",
+    "params": ["player"]
+  }
+]
+🧩 17. Combined Overview
+Total Categories:
+General
+Leagues
+Teams
+Players
+Fixtures
+Odds
+Predictions
+Transfers
+Injuries
+Coaches
+Venues
+Standings
+Statistics
+TV
+Trophies
+Sidelined
+⚠️ Important Notes
+Some endpoints:
+Require mandatory params (e.g., league + season)
+Support pagination (page)
+Rate limits depend on your plan
+All responses:
+{
+  "get": "endpoint",
+  "parameters": {},
+  "errors": [],
+  "results": 0,
+  "paging": {},
+  "response": []
+}

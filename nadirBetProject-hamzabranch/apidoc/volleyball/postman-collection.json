@@ -1,0 +1,23 @@
+{
+  "info": { "name": "API-Volleyball v1 Test Collection", "description": "Complete test collection for API-Volleyball (API-Sports) v1 API", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
+  "variable": [ { "key": "baseUrl", "value": "https://v1.volleyball.api-sports.io" }, { "key": "apiKey", "value": "303e4402fcec0c684084b2b79a2b6338" } ],
+  "item": [
+    { "name": "Phase 1: Core", "item": [
+      { "name": "1. Timezone", "request": { "method": "GET", "url": "{{baseUrl}}/timezone", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "2. Seasons", "request": { "method": "GET", "url": "{{baseUrl}}/seasons", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "3. Countries", "request": { "method": "GET", "url": "{{baseUrl}}/countries", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "4. Leagues", "request": { "method": "GET", "url": "{{baseUrl}}/leagues", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 2: Teams", "item": [
+      { "name": "5. Teams by ID", "request": { "method": "GET", "url": "{{baseUrl}}/teams?id=119", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "6. Teams by League", "request": { "method": "GET", "url": "{{baseUrl}}/teams?league=1&season=2019", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 3: Games", "item": [
+      { "name": "7. Games by Date", "request": { "method": "GET", "url": "{{baseUrl}}/games?date=2021-04-10", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } },
+      { "name": "8. Games by League", "request": { "method": "GET", "url": "{{baseUrl}}/games?league=1&season=2021", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]},
+    { "name": "Phase 4: Standings", "item": [
+      { "name": "9. Standings", "request": { "method": "GET", "url": "{{baseUrl}}/standings?league=1&season=2021", "header": [{ "key": "x-apisports-key", "value": "{{apiKey}}" }] } }
+    ]}
+  ]
+}
